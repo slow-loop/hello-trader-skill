@@ -1,0 +1,41 @@
+[build-system]
+requires = ["setuptools>=61.0"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "skill-crypto-trader"
+version = "0.1.0"
+description = "AI-driven crypto trading with freqtrade"
+requires-python = ">=3.13"
+dependencies = [
+    "deflated-sharpe>=0.1.0",
+    "fastapi==0.115.0",
+    "freqtrade[hyperopt]>=2026.2",
+    "httpx>=0.28",
+    "jinja2>=3.1",
+    "pandas-ta-classic>=0.4.47",
+    "pyharmonics>=1.5.3",
+    "pyyaml>=6.0",
+    "smartmoneyconcepts>=0.0.10",
+    "web-reader",
+    "websockets>=13.0",
+    "zigzag",
+]
+
+[project.scripts]
+crypto-trader = "skill_crypto_trader.cli:main"
+
+[tool.setuptools]
+package-dir = {"" = "src"}
+
+[tool.setuptools.packages.find]
+where = ["src"]
+
+[tool.uv.sources]
+web-reader = { path = "../../libs/web-reader", editable = true }
+zigzag = { path = "../../libs/zigzag", editable = true }
+
+[dependency-groups]
+dev = [
+    "pytest>=9.0.2",
+]

@@ -1,0 +1,38 @@
+[
+  {
+    "date": "2026-03-25",
+    "recorded_at": "2026-03-25T15:08:15+08:00",
+    "account_value": 986500.0,
+    "cash": 827363.0,
+    "market_value": 159137.0,
+    "realized_pnl": 8500.0,
+    "unrealized_pnl": 4200.0,
+    "exposure_pct": 16.0,
+    "cash_pct": 84.0,
+    "positions_count": 1
+  },
+  {
+    "date": "2026-03-26",
+    "recorded_at": "2026-03-26T15:06:44+08:00",
+    "account_value": 1001200.0,
+    "cash": 712450.0,
+    "market_value": 288750.0,
+    "realized_pnl": 18400.0,
+    "unrealized_pnl": 8300.0,
+    "exposure_pct": 29.0,
+    "cash_pct": 71.0,
+    "positions_count": 2
+  },
+  {
+    "date": "2026-03-27",
+    "recorded_at": "2026-03-27T15:07:10+08:00",
+    "account_value": 1009800.0,
+    "cash": 712450.0,
+    "market_value": 297350.0,
+    "realized_pnl": 18400.0,
+    "unrealized_pnl": 16900.0,
+    "exposure_pct": 29.0,
+    "cash_pct": 71.0,
+    "positions_count": 2
+  }
+]

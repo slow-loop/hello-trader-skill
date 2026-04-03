@@ -1,0 +1,1016 @@
+{
+  "timestamp": "2026-03-27T04:44:50.668703Z",
+  "scanned": 57,
+  "event_count": 22,
+  "events": [
+    {
+      "event_id": "106614",
+      "title": "Hungary Parliamentary Election Winner",
+      "category": null,
+      "markets": [
+        {
+          "market_id": "948043",
+          "slug": "will-tisza-respect-and-freedom-party-tisza-win-the-most-seats-in-the-next-hungarian-parliamentary-election",
+          "question": "Will TISZA – Respect and Freedom Party (TISZA) win the most seats in the next Hungarian parliamentary election?",
+          "yes_price": 0.625,
+          "no_price": 0.375,
+          "volume_24h": 86594.33841999997,
+          "liquidity": 57226.1165,
+          "one_day_price_change": -0.02,
+          "best_bid": 0.62,
+          "best_ask": 0.63,
+          "end_date": "2026-04-12T00:00:00Z",
+          "days_to_resolution": 15,
+          "spread": 0.010000000000000009
+        },
+        {
+          "market_id": "948038",
+          "slug": "will-fideszkdnp-win-the-most-seats-in-the-next-hungarian-parliamentary-election",
+          "question": "Will Fidesz–KDNP win the most seats in the next Hungarian parliamentary election?",
+          "yes_price": 0.365,
+          "no_price": 0.635,
+          "volume_24h": 73673.58424100002,
+          "liquidity": 59938.9634,
+          "one_day_price_change": 0.015,
+          "best_bid": 0.36,
+          "best_ask": 0.37,
+          "end_date": "2026-04-12T00:00:00Z",
+          "days_to_resolution": 15,
+          "spread": 0.010000000000000009
+        }
+      ]
+    },
+    {
+      "event_id": "236840",
+      "title": "US x Iran ceasefire by...?",
+      "category": null,
+      "markets": [
+        {
+          "market_id": "1466015",
+          "slug": "us-x-iran-ceasefire-by-march-31",
+          "question": "US x Iran ceasefire by March 31?",
+          "yes_price": 0.045,
+          "no_price": 0.955,
+          "volume_24h": 2293984.4590750015,
+          "liquidity": 913355.2664,
+          "one_day_price_change": 0.0,
+          "best_bid": 0.04,
+          "best_ask": 0.05,
+          "end_date": null,
+          "days_to_resolution": null,
+          "spread": 0.010000000000000002
+        },
+        {
+          "market_id": "1466016",
+          "slug": "us-x-iran-ceasefire-by-april-30-194-679-389",
+          "question": "US x Iran ceasefire by April 30?",
+          "yes_price": 0.415,
+          "no_price": 0.585,
+          "volume_24h": 498636.10659800016,
+          "liquidity": 190776.3586,
+          "one_day_price_change": 0.0,
+          "best_bid": 0.41,
+          "best_ask": 0.42,
+          "end_date": null,
+          "days_to_resolution": null,
+          "spread": 0.010000000000000009
+        },
+        {
+          "market_id": "1569627",
+          "slug": "us-x-iran-ceasefire-by-april-15-182-528-637",
+          "question": "US x Iran ceasefire by April 15?",
+          "yes_price": 0.285,
+          "no_price": 0.715,
+          "volume_24h": 436207.6043820005,
+          "liquidity": 158863.8343,
+          "one_day_price_change": 0.0,
+          "best_bid": 0.28,
+          "best_ask": 0.29,
+          "end_date": "2026-04-15T00:00:00Z",
+          "days_to_resolution": 18,
+          "spread": 0.009999999999999953
+        },
+        {
+          "market_id": "1706788",
+          "slug": "us-x-iran-ceasefire-by-april-7-278",
+          "question": "US x Iran ceasefire by April 7?",
+          "yes_price": 0.155,
+          "no_price": 0.845,
+          "volume_24h": 275007.28647799994,
+          "liquidity": 88225.6468,
+          "one_day_price_change": 0.0,
+          "best_bid": 0.15,
+          "best_ask": 0.16,
+          "end_date": "2026-04-07T00:00:00Z",
+          "days_to_resolution": 10,
+          "spread": 0.010000000000000009
+        }
+      ]
+    },
+    {
+      "event_id": "75478",
+      "title": "Fed decision in April?",
+      "category": null,
+      "markets": [
+        {
+          "market_id": "669662",
+          "slug": "will-there-be-no-change-in-fed-interest-rates-after-the-april-2026-meeting",
+          "question": "Will there be no change in Fed interest rates after the April 2026 meeting?",
+          "yes_price": 0.9605,
+          "no_price": 0.0395,
+          "volume_24h": 724180.704613001,
+          "liquidity": 708995.89644,
+          "one_day_price_change": 0.02,
+          "best_bid": 0.96,
+          "best_ask": 0.961,
+          "end_date": "2026-04-29T00:00:00Z",
+          "days_to_resolution": 32,
+          "spread": 0.0010000000000000009
+        }
+      ]
+    },
+    {
+      "event_id": "238474",
+      "title": "What price will Bitcoin hit in March?",
+      "category": null,
+      "markets": [
+        {
+          "market_id": "1473072",
+          "slug": "will-bitcoin-dip-to-65k-in-march-2026",
+          "question": "Will Bitcoin dip to $65,000 in March?",
+          "yes_price": 0.3435,
+          "no_price": 0.6565,
+          "volume_24h": 209313.2928110001,
+          "liquidity": 70480.3606,
+          "one_day_price_change": 0.0,
+          "best_bid": 0.343,
+          "best_ask": 0.344,
+          "end_date": "2026-04-01T04:00:00Z",
+          "days_to_resolution": 4,
+          "spread": 0.0009999999999999454
+        },
+        {
+          "market_id": "1473074",
+          "slug": "will-bitcoin-dip-to-60k-in-march-2026",
+          "question": "Will Bitcoin dip to $60,000 in March?",
+          "yes_price": 0.06,
+          "no_price": 0.94,
+          "volume_24h": 352341.36103100015,
+          "liquidity": 98737.20389,
+          "one_day_price_change": 0.0,
+          "best_bid": 0.059,
+          "best_ask": 0.061,
+          "end_date": "2026-04-01T04:00:00Z",
+          "days_to_resolution": 4,
+          "spread": 0.0020000000000000018
+        }
+      ]
+    },
+    {
+      "event_id": "237260",
+      "title": "Will Crude Oil (CL) hit__ by end of March?",
+      "category": null,
+      "markets": [
+        {
+          "market_id": "1467765",
+          "slug": "will-crude-oil-cl-hit-high-110-by-end-of-march-732-945-787-552",
+          "question": "Will Crude Oil (CL) hit (HIGH) $110 by end of March?",
+          "yes_price": 0.0845,
+          "no_price": 0.9155,
+          "volume_24h": 254495.98465399994,
+          "liquidity": 71907.51147,
+          "one_day_price_change": 0.0,
+          "best_bid": 0.083,
+          "best_ask": 0.086,
+          "end_date": "2026-03-31T00:00:00Z",
+          "days_to_resolution": 3,
+          "spread": 0.002999999999999989
+        },
+        {
+          "market_id": "1467766",
+          "slug": "will-crude-oil-cl-hit-high-100-by-end-of-march-658-396-769-971",
+          "question": "Will Crude Oil (CL) hit (HIGH) $100 by end of March?",
+          "yes_price": 0.316,
+          "no_price": 0.684,
+          "volume_24h": 553691.3594420007,
+          "liquidity": 101881.55233,
+          "one_day_price_change": 0.0,
+          "best_bid": 0.313,
+          "best_ask": 0.319,
+          "end_date": "2026-03-31T00:00:00Z",
+          "days_to_resolution": 3,
+          "spread": 0.006000000000000005
+        },
+        {
+          "market_id": "1538078",
+          "slug": "will-crude-oil-cl-hit-low-75-by-end-of-march-644-777-281-682-546-253",
+          "question": "Will Crude Oil (CL) hit (LOW) $75 by end of March?",
+          "yes_price": 0.0355,
+          "no_price": 0.9645,
+          "volume_24h": 68361.27586300002,
+          "liquidity": 60889.32522,
+          "one_day_price_change": 0.0,
+          "best_bid": 0.035,
+          "best_ask": 0.036,
+          "end_date": "2026-03-31T00:00:00Z",
+          "days_to_resolution": 3,
+          "spread": 0.000999999999999994
+        },
+        {
+          "market_id": "1538079",
+          "slug": "will-crude-oil-cl-hit-low-80-by-end-of-march-459-543-676-456-138-869-867-397",
+          "question": "Will Crude Oil (CL) hit (LOW) $80 by end of March?",
+          "yes_price": 0.055,
+          "no_price": 0.945,
+          "volume_24h": 85262.52497700001,
+          "liquidity": 77328.3296,
+          "one_day_price_change": 0.0,
+          "best_bid": 0.05,
+          "best_ask": 0.06,
+          "end_date": "2026-03-31T00:00:00Z",
+          "days_to_resolution": 3,
+          "spread": 0.009999999999999995
+        },
+        {
+          "market_id": "1515775",
+          "slug": "will-crude-oil-cl-hit-high-105-by-end-of-march-881",
+          "question": "Will Crude Oil (CL) hit (HIGH) $105 by end of March?",
+          "yes_price": 0.179,
+          "no_price": 0.821,
+          "volume_24h": 142896.21906599993,
+          "liquidity": 52666.21092,
+          "one_day_price_change": 0.0,
+          "best_bid": 0.177,
+          "best_ask": 0.181,
+          "end_date": "2026-03-31T00:00:00Z",
+          "days_to_resolution": 3,
+          "spread": 0.0040000000000000036
+        },
+        {
+          "market_id": "1652533",
+          "slug": "will-crude-oil-cl-hit-low-85-by-end-of-march-893-949-456-773",
+          "question": "Will Crude Oil (CL) hit (LOW) $85 by end of March?",
+          "yes_price": 0.105,
+          "no_price": 0.895,
+          "volume_24h": 137390.1364139999,
+          "liquidity": 42047.8893,
+          "one_day_price_change": 0.0,
+          "best_bid": 0.1,
+          "best_ask": 0.11,
+          "end_date": "2026-03-31T00:00:00Z",
+          "days_to_resolution": 3,
+          "spread": 0.009999999999999995
+        },
+        {
+          "market_id": "1709468",
+          "slug": "will-crude-oil-cl-hit-high-95-by-end-of-march-479-558",
+          "question": "Will Crude Oil (CL) hit (HIGH) $95 by end of March?",
+          "yes_price": 0.73,
+          "no_price": 0.27,
+          "volume_24h": 313231.11895400024,
+          "liquidity": 27949.5627,
+          "one_day_price_change": 0.0,
+          "best_bid": 0.72,
+          "best_ask": 0.74,
+          "end_date": "2026-03-31T00:00:00Z",
+          "days_to_resolution": 3,
+          "spread": 0.020000000000000018
+        }
+      ]
+    },
+    {
+      "event_id": "158299",
+      "title": "US forces enter Iran by..?",
+      "category": null,
+      "markets": [
+        {
+          "market_id": "1162940",
+          "slug": "us-forces-enter-iran-by-march-31-222-191-243-517-878-439-519",
+          "question": "US forces enter Iran by March 31?",
+          "yes_price": 0.155,
+          "no_price": 0.845,
+          "volume_24h": 2213004.9397410094,
+          "liquidity": 597413.8554,
+          "one_day_price_change": -0.005,
+          "best_bid": 0.15,
+          "best_ask": 0.16,
+          "end_date": "2026-03-31T00:00:00Z",
+          "days_to_resolution": 3,
+          "spread": 0.010000000000000009
+        },
+        {
+          "market_id": "1640919",
+          "slug": "us-forces-enter-iran-by-april-30-899",
+          "question": "US forces enter Iran by April 30?",
+          "yes_price": 0.615,
+          "no_price": 0.385,
+          "volume_24h": 668195.1751580023,
+          "liquidity": 392341.3219,
+          "one_day_price_change": 0.0,
+          "best_bid": 0.61,
+          "best_ask": 0.62,
+          "end_date": "2026-04-30T00:00:00Z",
+          "days_to_resolution": 33,
+          "spread": 0.010000000000000009
+        }
+      ]
+    },
+    {
+      "event_id": "69987",
+      "title": "2026 NCAA Tournament Winner",
+      "category": null,
+      "markets": [
+        {
+          "market_id": "658931",
+          "slug": "will-michigan-win-the-2026-ncaa-tournament",
+          "question": "Will Michigan win the 2026 NCAA Tournament?",
+          "yes_price": 0.215,
+          "no_price": 0.785,
+          "volume_24h": 60806.218394999974,
+          "liquidity": 571852.3344,
+          "one_day_price_change": 0.0,
+          "best_bid": 0.21,
+          "best_ask": 0.22,
+          "end_date": "2026-04-04T00:00:00Z",
+          "days_to_resolution": 7,
+          "spread": 0.010000000000000009
+        },
+        {
+          "market_id": "658941",
+          "slug": "will-arizona-win-the-2026-ncaa-tournament",
+          "question": "Will Arizona win the 2026 NCAA Tournament?",
+          "yes_price": 0.249,
+          "no_price": 0.751,
+          "volume_24h": 54233.968842999995,
+          "liquidity": 45099.30718,
+          "one_day_price_change": 0.0225,
+          "best_bid": 0.244,
+          "best_ask": 0.254,
+          "end_date": "2026-04-04T00:00:00Z",
+          "days_to_resolution": 7,
+          "spread": 0.010000000000000009
+        },
+        {
+          "market_id": "658945",
+          "slug": "will-connecticut-win-the-2026-ncaa-tournament",
+          "question": "Will Connecticut win the 2026 NCAA Tournament?",
+          "yes_price": 0.038,
+          "no_price": 0.962,
+          "volume_24h": 46831.40225299999,
+          "liquidity": 55421.55819,
+          "one_day_price_change": 0.0015,
+          "best_bid": 0.035,
+          "best_ask": 0.041,
+          "end_date": "2026-04-04T00:00:00Z",
+          "days_to_resolution": 7,
+          "spread": 0.005999999999999998
+        },
+        {
+          "market_id": "658949",
+          "slug": "will-iowa-state-win-the-2026-ncaa-tournament",
+          "question": "Will Iowa State win the 2026 NCAA Tournament?",
+          "yes_price": 0.053,
+          "no_price": 0.947,
+          "volume_24h": 46124.12465300001,
+          "liquidity": 97789.16635,
+          "one_day_price_change": 0.0015,
+          "best_bid": 0.052,
+          "best_ask": 0.054,
+          "end_date": "2026-04-04T00:00:00Z",
+          "days_to_resolution": 7,
+          "spread": 0.0020000000000000018
+        },
+        {
+          "market_id": "658928",
+          "slug": "will-purdue-win-the-2026-ncaa-tournament",
+          "question": "Will Purdue win the 2026 NCAA Tournament?",
+          "yes_price": 0.0705,
+          "no_price": 0.9295,
+          "volume_24h": 981588.5218299999,
+          "liquidity": 69032.51594,
+          "one_day_price_change": 0.0005,
+          "best_bid": 0.07,
+          "best_ask": 0.071,
+          "end_date": "2026-04-04T00:00:00Z",
+          "days_to_resolution": 7,
+          "spread": 0.000999999999999987
+        },
+        {
+          "market_id": "658944",
+          "slug": "will-duke-win-the-2026-ncaa-tournament",
+          "question": "Will Duke win the 2026 NCAA Tournament?",
+          "yes_price": 0.175,
+          "no_price": 0.825,
+          "volume_24h": 39966.84830099999,
+          "liquidity": 379490.8164,
+          "one_day_price_change": -0.01,
+          "best_bid": 0.17,
+          "best_ask": 0.18,
+          "end_date": "2026-04-04T00:00:00Z",
+          "days_to_resolution": 7,
+          "spread": 0.009999999999999981
+        },
+        {
+          "market_id": "658946",
+          "slug": "will-illinois-win-the-2026-ncaa-tournament",
+          "question": "Will Illinois win the 2026 NCAA Tournament?",
+          "yes_price": 0.1275,
+          "no_price": 0.8725,
+          "volume_24h": 90205.43488299998,
+          "liquidity": 88066.67058,
+          "one_day_price_change": -0.002,
+          "best_bid": 0.125,
+          "best_ask": 0.13,
+          "end_date": "2026-04-04T00:00:00Z",
+          "days_to_resolution": 7,
+          "spread": 0.0050000000000000044
+        }
+      ]
+    },
+    {
+      "event_id": "34051",
+      "title": "Netanyahu out by...?",
+      "category": null,
+      "markets": [
+        {
+          "market_id": "1632763",
+          "slug": "netanyahu-out-by-april-30",
+          "question": "Netanyahu out by April 30?",
+          "yes_price": 0.035,
+          "no_price": 0.965,
+          "volume_24h": 140698.02789499998,
+          "liquidity": 146099.17315,
+          "one_day_price_change": 0.0,
+          "best_bid": 0.034,
+          "best_ask": 0.036,
+          "end_date": "2026-04-30T00:00:00Z",
+          "days_to_resolution": 33,
+          "spread": 0.001999999999999995
+        }
+      ]
+    },
+    {
+      "event_id": "238477",
+      "title": "What price will Ethereum hit in March?",
+      "category": null,
+      "markets": [
+        {
+          "market_id": "1473070",
+          "slug": "will-ethereum-reach-2400-in-march-2026",
+          "question": "Will Ethereum reach $2,400 in March?",
+          "yes_price": 0.045,
+          "no_price": 0.955,
+          "volume_24h": 132416.92285499998,
+          "liquidity": 65282.3202,
+          "one_day_price_change": 0.0,
+          "best_bid": 0.04,
+          "best_ask": 0.05,
+          "end_date": "2026-04-01T04:00:00Z",
+          "days_to_resolution": 4,
+          "spread": 0.010000000000000002
+        },
+        {
+          "market_id": "1473076",
+          "slug": "will-ethereum-dip-to-1800-in-march-2026",
+          "question": "Will Ethereum dip to $1,800 in March?",
+          "yes_price": 0.1,
+          "no_price": 0.9,
+          "volume_24h": 139827.72437299998,
+          "liquidity": 84335.34355,
+          "one_day_price_change": 0.0,
+          "best_bid": 0.098,
+          "best_ask": 0.102,
+          "end_date": "2026-04-01T04:00:00Z",
+          "days_to_resolution": 4,
+          "spread": 0.00399999999999999
+        },
+        {
+          "market_id": "1473077",
+          "slug": "will-ethereum-dip-to-1600-in-march-2026",
+          "question": "Will Ethereum dip to $1,600 in March?",
+          "yes_price": 0.0355,
+          "no_price": 0.9645,
+          "volume_24h": 81146.02714700002,
+          "liquidity": 87650.1005,
+          "one_day_price_change": 0.0,
+          "best_bid": 0.035,
+          "best_ask": 0.036,
+          "end_date": "2026-04-01T04:00:00Z",
+          "days_to_resolution": 4,
+          "spread": 0.000999999999999994
+        }
+      ]
+    },
+    {
+      "event_id": "34436",
+      "title": "Augusta National Invitational - Winner",
+      "category": null,
+      "markets": [
+        {
+          "market_id": "568652",
+          "slug": "will-justin-rose-win-the-2026-masters-tournament",
+          "question": "Will Justin Rose win the 2026 Masters tournament?",
+          "yes_price": 0.037,
+          "no_price": 0.963,
+          "volume_24h": 37704.98689100001,
+          "liquidity": 69357.68574,
+          "one_day_price_change": -0.0105,
+          "best_bid": 0.035,
+          "best_ask": 0.039,
+          "end_date": "2026-04-13T00:00:00Z",
+          "days_to_resolution": 16,
+          "spread": 0.003999999999999997
+        }
+      ]
+    },
+    {
+      "event_id": "267102",
+      "title": "Kharg Island no longer under Iranian control by...?",
+      "category": null,
+      "markets": [
+        {
+          "market_id": "1581306",
+          "slug": "kharg-island-no-longer-under-iranian-control-by-march-31",
+          "question": "Kharg Island no longer under Iranian control by March 31?",
+          "yes_price": 0.045,
+          "no_price": 0.955,
+          "volume_24h": 688765.2908680008,
+          "liquidity": 235679.8124,
+          "one_day_price_change": 0.0,
+          "best_bid": 0.04,
+          "best_ask": 0.05,
+          "end_date": "2026-03-31T23:55:00Z",
+          "days_to_resolution": 4,
+          "spread": 0.010000000000000002
+        },
+        {
+          "market_id": "1611267",
+          "slug": "kharg-island-no-longer-under-iranian-control-by-april-30",
+          "question": "Kharg Island no longer under Iranian control by April 30?",
+          "yes_price": 0.345,
+          "no_price": 0.655,
+          "volume_24h": 262031.48216199985,
+          "liquidity": 119390.8633,
+          "one_day_price_change": 0.0,
+          "best_bid": 0.34,
+          "best_ask": 0.35,
+          "end_date": "2026-04-30T23:55:00Z",
+          "days_to_resolution": 34,
+          "spread": 0.009999999999999953
+        }
+      ]
+    },
+    {
+      "event_id": "291733",
+      "title": "Elon Musk # tweets March 24 - March 31, 2026?",
+      "category": null,
+      "markets": [
+        {
+          "market_id": "1668611",
+          "slug": "elon-musk-of-tweets-march-24-march-31-200-219",
+          "question": "Will Elon Musk post 200-219 tweets from March 24 to March 31, 2026?",
+          "yes_price": 0.073,
+          "no_price": 0.927,
+          "volume_24h": 54271.65699899998,
+          "liquidity": 51649.62394,
+          "one_day_price_change": 0.0,
+          "best_bid": 0.072,
+          "best_ask": 0.074,
+          "end_date": "2026-03-31T16:00:00Z",
+          "days_to_resolution": 4,
+          "spread": 0.0020000000000000018
+        },
+        {
+          "market_id": "1668613",
+          "slug": "elon-musk-of-tweets-march-24-march-31-220-239",
+          "question": "Will Elon Musk post 220-239 tweets from March 24 to March 31, 2026?",
+          "yes_price": 0.113,
+          "no_price": 0.887,
+          "volume_24h": 33761.57642,
+          "liquidity": 46368.66251,
+          "one_day_price_change": 0.0,
+          "best_bid": 0.111,
+          "best_ask": 0.115,
+          "end_date": "2026-03-31T16:00:00Z",
+          "days_to_resolution": 4,
+          "spread": 0.0040000000000000036
+        }
+      ]
+    },
+    {
+      "event_id": "248032",
+      "title": "Will the Iranian regime fall by April 30?",
+      "category": null,
+      "markets": [
+        {
+          "market_id": "1507751",
+          "slug": "will-the-iranian-regime-fall-by-april-30",
+          "question": "Will the Iranian regime fall by April 30?",
+          "yes_price": 0.085,
+          "no_price": 0.915,
+          "volume_24h": 749806.5662120007,
+          "liquidity": 840967.4953,
+          "one_day_price_change": 0.0,
+          "best_bid": 0.08,
+          "best_ask": 0.09,
+          "end_date": "2026-04-30T00:00:00Z",
+          "days_to_resolution": 33,
+          "spread": 0.009999999999999995
+        }
+      ]
+    },
+    {
+      "event_id": "46859",
+      "title": "Will Trump visit China by...?",
+      "category": null,
+      "markets": [
+        {
+          "market_id": "706279",
+          "slug": "will-trump-visit-china-by-april-30",
+          "question": "Will Trump visit China by April 30?",
+          "yes_price": 0.0415,
+          "no_price": 0.9585,
+          "volume_24h": 341269.28573999996,
+          "liquidity": 123044.55339,
+          "one_day_price_change": 0.0,
+          "best_bid": 0.04,
+          "best_ask": 0.043,
+          "end_date": "2026-04-30T00:00:00Z",
+          "days_to_resolution": 33,
+          "spread": 0.0029999999999999957
+        },
+        {
+          "market_id": "1611527",
+          "slug": "will-trump-visit-china-by-may-31",
+          "question": "Will Trump visit China by May 31?",
+          "yes_price": 0.805,
+          "no_price": 0.195,
+          "volume_24h": 61598.454966000034,
+          "liquidity": 59954.5147,
+          "one_day_price_change": 0.0,
+          "best_bid": 0.8,
+          "best_ask": 0.81,
+          "end_date": "2026-03-31T00:00:00Z",
+          "days_to_resolution": 3,
+          "spread": 0.010000000000000009
+        },
+        {
+          "market_id": "1611577",
+          "slug": "will-trump-visit-china-by-june-30",
+          "question": "Will Trump visit China by June 30?",
+          "yes_price": 0.865,
+          "no_price": 0.135,
+          "volume_24h": 38640.63017399998,
+          "liquidity": 60215.5587,
+          "one_day_price_change": 0.0,
+          "best_bid": 0.86,
+          "best_ask": 0.87,
+          "end_date": "2026-03-31T00:00:00Z",
+          "days_to_resolution": 3,
+          "spread": 0.010000000000000009
+        }
+      ]
+    },
+    {
+      "event_id": "238486",
+      "title": "What price will Solana hit in March?",
+      "category": null,
+      "markets": [
+        {
+          "market_id": "1473201",
+          "slug": "will-solana-reach-100-in-march-2026",
+          "question": "Will Solana reach $100 in March?",
+          "yes_price": 0.08,
+          "no_price": 0.92,
+          "volume_24h": 29545.18053299999,
+          "liquidity": 32114.2404,
+          "one_day_price_change": 0.0,
+          "best_bid": 0.07,
+          "best_ask": 0.09,
+          "end_date": "2026-04-01T04:00:00Z",
+          "days_to_resolution": 4,
+          "spread": 0.01999999999999999
+        },
+        {
+          "market_id": "1473207",
+          "slug": "will-solana-dip-to-70-in-march-2026",
+          "question": "Will Solana dip to $70 in March?",
+          "yes_price": 0.0675,
+          "no_price": 0.9325,
+          "volume_24h": 55991.537837,
+          "liquidity": 32744.05528,
+          "one_day_price_change": 0.0,
+          "best_bid": 0.063,
+          "best_ask": 0.072,
+          "end_date": "2026-04-01T04:00:00Z",
+          "days_to_resolution": 4,
+          "spread": 0.008999999999999994
+        },
+        {
+          "market_id": "1473204",
+          "slug": "will-solana-dip-to-80-in-march-2026",
+          "question": "Will Solana dip to $80 in March?",
+          "yes_price": 0.4105,
+          "no_price": 0.5895,
+          "volume_24h": 120316.18035299997,
+          "liquidity": 26106.35711,
+          "one_day_price_change": 0.0,
+          "best_bid": 0.4,
+          "best_ask": 0.421,
+          "end_date": "2026-04-01T04:00:00Z",
+          "days_to_resolution": 4,
+          "spread": 0.020999999999999963
+        }
+      ]
+    },
+    {
+      "event_id": "236884",
+      "title": "Iran x Israel/US conflict ends by...?",
+      "category": null,
+      "markets": [
+        {
+          "market_id": "1466150",
+          "slug": "iran-x-israelus-conflict-ends-by-march-31",
+          "question": "Iran x Israel/US conflict ends by March 31?",
+          "yes_price": 0.0405,
+          "no_price": 0.9595,
+          "volume_24h": 222812.62042299996,
+          "liquidity": 93384.20832,
+          "one_day_price_change": 0.0,
+          "best_bid": 0.038,
+          "best_ask": 0.043,
+          "end_date": "2026-03-31T00:00:00Z",
+          "days_to_resolution": 3,
+          "spread": 0.0049999999999999975
+        },
+        {
+          "market_id": "1567747",
+          "slug": "iran-x-israelus-conflict-ends-by-april-30-766-662-668-546",
+          "question": "Iran x Israel/US conflict ends by April 30?",
+          "yes_price": 0.355,
+          "no_price": 0.645,
+          "volume_24h": 84734.16902900001,
+          "liquidity": 40595.1715,
+          "one_day_price_change": 0.0,
+          "best_bid": 0.35,
+          "best_ask": 0.36,
+          "end_date": "2026-04-30T00:00:00Z",
+          "days_to_resolution": 33,
+          "spread": 0.010000000000000009
+        },
+        {
+          "market_id": "1567746",
+          "slug": "iran-x-israelus-conflict-ends-by-april-15-618-586-982",
+          "question": "Iran x Israel/US conflict ends by April 15?",
+          "yes_price": 0.205,
+          "no_price": 0.795,
+          "volume_24h": 43037.636542,
+          "liquidity": 40793.2369,
+          "one_day_price_change": 0.0,
+          "best_bid": 0.2,
+          "best_ask": 0.21,
+          "end_date": "2026-04-15T00:00:00Z",
+          "days_to_resolution": 18,
+          "spread": 0.009999999999999981
+        }
+      ]
+    },
+    {
+      "event_id": "34038",
+      "title": "Next Prime Minister of Hungary",
+      "category": null,
+      "markets": [
+        {
+          "market_id": "567560",
+          "slug": "will-the-next-prime-minister-of-hungary-be-viktor-orbn",
+          "question": "Will the next Prime Minister of Hungary be Viktor Orbán?",
+          "yes_price": 0.375,
+          "no_price": 0.625,
+          "volume_24h": 130409.62712099991,
+          "liquidity": 104810.4508,
+          "one_day_price_change": 0.0,
+          "best_bid": 0.37,
+          "best_ask": 0.38,
+          "end_date": "2026-04-12T00:00:00Z",
+          "days_to_resolution": 15,
+          "spread": 0.010000000000000009
+        },
+        {
+          "market_id": "567561",
+          "slug": "will-the-next-prime-minister-of-hungary-be-pter-magyar",
+          "question": "Will the next Prime Minister of Hungary be Péter Magyar?",
+          "yes_price": 0.625,
+          "no_price": 0.375,
+          "volume_24h": 139967.77991500005,
+          "liquidity": 143258.3738,
+          "one_day_price_change": 0.02,
+          "best_bid": 0.62,
+          "best_ask": 0.63,
+          "end_date": "2026-04-12T00:00:00Z",
+          "days_to_resolution": 15,
+          "spread": 0.010000000000000009
+        }
+      ]
+    },
+    {
+      "event_id": "236992",
+      "title": "Trump announces end of military operations against Iran by ...?",
+      "category": null,
+      "markets": [
+        {
+          "market_id": "1466575",
+          "slug": "trump-announces-end-of-military-operations-against-iran-by-march-31st",
+          "question": "Trump announces end of military operations against Iran by March 31st?",
+          "yes_price": 0.041,
+          "no_price": 0.959,
+          "volume_24h": 288847.6395049999,
+          "liquidity": 124332.18295,
+          "one_day_price_change": 0.0,
+          "best_bid": 0.036,
+          "best_ask": 0.046,
+          "end_date": "2026-03-31T23:55:00Z",
+          "days_to_resolution": 4,
+          "spread": 0.010000000000000002
+        },
+        {
+          "market_id": "1517835",
+          "slug": "trump-announces-end-of-military-operations-against-iran-by-april-30th-753-882-164-769",
+          "question": "Trump announces end of military operations against Iran by April 30th?",
+          "yes_price": 0.565,
+          "no_price": 0.435,
+          "volume_24h": 71371.01958800001,
+          "liquidity": 64449.3639,
+          "one_day_price_change": 0.0,
+          "best_bid": 0.56,
+          "best_ask": 0.57,
+          "end_date": "2026-04-30T23:55:00Z",
+          "days_to_resolution": 34,
+          "spread": 0.009999999999999898
+        },
+        {
+          "market_id": "1662802",
+          "slug": "trump-announces-end-of-military-operations-against-iran-by-april-15th-962-364-677",
+          "question": "Trump announces end of military operations against Iran by April 15th?",
+          "yes_price": 0.41,
+          "no_price": 0.59,
+          "volume_24h": 48068.30981599999,
+          "liquidity": 45688.6349,
+          "one_day_price_change": 0.0,
+          "best_bid": 0.4,
+          "best_ask": 0.42,
+          "end_date": "2026-04-15T23:55:00Z",
+          "days_to_resolution": 19,
+          "spread": 0.019999999999999962
+        },
+        {
+          "market_id": "1706482",
+          "slug": "trump-announces-end-of-military-operations-against-iran-by-april-7th-659",
+          "question": "Trump announces end of military operations against Iran by April 7th?",
+          "yes_price": 0.215,
+          "no_price": 0.785,
+          "volume_24h": 54508.707513999994,
+          "liquidity": 27154.3058,
+          "one_day_price_change": 0.0,
+          "best_bid": 0.21,
+          "best_ask": 0.22,
+          "end_date": "2026-04-07T23:55:00Z",
+          "days_to_resolution": 11,
+          "spread": 0.010000000000000009
+        }
+      ]
+    },
+    {
+      "event_id": "215193",
+      "title": "Will the U.S. invade Iran by March 31?",
+      "category": null,
+      "markets": [
+        {
+          "market_id": "1394368",
+          "slug": "will-the-us-invade-iran-by-march-31",
+          "question": "Will the U.S. invade Iran by March 31?",
+          "yes_price": 0.1355,
+          "no_price": 0.8645,
+          "volume_24h": 418105.1657109996,
+          "liquidity": 73538.14527,
+          "one_day_price_change": 0.015,
+          "best_bid": 0.134,
+          "best_ask": 0.137,
+          "end_date": "2026-03-31T00:00:00Z",
+          "days_to_resolution": 3,
+          "spread": 0.0030000000000000027
+        }
+      ]
+    },
+    {
+      "event_id": "293386",
+      "title": "Bitcoin above ___ on March 28?",
+      "category": null,
+      "markets": [
+        {
+          "market_id": "1672997",
+          "slug": "bitcoin-above-64k-on-march-28",
+          "question": "Will the price of Bitcoin be above $64,000 on March 28?",
+          "yes_price": 0.969,
+          "no_price": 0.031,
+          "volume_24h": 26662.666051000004,
+          "liquidity": 27952.40528,
+          "one_day_price_change": 0.0,
+          "best_bid": 0.967,
+          "best_ask": 0.971,
+          "end_date": "2026-03-28T16:00:00Z",
+          "days_to_resolution": 1,
+          "spread": 0.0040000000000000036
+        }
+      ]
+    },
+    {
+      "event_id": "298562",
+      "title": "What price will Bitcoin hit March 23-29?",
+      "category": null,
+      "markets": [
+        {
+          "market_id": "1688336",
+          "slug": "will-bitcoin-reach-74k-march-23-29",
+          "question": "Will Bitcoin reach $74,000 March 23-29?",
+          "yes_price": 0.07,
+          "no_price": 0.93,
+          "volume_24h": 51598.034064,
+          "liquidity": 36959.9947,
+          "one_day_price_change": 0.0,
+          "best_bid": 0.06,
+          "best_ask": 0.08,
+          "end_date": "2026-03-30T04:00:00Z",
+          "days_to_resolution": 2,
+          "spread": 0.020000000000000004
+        },
+        {
+          "market_id": "1688344",
+          "slug": "will-bitcoin-dip-to-66k-march-23-29",
+          "question": "Will Bitcoin dip to $66,000 March 23-29?",
+          "yes_price": 0.375,
+          "no_price": 0.625,
+          "volume_24h": 48649.60495900002,
+          "liquidity": 36055.407,
+          "one_day_price_change": 0.0,
+          "best_bid": 0.37,
+          "best_ask": 0.38,
+          "end_date": "2026-03-30T04:00:00Z",
+          "days_to_resolution": 2,
+          "spread": 0.010000000000000009
+        },
+        {
+          "market_id": "1688334",
+          "slug": "will-bitcoin-reach-76k-march-23-29",
+          "question": "Will Bitcoin reach $76,000 March 23-29?",
+          "yes_price": 0.0375,
+          "no_price": 0.9625,
+          "volume_24h": 29841.060540999995,
+          "liquidity": 33753.77612,
+          "one_day_price_change": 0.0,
+          "best_bid": 0.036,
+          "best_ask": 0.039,
+          "end_date": "2026-03-30T04:00:00Z",
+          "days_to_resolution": 2,
+          "spread": 0.0030000000000000027
+        },
+        {
+          "market_id": "1688348",
+          "slug": "will-bitcoin-dip-to-64k-march-23-29",
+          "question": "Will Bitcoin dip to $64,000 March 23-29?",
+          "yes_price": 0.15,
+          "no_price": 0.85,
+          "volume_24h": 34408.89322799999,
+          "liquidity": 33169.6152,
+          "one_day_price_change": 0.0,
+          "best_bid": 0.14,
+          "best_ask": 0.16,
+          "end_date": "2026-03-30T04:00:00Z",
+          "days_to_resolution": 2,
+          "spread": 0.01999999999999999
+        }
+      ]
+    },
+    {
+      "event_id": "238094",
+      "title": "Which countries will conduct military action against Iran by March 31?",
+      "category": null,
+      "markets": [
+        {
+          "market_id": "1472010",
+          "slug": "will-uae-strike-iran-by-march-31",
+          "question": "Will UAE strike Iran by March 31?",
+          "yes_price": 0.055,
+          "no_price": 0.945,
+          "volume_24h": 52348.898314,
+          "liquidity": 62366.8416,
+          "one_day_price_change": 0.0,
+          "best_bid": 0.05,
+          "best_ask": 0.06,
+          "end_date": null,
+          "days_to_resolution": null,
+          "spread": 0.009999999999999995
+        }
+      ]
+    }
+  ]
+}

@@ -1,0 +1,21 @@
+- at: 00:20
+  type: study
+  actions: []
+  notes:
+  - Phase 0-4 Research COMPLETE
+  - '大盤判斷: 偏弱 (地緣政治風險升溫，美機被擊落)'
+  - 'Screener: 週末跳過'
+  - 'Sentiment: PTT 避險氛圍濃，關注石油、軍工、避險股'
+  - 'Macro: 美伊衝突、川普藥品關稅為主要利空'
+  - 'Watchlist: 2330, 2454, 2303 續留，但需注意停損位'
+  - '明日展望: 觀察地緣政治進展，不輕易進場'
+- at: 00:25
+  type: reflection
+  actions: []
+  notes:
+  - 'REFLECTION: RESEARCH PROCESS'
+  - 'Issue: tw-trader CLI missing screener/check-triggers command'
+  - 'Issue: backend2 failed to start, schema mismatch after manual DB edits'
+  - 'Issue: missing web-reader tool in current env'
+  - 'Next: Align RESEARCH.TW.md with actual CLI capabilities'
+  - 'Next: Restore backend2 WAL if I/O error is resolved'

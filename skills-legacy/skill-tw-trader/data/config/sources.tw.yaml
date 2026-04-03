@@ -1,0 +1,145 @@
+# Taiwan market news sources for external web-reader CLI usage.
+# Preferred usage:
+#   uv run web-reader data/config/sources.tw.yaml --tags=tw,macro --format=md
+#   uv run web-reader data/config/sources.tw.yaml --tags=research --format=md
+#   uv run web-reader data/config/sources.tw.yaml --tags=sentiment --format=md   # PTT retail pulse
+
+sources:
+  - name: yahoo-latest-news
+    reader: rss
+    url: "https://tw.stock.yahoo.com/rss?category=news"
+    tags: [general]          # removed [macro]: contains weather/sports/celebrity noise; use yahoo-intl-markets for macro
+    cache:
+      ttl: 900
+
+  # - name: yahoo-tw-market   # commented out: 高度重疊 cnyes-tw-stock + gnews-tw-macro，重複率高、雜訊多
+  #   reader: rss
+  #   url: "https://tw.stock.yahoo.com/rss?category=tw-market"
+  #   tags: [tw, market]
+  #   cache:
+  #     ttl: 900
+
+  - name: yahoo-intl-markets
+    reader: rss
+    url: "https://tw.stock.yahoo.com/rss?category=intl-markets"
+    tags: [macro, intl]
+    cache:
+      ttl: 1800
+
+  - name: yahoo-research
+    reader: rss
+    url: "https://tw.stock.yahoo.com/rss?category=research"
+    tags: [tw, research]     # Yahoo 分析師觀點欄：個股 spotlight、深度分析，比新聞更有觀點
+    cache:
+      ttl: 1800
+
+  - name: yahoo-column
+    reader: rss
+    url: "https://tw.stock.yahoo.com/rss?category=column"
+    tags: [opinion]          # removed [tw]: feed has stale articles (2025-09~11)
+    cache:
+      ttl: 1800
+
+  - name: cnyes-tw-stock
+    reader: cnyes
+    params:
+      category: tw_stock
+      limit: 10              # 從 20 降至 10：有個股 symbol 標記保留，但控制總量
+    tags: [tw, market]       # Cnyes 台股新聞 API，有個股 symbol 標記
+    cache:
+      ttl: 900
+
+  - name: cnyes-headlines
+    reader: cnyes
+    params:
+      category: headline
+      limit: 10
+    tags: [macro]            # Cnyes 國際財經頭條
+    cache:
+      ttl: 900
+
+  - name: ptt-stock
+    reader: ptt
+    params:
+      board: "Stock"
+    tags: [sentiment]        # PTT/Stock 散戶即時情緒；分開掃描: --tags=sentiment
+    cache:
+      ttl: 900
+
+  - name: udn-tw-market
+    reader: rss
+    url: "https://money.udn.com/rssfeed/news/1001/5591"
+    tags: [tw, market]       # 經濟日報台股深度分析，來源與 Yahoo/Cnyes 不重疊
+    cache:
+      ttl: 1800
+
+  - name: gnews-tw-macro
+    reader: gnews
+    params:
+      query: "台股 外資 法人 OR 台積電 OR 半導體"
+      language: "zh-TW"
+      country: "TW"
+      period: "1d"
+      max_results: 15
+    tags: [tw, market]       # GNews 搜尋：聚合多家媒體，針對性查詢台股法人動向
+    cache:
+      ttl: 900
+
+  - name: gnews-semicon
+    reader: gnews
+    params:
+      query: "TSMC OR CoWoS OR HBM OR semiconductor supply chain"
+      language: "en"
+      country: "US"
+      period: "3d"
+      max_results: 10
+    tags: [research]         # GNews 英文半導體：外資視角，補充 EE Times
+    cache:
+      ttl: 3600
+
+  - name: reddit-semiconductors
+    reader: reddit
+    params:
+      subreddit: "semiconductors"
+      sort: "hot"
+      limit: 15
+    tags: [research]         # Reddit r/semiconductors：工程師/業界人士視角，異質性高
+    cache:
+      ttl: 3600
+
+  - name: reddit-investing
+    reader: reddit
+    params:
+      subreddit: "investing"
+      sort: "hot"
+      limit: 15
+    tags: [sentiment]        # Reddit r/investing 純討論：外資散戶在關注什麼
+    cache:
+      ttl: 3600
+
+  - name: reddit-stocks
+    reader: reddit
+    params:
+      subreddit: "stocks"
+      sort: "hot"
+      limit: 15
+    tags: [sentiment]        # Reddit r/stocks 純討論：散戶股票討論
+    cache:
+      ttl: 3600
+
+  - name: reddit-wsb
+    reader: reddit
+    params:
+      subreddit: "wallstreetbets"
+      sort: "hot"
+      limit: 10
+    tags: [sentiment]        # Reddit r/wallstreetbets 純討論：高 beta 情緒指標
+    cache:
+      ttl: 3600
+
+  - name: eetimes
+    reader: rss
+    url: "https://eetimes.com/feed/"
+    tags: [research]         # 半導體業界情報：記憶體、AI晶片、封裝技術，外資研究視角
+    cache:
+      ttl: 3600

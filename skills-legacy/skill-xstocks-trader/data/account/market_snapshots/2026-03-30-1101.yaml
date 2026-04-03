@@ -1,0 +1,150 @@
+timestamp: '2026-03-30T03:01:56.439516+00:00'
+regime:
+  SPY/USDC:
+    status: INSUFFICIENT_DATA
+  QQQ/USDC:
+    status: INSUFFICIENT_DATA
+stocks:
+- symbol: AAPL/USDC
+  quote:
+    symbol: AAPL/USDC
+    price: 249.06
+    change_pct: null
+    high_24h: null
+    low_24h: null
+    volume_24h: null
+  metrics:
+    close: 248.07
+    change_pct: 0.0
+    volume_ratio_20: 0.0
+    dist_to_support_pct: 0.0
+    dist_to_resistance_pct: 1.1
+    rsi_14: 3.71
+    macd_histogram: -1.44
+    stoch_k: 0.0
+    adx_14: 48.25
+    atr_14_pct: 0.13
+    bb_position_ratio: 0.25
+  triggers:
+    rsi:
+    - rsi_14_below_30
+    - rsi_14_below_35
+    momentum:
+    - rsi_14_below_30
+    - rsi_14_below_35
+    - macd_histogram_negative
+    - macd_histogram_contracting
+    - stoch_oversold
+    oversold:
+    - rsi_14_below_30
+    - stoch_oversold
+    macd:
+    - macd_histogram_negative
+    - macd_histogram_contracting
+    bearish:
+    - macd_histogram_negative
+    - price_below_sma_20
+    - price_below_sma_50
+    - price_below_ema_20
+    - sma_20_below_sma_50
+    - ema_20_below_ema_50
+    trend:
+    - price_below_sma_20
+    - price_below_sma_50
+    - price_below_ema_20
+    - sma_20_below_sma_50
+    - sma_20_falling_5d
+    - sma_50_falling_5d
+    - ema_20_below_ema_50
+    - price_below_bb_mid
+    - trend_is_strong
+    volume:
+    - low_volume_day
+    levels:
+    - near_recent_low_lookback
+    - near_support
+    - near_resistance
+    bb:
+    - price_below_bb_mid
+- symbol: TSLA/USDC
+  quote:
+    symbol: TSLA/USDC
+    price: 246.891
+    change_pct: null
+    high_24h: null
+    low_24h: null
+    volume_24h: null
+  metrics:
+    close: 30.64
+    change_pct: -92.19
+    volume_ratio_20: 0.0
+    dist_to_support_pct: 0.0
+    dist_to_resistance_pct: 1179.6
+    rsi_14: 0.0
+    macd_histogram: -5.77
+    stoch_k: 0.0
+    adx_14: 100.0
+    atr_14_pct: 100.74
+    bb_position_ratio: -0.56
+  triggers:
+    rsi:
+    - rsi_14_below_30
+    - rsi_14_below_35
+    momentum:
+    - rsi_14_below_30
+    - rsi_14_below_35
+    - macd_histogram_negative
+    - macd_histogram_crossed_below_zero
+    - macd_histogram_contracting
+    - stoch_oversold
+    oversold:
+    - rsi_14_below_30
+    - bb_outside_lower_band
+    - stoch_oversold
+    macd:
+    - macd_histogram_negative
+    - macd_histogram_crossed_below_zero
+    - macd_histogram_contracting
+    bearish:
+    - macd_histogram_negative
+    - macd_histogram_crossed_below_zero
+    - price_below_sma_20
+    - price_below_sma_50
+    - price_below_ema_20
+    - price_crossed_below_sma_20
+    - sma_20_below_sma_50
+    - ema_20_below_ema_50
+    trend:
+    - price_below_sma_20
+    - price_below_sma_50
+    - price_below_ema_20
+    - price_crossed_below_sma_20
+    - sma_20_below_sma_50
+    - sma_20_falling_5d
+    - sma_50_falling_5d
+    - ema_20_below_ema_50
+    - price_below_bb_mid
+    - trend_is_strong
+    volume:
+    - low_volume_day
+    - obv_falling_5d
+    volatility:
+    - large_daily_move
+    - bb_expanding_vs_prev5
+    - atr_14_above_4_pct
+    - atr_14_above_6_pct
+    levels:
+    - near_recent_low_lookback
+    - near_support
+    bb:
+    - price_below_bb_mid
+    - bb_near_lower_band
+    - bb_outside_lower_band
+    - bb_expanding_vs_prev5
+  warnings:
+  - 'rsi_crossed_below_50: ''>='' not supported between instances of ''NoneType''
+    and ''int'''
+  - 'rsi_entered_oversold: ''>='' not supported between instances of ''NoneType''
+    and ''int'''
+  - 'rsi_fell_below_50_from_prev5_above70: ''>'' not supported between instances of
+    ''NoneType'' and ''int'''

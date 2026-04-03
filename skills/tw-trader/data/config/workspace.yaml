@@ -1,0 +1,25 @@
+id: default
+name: TW Trader
+
+market:
+  profile: tw_equity
+
+agent:
+  enabled: true
+  strategy: tw_momentum
+  prompt_file: prompts/TRADING.TW.md
+  tags:
+    - tw
+    - momentum
+
+risk:
+  execution_mode: paper
+  initial_cash: 1000000
+  max_positions: 5
+  max_position_pct: 30
+  stop_loss_required: true
+  max_price_deviation_pct: 0.03
+
+schedule:
+  enabled: false
+  snapshot_interval_minutes: 30

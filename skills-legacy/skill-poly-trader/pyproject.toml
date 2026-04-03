@@ -1,0 +1,19 @@
+[build-system]
+requires = ["setuptools>=61.0"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "skill-poly-trader"
+version = "0.1.0"
+description = "Minimal Polymarket paper-trading MVP"
+requires-python = ">=3.10"
+
+[project.scripts]
+poly-paper = "skill_poly_trader.cli:main"
+poly-paper-v2 = "skill_poly_trader_v2.cli:main"
+
+[tool.setuptools]
+package-dir = {"" = "src"}
+
+[tool.setuptools.packages.find]
+where = ["src"]

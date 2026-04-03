@@ -1,0 +1,20 @@
+- symbol: "2330"
+  status: watch
+  thesis: "AI capex 與先進製程需求仍強，台積電是最核心的結構型受益股。"
+  trigger: "站回短線整理區上緣並放量突破，再評估加碼或建立新部位。"
+  invalidation: "收盤跌破近期關鍵支撐，代表整理失敗。"
+  updated_at: "2026-04-03"
+
+- symbol: "2454"
+  status: watch
+  thesis: "AI server 與 ASIC 需求延續，聯發科具高階 SoC 與平台優勢。"
+  trigger: "量縮守穩後重新轉強，或突破前高時再進一步確認。"
+  invalidation: "收盤跌回主要均線下方且動能持續轉弱。"
+  updated_at: "2026-04-03"
+
+- symbol: "2303"
+  status: watch
+  thesis: "成熟製程循環復甦仍在早期，聯電受惠庫存回補與產能利用率改善。"
+  trigger: "回測支撐不破並重新放量上攻。"
+  invalidation: "收盤跌破整理平台下緣。"
+  updated_at: "2026-04-03"

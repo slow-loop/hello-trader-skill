@@ -1,0 +1,33 @@
+{
+  "strategy_name": "RangingRsiBbV1",
+  "params": {
+    "max_open_trades": {
+      "max_open_trades": 3
+    },
+    "buy": {
+      "buy_adx_max": 26,
+      "buy_bb_factor": 0.99,
+      "buy_rsi_max": 36
+    },
+    "sell": {
+      "sell_rsi_min": 77
+    },
+    "roi": {
+      "0": 0.143,
+      "356": 0.082,
+      "656": 0.023,
+      "1764": 0
+    },
+    "stoploss": {
+      "stoploss": -0.239
+    },
+    "trailing": {
+      "trailing_stop": true,
+      "trailing_stop_positive": 0.304,
+      "trailing_stop_positive_offset": 0.352,
+      "trailing_only_offset_is_reached": false
+    }
+  },
+  "ft_stratparam_v": 1,
+  "export_time": "2026-03-28 16:57:16.595258+00:00"
+}

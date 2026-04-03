@@ -1,0 +1,60 @@
+outputs:
+  - close
+  - change_pct
+  - volume_ratio_20
+  - rsi_14
+  - macd_histogram
+  - dist_to_support_pct
+  - dist_to_resistance_pct
+
+indicators:
+  - name: rsi_14
+    ta_fn: rsi
+    params: {length: 14}
+    output: true
+  - name: macd
+    ta_fn: macd
+    params: {fast: 12, slow: 26, signal: 9}
+    output: true
+  - name: sma_20
+    ta_fn: sma
+    params: {length: 20}
+    output: true
+  - name: sma_50
+    ta_fn: sma
+    params: {length: 50}
+    output: true
+  - name: atr_14
+    ta_fn: atr
+    params: {length: 14}
+    output: true
+  - name: stoch
+    ta_fn: stoch
+    params: {k: 14, d: 3, smooth_k: 3}
+    output: true
+
+expressions:
+  - name: price_above_sma_20
+    expr: close > sma_20
+    tags: ["trend", "bullish"]
+  - name: price_above_sma_50
+    expr: close > sma_50
+    tags: ["trend", "bullish"]
+  - name: rsi_crossed_above_50
+    expr: rsi_14 > 50 and prev_rsi_14 <= 50
+    tags: ["rsi", "momentum", "bullish"]
+  - name: macd_histogram_positive
+    expr: macd_histogram > 0
+    tags: ["macd", "momentum", "bullish"]
+  - name: near_support
+    expr: dist_to_support_pct >= -1.5
+    tags: ["levels"]
+  - name: near_resistance
+    expr: dist_to_resistance_pct <= 1.5
+    tags: ["levels"]
+  - name: atr_14_above_4_pct
+    expr: atr_14_pct > 4
+    tags: ["volatility"]
+  - name: stoch_bull_cross
+    expr: stoch_k > stoch_d and prev_stoch_k <= prev_stoch_d
+    tags: ["momentum", "bullish"]

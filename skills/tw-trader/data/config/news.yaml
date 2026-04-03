@@ -1,0 +1,9 @@
+enabled: true
+max_items: 8
+sources:
+  - name: yahoo-tw-news
+    kind: rss
+    url: https://tw.stock.yahoo.com/rss?category=news
+  - name: udn-tw-market
+    kind: rss
+    url: https://money.udn.com/rssfeed/news/1001/5591

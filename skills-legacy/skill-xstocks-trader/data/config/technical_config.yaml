@@ -1,0 +1,303 @@
+# Global technical-analysis config shared by holdings and watchlist.
+# Edit this file only when the analysis framework itself changes.
+
+outputs:
+  - close
+  - change_pct
+  - volume_ratio_20
+  - rsi_14
+  - macd_histogram
+  - bb_position_ratio
+  - atr_14_pct
+  - dist_to_support_pct
+  - dist_to_resistance_pct
+  - stoch_k
+  - adx_14
+
+indicators:
+  # Core momentum / trend indicators
+  - name: rsi_14
+    ta_fn: rsi
+    params: {length: 14}
+    output: true
+  - name: macd
+    ta_fn: macd
+    params: {fast: 12, slow: 26, signal: 9}
+    output: true
+  - name: sma_20
+    ta_fn: sma
+    params: {length: 20}
+    output: true
+  - name: sma_50
+    ta_fn: sma
+    params: {length: 50}
+    output: true
+  - name: ema_20
+    ta_fn: ema
+    params: {length: 20}
+    output: true
+  - name: ema_50
+    ta_fn: ema
+    params: {length: 50}
+    output: true
+
+  # Volatility / bands
+  - name: bb
+    ta_fn: bbands
+    params: {length: 20, std: 2.0}
+    output: true
+  - name: atr_14
+    ta_fn: atr
+    params: {length: 14}
+    output: true
+
+  # Flow / oscillator
+  - name: obv
+    ta_fn: obv
+    params: {}
+    output: false
+  - name: stoch
+    ta_fn: stoch
+    params: {k: 14, d: 3, smooth_k: 3}
+    output: true
+  - name: adx
+    ta_fn: adx
+    params: {length: 14}
+    output: true
+
+expressions:
+  # RSI / momentum regime
+  - name: rsi_14_below_30
+    expr: rsi_14 < 30
+    tags: ["rsi", "momentum", "oversold"]
+  - name: rsi_14_below_35
+    expr: rsi_14 < 35
+    tags: ["rsi", "momentum"]
+  - name: rsi_14_above_70
+    expr: rsi_14 > 70
+    tags: ["rsi", "momentum", "overbought"]
+  - name: rsi_crossed_above_50
+    expr: rsi_14 > 50 and prev_rsi_14 <= 50
+    tags: ["rsi", "momentum", "bullish"]
+  - name: rsi_crossed_below_50
+    expr: rsi_14 < 50 and prev_rsi_14 >= 50
+    tags: ["rsi", "momentum", "bearish"]
+  - name: rsi_entered_oversold
+    expr: rsi_14 < 30 and prev_rsi_14 >= 30
+    tags: ["rsi", "momentum", "oversold"]
+  - name: rsi_entered_overbought
+    expr: rsi_14 > 70 and prev_rsi_14 <= 70
+    tags: ["rsi", "momentum", "overbought"]
+  - name: rsi_recovered_above_50_from_prev5_sub30
+    expr: rsi_14 > 50 and prev5_rsi_14 < 30
+    tags: ["rsi", "momentum", "bullish"]
+  - name: rsi_fell_below_50_from_prev5_above70
+    expr: rsi_14 < 50 and prev5_rsi_14 > 70
+    tags: ["rsi", "momentum", "bearish"]
+
+  # MACD / histogram state
+  - name: macd_histogram_positive
+    expr: macd_histogram > 0
+    tags: ["macd", "momentum", "bullish"]
+  - name: macd_histogram_negative
+    expr: macd_histogram < 0
+    tags: ["macd", "momentum", "bearish"]
+  - name: macd_histogram_crossed_above_zero
+    expr: prev_macd_histogram <= 0 and macd_histogram > 0
+    tags: ["macd", "momentum", "bullish"]
+  - name: macd_histogram_crossed_below_zero
+    expr: prev_macd_histogram >= 0 and macd_histogram < 0
+    tags: ["macd", "momentum", "bearish"]
+  - name: macd_histogram_expanding
+    expr: macd_histogram > prev_macd_histogram
+    tags: ["macd", "momentum"]
+  - name: macd_histogram_contracting
+    expr: macd_histogram < prev_macd_histogram
+    tags: ["macd", "momentum"]
+
+  # Moving averages / trend structure
+  - name: price_above_sma_20
+    expr: close > sma_20
+    tags: ["trend", "bullish"]
+  - name: price_below_sma_20
+    expr: close < sma_20
+    tags: ["trend", "bearish"]
+  - name: price_above_sma_50
+    expr: close > sma_50
+    tags: ["trend", "bullish"]
+  - name: price_below_sma_50
+    expr: close < sma_50
+    tags: ["trend", "bearish"]
+  - name: price_above_ema_20
+    expr: close > ema_20
+    tags: ["trend", "bullish"]
+  - name: price_below_ema_20
+    expr: close < ema_20
+    tags: ["trend", "bearish"]
+  - name: price_crossed_above_sma_20
+    expr: close > sma_20 and prev_close <= prev_sma_20
+    tags: ["trend", "bullish"]
+  - name: price_crossed_below_sma_20
+    expr: close < sma_20 and prev_close >= prev_sma_20
+    tags: ["trend", "bearish"]
+  - name: price_crossed_above_sma_50
+    expr: close > sma_50 and prev_close <= prev_sma_50
+    tags: ["trend", "bullish"]
+  - name: price_crossed_below_sma_50
+    expr: close < sma_50 and prev_close >= prev_sma_50
+    tags: ["trend", "bearish"]
+  - name: sma_20_above_sma_50
+    expr: sma_20 > sma_50
+    tags: ["trend", "bullish"]
+  - name: sma_20_below_sma_50
+    expr: sma_20 < sma_50
+    tags: ["trend", "bearish"]
+  - name: sma_20_rising_5d
+    expr: sma_20 > prev5_sma_20
+    tags: ["trend"]
+  - name: sma_20_falling_5d
+    expr: sma_20 < prev5_sma_20
+    tags: ["trend"]
+  - name: sma_50_rising_5d
+    expr: sma_50 > prev5_sma_50
+    tags: ["trend"]
+  - name: sma_50_falling_5d
+    expr: sma_50 < prev5_sma_50
+    tags: ["trend"]
+  - name: ema_20_above_ema_50
+    expr: ema_20 > ema_50
+    tags: ["trend", "bullish"]
+  - name: ema_20_below_ema_50
+    expr: ema_20 < ema_50
+    tags: ["trend", "bearish"]
+  - name: ema_20_crossed_above_ema_50
+    expr: ema_20 > ema_50 and prev_ema_20 <= prev_ema_50
+    tags: ["trend", "bullish"]
+  - name: ema_20_crossed_below_ema_50
+    expr: ema_20 < ema_50 and prev_ema_20 >= prev_ema_50
+    tags: ["trend", "bearish"]
+
+  # Volume / move significance
+  - name: bullish_volume_spike
+    expr: volume > avg_volume_20 * 2 and change_pct > 0
+    tags: ["volume", "bullish"]
+  - name: volume_breakout_1_5x
+    expr: volume > avg_volume_20 * 1.5
+    tags: ["volume"]
+  - name: high_volume_day
+    expr: volume_ratio_20 > 1.2
+    tags: ["volume"]
+  - name: low_volume_day
+    expr: volume_ratio_20 < 0.8
+    tags: ["volume"]
+  - name: large_daily_move
+    expr: abs(change_pct) > 5
+    tags: ["volatility"]
+
+  # Levels / location
+  - name: near_recent_high_lookback
+    expr: close >= recent_high_lookback * 0.98
+    tags: ["levels"]
+  - name: near_recent_low_lookback
+    expr: close <= recent_low_lookback * 1.02
+    tags: ["levels"]
+  - name: near_support
+    expr: dist_to_support_pct >= -1.5
+    tags: ["levels"]
+  - name: near_resistance
+    expr: dist_to_resistance_pct <= 1.5
+    tags: ["levels"]
+
+  # Bollinger bands
+  - name: price_above_bb_mid
+    expr: close > bb_mid
+    tags: ["trend", "bb"]
+  - name: price_below_bb_mid
+    expr: close < bb_mid
+    tags: ["trend", "bb"]
+  - name: bb_near_upper_band
+    expr: bb_position_ratio >= 0.9
+    tags: ["bb"]
+  - name: bb_near_lower_band
+    expr: bb_position_ratio <= 0.1
+    tags: ["bb"]
+  - name: bb_outside_upper_band
+    expr: close > bb_upper
+    tags: ["bb", "overbought"]
+  - name: bb_outside_lower_band
+    expr: close < bb_lower
+    tags: ["bb", "oversold"]
+  - name: bb_squeezing_vs_prev5
+    expr: bb_band_width < (prev5_bb_upper - prev5_bb_lower) * 0.9
+    tags: ["bb", "volatility"]
+  - name: bb_expanding_vs_prev5
+    expr: bb_band_width > (prev5_bb_upper - prev5_bb_lower) * 1.1
+    tags: ["bb", "volatility"]
+
+  # ATR / volatility filters
+  - name: atr_14_above_4_pct
+    expr: atr_14_pct > 4
+    tags: ["volatility"]
+  - name: atr_14_above_6_pct
+    expr: atr_14_pct > 6
+    tags: ["volatility"]
+
+  # OBV / volume trend
+  - name: obv_rising_5d
+    expr: obv > prev5_obv
+    tags: ["volume"]
+  - name: obv_falling_5d
+    expr: obv < prev5_obv
+    tags: ["volume"]
+  - name: obv_bullish_divergence_5d
+    expr: obv > prev5_obv and close <= prev5_close
+    tags: ["volume", "bullish"]
+  - name: obv_bearish_divergence_5d
+    expr: obv < prev5_obv and close >= prev5_close
+    tags: ["volume", "bearish"]
+
+  # Stochastic oscillator
+  - name: stoch_k_above_d
+    expr: stoch_k > stoch_d
+    tags: ["momentum", "bullish"]
+  - name: stoch_k_below_d
+    expr: stoch_k < stoch_d
+    tags: ["momentum", "bearish"]
+  - name: stoch_bull_cross
+    expr: stoch_k > stoch_d and prev_stoch_k <= prev_stoch_d
+    tags: ["momentum", "bullish"]
+  - name: stoch_bear_cross
+    expr: stoch_k < stoch_d and prev_stoch_k >= prev_stoch_d
+    tags: ["momentum", "bearish"]
+  - name: stoch_oversold
+    expr: stoch_k < 20
+    tags: ["momentum", "oversold"]
+  - name: stoch_overbought
+    expr: stoch_k > 80
+    tags: ["momentum", "overbought"]
+
+  # Candle patterns / gap / composite
+  - name: hammer_candle
+    expr: lower_shadow > body_abs * 2 and upper_shadow < body_abs * 0.5 and body_abs > 0
+    tags: ["candle", "bullish"]
+  - name: shooting_star_candle
+    expr: upper_shadow > body_abs * 2 and lower_shadow < body_abs * 0.5 and body_abs > 0
+    tags: ["candle", "bearish"]
+  - name: bullish_engulfing
+    expr: close > open and prev_close < prev_open and close > prev_open and open < prev_close
+    tags: ["candle", "bullish"]
+  - name: bearish_engulfing
+    expr: close < open and prev_close > prev_open and close < prev_open and open > prev_close
+    tags: ["candle", "bearish"]
+  - name: gap_up
+    expr: low > prev_high
+    tags: ["candle", "bullish", "volatility"]
+  - name: gap_down
+    expr: high < prev_low
+    tags: ["candle", "bearish", "volatility"]
+  - name: volume_spike_long_lower_shadow
+    expr: volume_ratio_20 > 1.5 and lower_shadow > body_abs * 2
+    tags: ["reversal", "bullish", "volume"]
+  - name: trend_is_strong
+    expr: adx_14 > 25
+    tags: ["trend"]
