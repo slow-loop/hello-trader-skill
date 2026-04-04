@@ -139,19 +139,62 @@ def journal_add(
 
 @app.command()
 def watchlist():
-    """Show the file-backed watchlist."""
+    """Show the watchlist with analysis/evaluation from backend."""
     data = _api("GET", "/workspace/watchlist")
     typer.echo(json.dumps(data, indent=2, ensure_ascii=False))
 
 
 @app.command()
 def market(
-    snapshot: bool = typer.Option(False, "--snapshot"),
+    symbols: list[str] = typer.Argument(None, help="Ticker symbols to analyze"),
+    snapshot: bool = typer.Option(False, "--snapshot", help="Show latest market snapshot"),
 ):
-    """Show workspace overview or latest market snapshot."""
-    path = "/snapshots/latest" if snapshot else "/overview"
-    data = _api("GET", path)
-    typer.echo(json.dumps(data, indent=2, ensure_ascii=False))
+    """Show market overview or individual stock analysis."""
+    if symbols:
+        for sym in symbols:
+            data = _api("GET", f"/analysis/{sym}")
+            typer.echo(f"=== Analysis for {sym} ===")
+            typer.echo(json.dumps(data, indent=2, ensure_ascii=False))
+            typer.echo("-" * 40)
+    else:
+        path = "/snapshots/latest" if snapshot else "/overview"
+        data = _api("GET", path)
+        typer.echo(json.dumps(data, indent=2, ensure_ascii=False))
+
+
+@app.command()
+def screener(
+    strategy: str = typer.Option("momentum", "--strategy"),
+    no_enrich: bool = typer.Option(False, "--no-enrich"),
+):
+    """Run quantitative screener."""
+    try:
+        data = _api("GET", f"/screener", params={"strategy": strategy, "enrich": not no_enrich})
+        typer.echo(json.dumps(data, indent=2, ensure_ascii=False))
+    except Exception:
+        typer.echo("Unable to run screener from backend.")
+
+
+@app.command()
+def check_triggers():
+    """Evaluate watchlist trigger/invalidation conditions."""
+    try:
+        data = _api("GET", "/workspace/watchlist")
+        rows = []
+        for item in data.get("items", []):
+            evaluation = item.get("evaluation")
+            if evaluation is None:
+                continue
+            rows.append(
+                {
+                    "symbol": item.get("symbol"),
+                    "status": item.get("status"),
+                    **evaluation,
+                }
+            )
+        typer.echo(json.dumps(rows, indent=2, ensure_ascii=False))
+    except Exception:
+        typer.echo("Unable to evaluate watchlist triggers from backend.")
 
 
 @app.command()

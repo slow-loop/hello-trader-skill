@@ -19,3 +19,45 @@
   - 'Issue: missing web-reader tool in current env'
   - 'Next: Align RESEARCH.TW.md with actual CLI capabilities'
   - 'Next: Restore backend2 WAL if I/O error is resolved'
+- at: 07:45
+  type: study
+  actions: []
+  notes:
+  - Phase 0-4 Analysis COMPLETE (Proper)
+  - '大盤判斷: 偏弱且多變 (地緣政治風險激增)'
+  - 'Sentiment: 避險情緒濃厚，PTT 關注石油與國防'
+  - 'Macro: 美伊衝突持續，川普 100% 藥品關稅造成產業壓力'
+  - 'Watchlist: 2330, 2454, 2303 續留，周一開盤觀察支撐'
+- at: 07:55
+  type: reflection
+  actions: []
+  notes:
+  - 'PROBLEMS: (1) backend2 down due to DB I/O error + process conflict; (2) CLI/Prompt
+    mismatch with backend2 API; (3) news fetching might block async loop.'
+  - 'CHANGES: (1) Fixed tw_trader CLI to support market symbols and new commands;
+    (2) Reset backend2 DB and stabilized port 8000; (3) Aligned RESEARCH.TW.md with
+    current workspace structure.'
+  - 'NEXT: (1) Properly implement screener and check-triggers in backend2; (2) Add
+    async timeouts to news fetch in market.py.'
+- at: '10:15'
+  type: study
+  actions: []
+  notes:
+  - 'Phase 0-4 Run #2 COMPLETE (Post-WebReader Integration)'
+  - '大盤狀態: 地緣政治利空深化 (美 F-15E 被擊落)'
+  - 'Sentiment: 市場恐慌情緒蔓延，避險資金轉向 10Y 美債、公用事業、塑化原物料'
+  - 'Screener: 塑化股 (1304 台聚, 1309 台達化) 因油價與中國退稅取消走強'
+  - 'TSMC: 3奈米產能吃緊但受累大盤與馬斯克言論，支撐區待驗證'
+  - 'Action: 週一開盤建議極度保守，原物料股 (1305 華夏) 可列入轉強觀察'
+- at: '15:35'
+  type: study
+  actions: []
+  notes:
+  - Phase 0-5 Research COMPLETE (watchlist-eval flow)
+  - '大盤判斷: 偏弱，週末休市但中東戰事、油價與外資賣壓仍主導風險偏好'
+  - 'Screener: 依 RESEARCH.TW.md 跳過，原因為週末非盤後有效掃描時段'
+  - 'Sentiment: PTT 與 Reddit 仍以戰爭、油價、避險配置為主，散戶情緒偏防守'
+  - 'Macro: 台股主線偏向塑化/石化與原物料，半導體承壓；台積電受3奈米產能吃緊與外資賣壓干擾'
+  - 'Cross-check: 因 Phase 1 跳過，本輪不正式新增新標的；1305/1309 僅列 observation'
+  - 'Watchlist: 2454、2303 依 machine rules invalidated 後移除；2330 保留 watch，但尚未觸發進場條件'
+  - '明日展望: 週一開盤前先看中東局勢與油價，若防禦資金延續再追蹤塑化鏈，半導體須等量價結構修復'

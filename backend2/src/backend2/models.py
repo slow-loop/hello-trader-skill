@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 from datetime import datetime, timezone
 from typing import Any, Literal
 
@@ -63,6 +65,8 @@ class WatchlistItem(BaseModel):
     notes: str = ""
     trigger: str = ""
     invalidation: str = ""
+    trigger_conditions: list[str] = Field(default_factory=list)
+    invalidation_conditions: list[str] = Field(default_factory=list)
     trigger_price: float | None = None
     invalidation_price: float | None = None
     updated_at: str = ""
@@ -70,6 +74,31 @@ class WatchlistItem(BaseModel):
 
 class WatchlistConfig(BaseModel):
     items: list[WatchlistItem] = Field(default_factory=list)
+
+
+class WatchlistConditionResult(BaseModel):
+    expr: str
+    result: bool | None = None
+    error: str | None = None
+
+
+class WatchlistEvaluation(BaseModel):
+    trigger_met: bool = False
+    invalidation_met: bool = False
+    trigger_results: list[WatchlistConditionResult] = Field(default_factory=list)
+    invalidation_results: list[WatchlistConditionResult] = Field(default_factory=list)
+    context_snapshot: dict[str, Any] = Field(default_factory=dict)
+    evaluated_at: str = Field(default_factory=utc_now_iso)
+    error: str | None = None
+
+
+class EvaluatedWatchlistItem(WatchlistItem):
+    analysis: AnalysisReport | None = None
+    evaluation: WatchlistEvaluation | None = None
+
+
+class EvaluatedWatchlistConfig(BaseModel):
+    items: list[EvaluatedWatchlistItem] = Field(default_factory=list)
 
 
 class AgentConfig(BaseModel):
@@ -179,6 +208,24 @@ class AnalysisReport(BaseModel):
     triggers: dict[str, list[str]] = Field(default_factory=dict)
     warnings: list[str] = Field(default_factory=list)
     news: list[NewsItem] = Field(default_factory=list)
+
+
+class ScreenerResult(BaseModel):
+    symbol: str
+    name: str
+    close: float
+    change: float
+    change_pct: float
+    trade_value: float
+    analysis: AnalysisReport | None = None
+    chips: dict[str, Any] = Field(default_factory=dict)
+
+
+class ScreenerResponse(BaseModel):
+    strategy: str
+    market_profile: str
+    generated_at: str = Field(default_factory=utc_now_iso)
+    items: list[ScreenerResult] = Field(default_factory=list)
 
 
 class TradeRecord(BaseModel):

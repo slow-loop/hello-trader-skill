@@ -1,21 +1,40 @@
 from __future__ import annotations
 
+from dataclasses import dataclass
 from datetime import datetime, timedelta, timezone
 import os
 
 import feedparser
 from fugle_marketdata import RestClient
+import httpx
 import pandas as pd
 import yfinance as yf
 
 from backend2.models import AnalysisReport, Bar, MarketOverview, NewsItem, Quote, WorkspaceRuntimeConfig
 from backend2.policies import MarketProfile, get_market_session, market_data_symbol, normalize_symbol
-from backend2.technical import AnalysisConfig, ExpressionSpec, IndicatorSpec, build_technical_analysis, default_analysis_config
+from backend2.technical import (
+    AnalysisConfig,
+    ExpressionSpec,
+    IndicatorSpec,
+    TechnicalAnalysis,
+    build_technical_analysis,
+    default_analysis_config,
+)
 from backend2.workspace import (
     load_analysis_config as load_workspace_analysis_config,
     load_news_config as load_workspace_news_config,
     load_watchlist as load_workspace_watchlist,
 )
+
+
+@dataclass
+class AnalysisSnapshot:
+    symbol: str
+    quote: Quote
+    bars: list[Bar]
+    dataframe: pd.DataFrame
+    technical_config: AnalysisConfig
+    technical_analysis: TechnicalAnalysis
 
 
 def get_quote(symbol: str, profile: MarketProfile) -> Quote:
@@ -145,30 +164,9 @@ def build_overview(config: WorkspaceRuntimeConfig, profile: MarketProfile) -> Ma
 
 
 def build_analysis(symbol: str, config: WorkspaceRuntimeConfig, profile: MarketProfile) -> AnalysisReport:
-    quote = get_quote(symbol, profile)
-    bars = get_bars(
-        symbol,
-        profile,
-        timeframe=config.analysis.timeframe,
-        lookback_days=config.analysis.lookback_days,
-    )
-    rows = [
-        {
-            "date": bar.bar_time,
-            "open": bar.open,
-            "high": bar.high,
-            "low": bar.low,
-            "close": bar.close,
-            "volume": bar.volume,
-        }
-        for bar in bars
-    ]
-    df = pd.DataFrame(rows).sort_values("date").reset_index(drop=True)
-    if "volume" in df.columns:
-        df["volume"] = df["volume"].fillna(0)
-
-    technical_config = _build_analysis_config(config)
-    analysis = build_technical_analysis(df, technical_config)
+    snapshot = analyze_symbol(symbol, config, profile)
+    analysis = snapshot.technical_analysis
+    technical_config = snapshot.technical_config
     metrics = {
         key: (round(value, 4) if isinstance(value, float) else value)
         for key, value in analysis.values.items()
@@ -176,12 +174,33 @@ def build_analysis(symbol: str, config: WorkspaceRuntimeConfig, profile: MarketP
     }
 
     return AnalysisReport(
-        symbol=normalize_symbol(symbol, profile),
-        quote=quote,
+        symbol=snapshot.symbol,
+        quote=snapshot.quote,
         metrics=metrics,
         triggers={tag: names for tag, names in analysis.triggers.items() if names},
         warnings=analysis.warnings,
         news=[item for item in get_news(config) if symbol.upper() in item.title.upper()],
+    )
+
+
+def analyze_symbol(symbol: str, config: WorkspaceRuntimeConfig, profile: MarketProfile) -> AnalysisSnapshot:
+    quote = get_quote(symbol, profile)
+    bars = get_bars(
+        symbol,
+        profile,
+        timeframe=config.analysis.timeframe,
+        lookback_days=config.analysis.lookback_days,
+    )
+    df = bars_to_dataframe(bars)
+    technical_config = _build_analysis_config(config)
+    analysis = build_technical_analysis(df, technical_config)
+    return AnalysisSnapshot(
+        symbol=normalize_symbol(symbol, profile),
+        quote=quote,
+        bars=bars,
+        dataframe=df,
+        technical_config=technical_config,
+        technical_analysis=analysis,
     )
 
 
@@ -210,6 +229,24 @@ def get_news(config: WorkspaceRuntimeConfig) -> list[NewsItem]:
             if len(items) >= news_config.max_items:
                 return items
     return items
+
+
+def bars_to_dataframe(bars: list[Bar]) -> pd.DataFrame:
+    rows = [
+        {
+            "date": bar.bar_time,
+            "open": bar.open,
+            "high": bar.high,
+            "low": bar.low,
+            "close": bar.close,
+            "volume": bar.volume,
+        }
+        for bar in bars
+    ]
+    df = pd.DataFrame(rows).sort_values("date").reset_index(drop=True)
+    if "volume" in df.columns:
+        df["volume"] = df["volume"].fillna(0)
+    return df
 
 
 def _build_analysis_config(config: WorkspaceRuntimeConfig) -> AnalysisConfig:

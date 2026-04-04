@@ -22,6 +22,8 @@ from backend2.runtime import (
     place_order,
     update_orders,
 )
+from backend2.screener import run_screener
+from backend2.watchlist import load_evaluated_watchlist
 
 
 def create_app() -> FastAPI:
@@ -86,6 +88,21 @@ def create_app() -> FastAPI:
         except Exception as exc:
             raise HTTPException(status_code=500, detail=str(exc)) from exc
 
+    @app.get("/screener")
+    async def get_workspace_screener(
+        strategy: str = "momentum",
+        enrich: bool = True,
+        limit: int = 30,
+    ):
+        try:
+            config = get_runtime_config()
+            profile = get_market_profile_for_runtime(config)
+            return run_screener(config, profile, strategy=strategy, enrich=enrich, limit=limit)
+        except ValueError as exc:
+            raise HTTPException(status_code=400, detail=str(exc)) from exc
+        except Exception as exc:
+            raise HTTPException(status_code=500, detail=str(exc)) from exc
+
     @app.post("/orders")
     async def submit_order(request: OrderRequest):
         return {"message": await place_order(request)}
@@ -103,9 +120,13 @@ def create_app() -> FastAPI:
         return await db.get_latest_market_snapshot(workspace.load_runtime_config().id)
 
     @app.get("/workspace/watchlist")
-    async def get_workspace_watchlist():
+    async def get_workspace_watchlist(evaluate: bool = True):
         try:
-            return workspace.load_watchlist(get_runtime_config())
+            config = get_runtime_config()
+            if not evaluate:
+                return workspace.load_watchlist(config)
+            profile = get_market_profile_for_runtime(config)
+            return load_evaluated_watchlist(config, profile)
         except ValueError as exc:
             raise HTTPException(status_code=400, detail=str(exc)) from exc
 

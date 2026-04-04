@@ -23,6 +23,7 @@ uv run uvicorn backend2.main:app --reload
 - `GET /account`
 - `GET /overview`
 - `GET /analysis/2330`
+- `GET /screener?strategy=momentum`
 - `POST /orders`
 - `GET /workspace/watchlist`
 - `POST /workspace/journals/2026-04-03/entries`
@@ -33,6 +34,7 @@ uv run uvicorn backend2.main:app --reload
 - Trading state is stored in SQLite.
 - Runtime and strategy config remain file-based under `skills/...`.
 - Workspace state can stay file-based and be accessed through typed backend APIs.
+- `GET /workspace/watchlist` returns raw watchlist fields plus per-symbol `analysis` and `evaluation`.
 - API is single-workspace; there is no room layer anymore.
 - `tw_equity`, `us_equity`, `xstocks`, and `crypto` profiles exist.
 - `xstocks` currently uses underlying equity prices for analysis, not venue-native CCXT pricing.

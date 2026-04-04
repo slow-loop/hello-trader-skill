@@ -52,7 +52,13 @@ def test_watchlist_roundtrip(temp_workspace):
     
     # Save some items
     new_wl = WatchlistConfig(items=[
-        WatchlistItem(symbol="2330", thesis="TSMC 1nm success", status="watch")
+        WatchlistItem(
+            symbol="2330",
+            thesis="TSMC 1nm success",
+            status="watch",
+            trigger_conditions=["close > 1000"],
+            invalidation_conditions=["close < 900"],
+        )
     ])
     save_watchlist(config, new_wl)
     
@@ -61,6 +67,8 @@ def test_watchlist_roundtrip(temp_workspace):
     assert len(wl_reloaded.items) == 1
     assert wl_reloaded.items[0].symbol == "2330"
     assert wl_reloaded.items[0].thesis == "TSMC 1nm success"
+    assert wl_reloaded.items[0].trigger_conditions == ["close > 1000"]
+    assert wl_reloaded.items[0].invalidation_conditions == ["close < 900"]
 
 def test_upsert_watchlist_item(temp_workspace):
     root, config = temp_workspace

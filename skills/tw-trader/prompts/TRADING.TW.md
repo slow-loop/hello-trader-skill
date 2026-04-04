@@ -13,7 +13,7 @@
 
 ## 檔案
 
-**專案根目錄**：`/Users/cw/Documents/GitHub/hello-invest/apps/skill-tw-trader`，所有檔案路徑都相對於此目錄
+**專案根目錄**：`/Users/cw/Documents/GitHub/hello-trader-skill/skills/tw-trader`，所有檔案路徑都相對於此目錄
 
 - `data/account/lessons.md`: 可重複使用的規則與教訓
 - `data/account/watchlist.yaml`: 追蹤中的股票與簡短 thesis
@@ -29,36 +29,29 @@
 
 ```bash
 # 大盤總覽
-uv run python -m skill_tw_trader.cli market
+uv run python -m tw_trader.cli market
 
 # 個股分析
-uv run python -m skill_tw_trader.cli market 2330
-uv run python -m skill_tw_trader.cli market 2330 2303 2454
+uv run python -m tw_trader.cli market 2330
+uv run python -m tw_trader.cli market 2330 2303 2454
 
 # 帳戶狀態
-uv run python -m skill_tw_trader.cli account
+uv run python -m tw_trader.cli account
+
+# Watchlist（含 raw + analysis + evaluation）
+uv run python -m tw_trader.cli watchlist
 
 # 外部新聞掃描（直接讀輸出，不另存 feed）
 uv run web-reader data/config/sources.tw.yaml --tags=tw,macro,sentiment
 
 # 買進（含策略標籤與信心度，snapshot 自動生成）
-uv run python -m skill_tw_trader.cli buy 2330.TW --qty 100 --price 950 --stop-loss 895 --take-profit 1050 --strategy momentum --tags "ai,semiconductor" --confidence 0.7 --reason "AI capex 趨勢延續"
+uv run python -m tw_trader.cli buy 2330.TW --qty 100 --price 950 --stop-loss 895 --take-profit 1050 --strategy momentum --reason "AI capex 趨勢延續"
 
 # 賣出
-uv run python -m skill_tw_trader.cli sell 2330.TW --qty 100 --price 980 --reason "觸及止盈目標"
+uv run python -m tw_trader.cli sell 2330.TW --qty 100 --price 980 --reason "觸及止盈目標"
 
-# 設定/更新出場條件
-uv run python -m skill_tw_trader.cli set-exit 2330.TW --stop-loss 1600 --take-profit 2000
-
-# 查詢相似歷史交易（進場前參考）
-uv run python -m skill_tw_trader.cli recall 2313.TW --top 5
-
-# Watchlist trigger 條件檢查
-uv run python -m skill_tw_trader.cli check-triggers
-
-# 績效歸因
-uv run python -m skill_tw_trader.cli performance --by strategy
-uv run python -m skill_tw_trader.cli performance --by tags
+# Watchlist trigger/invalidation 摘要（optional shorthand）
+uv run python -m tw_trader.cli check-triggers
 ```
 
 ## 流程
@@ -67,7 +60,8 @@ uv run python -m skill_tw_trader.cli performance --by tags
 2. **掃全局**：
    - `cli market`（大盤 + headline）
    - `cli account`（持倉 + 未成交單）
-   - `cli check-triggers`（trigger / invalidation）
+   - `cli watchlist`（raw + analysis + evaluation 的完整 view）
+   - `cli check-triggers`（optional shorthand；只看 evaluation 摘要）
    - `uv run web-reader data/config/sources.tw.yaml --tags=tw,macro,sentiment`（當日新聞，每輪必跑）
 3. **持倉管理**（有持倉時）：逐一檢視持倉標的：
    - 是否觸及 stop-loss / take-profit？
@@ -75,7 +69,6 @@ uv run python -m skill_tw_trader.cli performance --by tags
    - → `sell`（必帶 `--reason`）/ `set-exit`（更新止損止盈）/ `hold`
 4. **新進場**（有候選時）：對 trigger 已達標或接近的 watchlist 標的：
    - 跑 `cli market <symbol>` 看個股詳細
-   - 跑 `cli recall <symbol>` 查歷史
    - → `buy`（參照 `## CLI` 中的 buy 範例，所有參數必填）/ `skip`
 5. **紀錄**：append `type: trade` journal 或正式 research
 

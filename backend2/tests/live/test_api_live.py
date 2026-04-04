@@ -53,3 +53,28 @@ async def test_api_quote_live():
     data = response.json()
     assert data["symbol"] == "AAPL"
     assert data["price"] > 0
+
+
+@pytest.mark.live
+@pytest.mark.asyncio
+async def test_api_watchlist_live():
+    async with AsyncClient(transport=ASGITransport(app=app), base_url="http://test") as ac:
+        response = await ac.get("/workspace/watchlist")
+    assert response.status_code == 200
+    data = response.json()
+    assert "items" in data
+    if data["items"]:
+        assert "analysis" in data["items"][0]
+
+
+@pytest.mark.live
+@pytest.mark.asyncio
+async def test_api_screener_live():
+    async with AsyncClient(transport=ASGITransport(app=app), base_url="http://test") as ac:
+        response = await ac.get("/screener", params={"strategy": "momentum", "enrich": False, "limit": 5})
+    assert response.status_code == 200
+    data = response.json()
+    assert data["strategy"] == "momentum"
+    assert data["market_profile"] == "tw_equity"
+    assert isinstance(data["items"], list)
+    assert data["items"]

@@ -7,7 +7,7 @@
 
 ## 檔案
 
-**專案根目錄**：`/Users/cw/Documents/GitHub/hello-invest/apps/skill-tw-trader`，所有檔案路徑都相對於此目錄
+**專案根目錄**：`/Users/cw/Documents/GitHub/hello-trader-skill/skills/tw-trader`，所有檔案路徑都相對於此目錄
 
 - `data/account/lessons.md`: 可重複使用的規則與教訓
 - `data/account/watchlist.yaml`: 追蹤中的股票與簡短 thesis
@@ -20,22 +20,25 @@
 
 ```bash
 # 量化雷達（含技術指標 + 籌碼 enrichment）
-uv run python -m skill_tw_trader.cli screener --strategy=momentum
+uv run python -m tw_trader.cli screener --strategy=momentum
 # 快速版（不做 enrichment，只看成交值與漲跌）
-uv run python -m skill_tw_trader.cli screener --strategy=momentum --no-enrich
+uv run python -m tw_trader.cli screener --strategy=momentum --no-enrich
 
 # 大盤總覽
-uv run python -m skill_tw_trader.cli market
+uv run python -m tw_trader.cli market
 
 # 個股分析
-uv run python -m skill_tw_trader.cli market 2330
-uv run python -m skill_tw_trader.cli market 2330 2303 2454
+uv run python -m tw_trader.cli market 2330
+uv run python -m tw_trader.cli market 2330 2303 2454
 
 # 帳戶狀態
-uv run python -m skill_tw_trader.cli account
+uv run python -m tw_trader.cli account
 
-# Watchlist trigger/invalidation 條件機器檢查
-uv run python -m skill_tw_trader.cli check-triggers
+# Watchlist（含 raw + analysis + evaluation）
+uv run python -m tw_trader.cli watchlist
+
+# Watchlist trigger/invalidation 條件摘要（optional shorthand）
+uv run python -m tw_trader.cli check-triggers
 
 # 散戶情緒（PTT/Reddit）
 uv run web-reader data/config/sources.tw.yaml --tags=sentiment
@@ -63,16 +66,18 @@ uv run web-reader data/config/sources.tw.yaml --tags=research
 ### Phase 0：準備
 
 1. 讀 `data/account/lessons.md`、`data/account/watchlist.yaml`、最近 journal、查看目前持倉 `cli account`
-2. 跑 `cli check-triggers` 取得所有 watchlist 標的的 trigger/invalidation 機器評估結果
+2. 跑 `cli watchlist` 取得 watchlist 的 raw + analysis + evaluation
+   - `watchlist` 是唯一完整來源；不要再期待獨立的 trigger 檔案或獨立資料來源
+   - `check-triggers` 只是 `watchlist.evaluation` 的摘要 view，適合快速看 trigger/invalidation 狀態
 3. **強制更新預檢（讀完即執行）**：對每個 watchlist 標的，確認：
    - (a) 現價是否相對 thesis 基準價移動 >10%？若是 → 本次研究強制重跑個股交易研究
-   - (b) `check-triggers` 顯示 `invalidation: INVALIDATED`？若是 → 本次研究立刻移除該標的，不帶入後續步驟
-   - (c) `check-triggers` 顯示 `trigger: TRIGGERED`？標注為高優先進場候選
+   - (b) `watchlist.evaluation.invalidation_met=true`？若是 → 本次研究立刻移除該標的，不帶入後續步驟
+   - (c) `watchlist.evaluation.trigger_met=true`？標注為高優先進場候選
    - 不完成預檢，不進行 Phase 1
 
 ### Phase 1：量化雷達（數據先行，鎖定名單）
 
-跑 `uv run python -m skill_tw_trader.cli screener --strategy=momentum`
+跑 `uv run python -m tw_trader.cli screener --strategy=momentum`
 
 Screener 現在自動附帶技術指標（RSI, ADX, 量比）與籌碼資訊（外資/投信連買天數, 融資趨勢），可直接用於篩選：
 - 記錄上榜名單（含指標），標注哪些是 watchlist 已有、哪些是新面孔
