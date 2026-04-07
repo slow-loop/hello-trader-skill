@@ -1,0 +1,13 @@
+[project]
+name = "scripts"
+version = "0.1.0"
+description = "Add your description here"
+readme = "README.md"
+requires-python = ">=3.13"
+dependencies = [
+    "nanobot-ai>=0.1.4.post6",
+    "web-reader[mcp]",
+]
+
+[tool.uv.sources]
+web-reader = { path = "../../hello-invest/libs/web-reader", editable = true }

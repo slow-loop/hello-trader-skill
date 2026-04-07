@@ -148,3 +148,5 @@ dist
 
 .DS_Store
 tmp/
+
+.nanobot-workspace
