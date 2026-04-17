@@ -167,7 +167,7 @@ def build_workspace_config() -> dict[str, object]:
                         "web-reader-mcp",
                     ],
                     "enabledTools": [
-                        "read_url_content",
+                        "read_url",
                         "read_config",
                         "web_reader_server_info",
                     ],
@@ -214,6 +214,24 @@ def resolve_nanobot_config(args: argparse.Namespace) -> Path | None:
 
     searched = "\n".join(f"- {path}" for path in candidates)
     raise SystemExit(f"Nanobot config not found. Searched:\n{searched}")
+
+
+def read_agent_defaults(config_path: Path) -> tuple[str | None, str | None]:
+    try:
+        config = json.loads(config_path.read_text(encoding="utf-8"))
+    except (OSError, json.JSONDecodeError):
+        return None, None
+
+    defaults = config.get("agents", {}).get("defaults", {})
+    if not isinstance(defaults, dict):
+        return None, None
+
+    provider = defaults.get("provider")
+    model = defaults.get("model")
+    return (
+        provider if isinstance(provider, str) and provider else None,
+        model if isinstance(model, str) and model else None,
+    )
 
 
 def build_hooks(stream: bool):
@@ -276,8 +294,13 @@ async def run_agent(args: argparse.Namespace) -> int:
     Nanobot = load_nanobot_class()
     bot = Nanobot.from_config(config_path=nanobot_config, workspace=workspace)
     session_key = args.session_key.strip() or f"sdk:trader-poc:{int(asyncio.get_running_loop().time())}"
+    provider, model = read_agent_defaults(nanobot_config)
     print(f"[session] {session_key}", flush=True)
     print(f"[config] {nanobot_config}", flush=True)
+    if provider:
+        print(f"[provider] {provider}", flush=True)
+    if model:
+        print(f"[model] {model}", flush=True)
     message = build_run_message(
         prompt_path,
         context_lines=(

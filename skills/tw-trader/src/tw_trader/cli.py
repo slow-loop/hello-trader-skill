@@ -8,6 +8,8 @@ Usage:
   tw-trader watchlist
   tw-trader journal
   tw-trader journal-add --note "..." --note "..."
+  tw-trader lessons
+  tw-trader lessons-set --file data/account/lessons.md
   tw-trader trades
 """
 
@@ -16,6 +18,7 @@ from __future__ import annotations
 import json
 import os
 from datetime import date
+from pathlib import Path
 from typing import Optional
 
 import httpx
@@ -138,6 +141,34 @@ def journal_add(
 
 
 @app.command()
+def lessons():
+    """Show lessons markdown."""
+    data = _api("GET", "/workspace/lessons")
+    typer.echo(data.get("content", ""))
+
+
+@app.command()
+def lessons_set(
+    content: Optional[str] = typer.Option(None, "--content", help="Replacement markdown content"),
+    file: Optional[Path] = typer.Option(None, "--file", help="Read replacement markdown from file"),
+):
+    """Replace lessons markdown through the backend workspace API."""
+    if (content is None) == (file is None):
+        typer.echo("Provide exactly one of --content or --file.", err=True)
+        raise typer.Exit(1)
+
+    if file is not None:
+        try:
+            content = file.read_text(encoding="utf-8")
+        except OSError as exc:
+            typer.echo(f"Unable to read {file}: {exc}", err=True)
+            raise typer.Exit(1) from exc
+
+    data = _api("PUT", "/workspace/lessons", json={"content": content or ""})
+    typer.echo(f"Updated lessons ({len(data.get('content', ''))} chars).")
+
+
+@app.command()
 def watchlist():
     """Show the watchlist with analysis/evaluation from backend."""
     data = _api("GET", "/workspace/watchlist")
@@ -202,6 +233,23 @@ def heartbeat():
     """Manually trigger a heartbeat."""
     data = _api("POST", "/heartbeat")
     typer.echo(json.dumps(data, indent=2, ensure_ascii=False))
+
+
+@app.command()
+def publish(
+    date_arg: Optional[str] = typer.Option(
+        None, "--date", "-d", help="Target date YYYY-MM-DD (default: today)"
+    ),
+):
+    """Render daily publish artifacts (poster.png) from post.yaml + backend2 state."""
+    from tw_trader.publish import render_poster
+
+    try:
+        path = render_poster(date_arg)
+    except Exception as exc:
+        typer.echo(f"publish failed: {exc}", err=True)
+        raise typer.Exit(1)
+    typer.echo(f"wrote {path}")
 
 
 if __name__ == "__main__":

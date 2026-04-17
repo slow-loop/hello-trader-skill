@@ -11,8 +11,8 @@ from backend2.models import (
     WatchlistItem,
     WorkspaceRuntimeConfig,
 )
-from backend2.policies import MarketProfile, get_market_session
-from backend2.technical import _evaluate_expression
+from market_core import MarketProfile, get_market_session
+from market_core.technical import _evaluate_expression
 from backend2.workspace import load_watchlist
 
 SNAPSHOT_KEYS = (

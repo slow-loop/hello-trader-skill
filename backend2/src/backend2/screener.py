@@ -12,7 +12,7 @@ import pandas as pd
 
 from backend2.market import analyze_symbol
 from backend2.models import AnalysisReport, ScreenerResponse, ScreenerResult, WorkspaceRuntimeConfig
-from backend2.policies import MarketProfile, get_market_profile, normalize_symbol
+from market_core import MarketProfile, get_market_profile, normalize_symbol
 
 logger = logging.getLogger(__name__)
 

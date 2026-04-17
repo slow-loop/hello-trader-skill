@@ -1,6 +1,6 @@
 import pytest
 from backend2.market import get_quote, get_bars, get_news
-from backend2.policies import MARKET_PROFILES
+from market_core import MARKET_PROFILES
 from backend2.models import WorkspaceRuntimeConfig, MarketConfig, NewsConfig, NewsSourceConfig
 
 @pytest.fixture

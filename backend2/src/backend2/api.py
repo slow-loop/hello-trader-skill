@@ -115,6 +115,10 @@ def create_app() -> FastAPI:
     async def run_heartbeat():
         return await heartbeat()
 
+    @app.get("/equity-history")
+    async def get_equity_history(days: int = 90):
+        return await db.list_account_snapshots(workspace.load_runtime_config().id, days=days)
+
     @app.get("/snapshots/latest")
     async def latest_snapshot():
         return await db.get_latest_market_snapshot(workspace.load_runtime_config().id)

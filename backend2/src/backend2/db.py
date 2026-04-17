@@ -64,6 +64,15 @@ async def _init_tables(conn: aiosqlite.Connection) -> None:
             data           TEXT NOT NULL
         );
         CREATE INDEX IF NOT EXISTS idx_snapshots_workspace ON market_snapshots (workspace_id, captured_at DESC);
+
+        CREATE TABLE IF NOT EXISTS account_snapshots (
+            workspace_id  TEXT NOT NULL,
+            date          TEXT NOT NULL,
+            account_value REAL NOT NULL,
+            cash          REAL NOT NULL,
+            market_value  REAL NOT NULL,
+            PRIMARY KEY (workspace_id, date)
+        );
         """
     )
     await conn.commit()
@@ -130,6 +139,44 @@ async def insert_market_snapshot(
         (workspace_id, market_profile, phase, ts, json.dumps(data, ensure_ascii=False)),
     )
     await conn.commit()
+
+
+async def upsert_account_snapshot(
+    workspace_id: str,
+    date: str,
+    account_value: float,
+    cash: float,
+    market_value: float,
+) -> None:
+    conn = await get_connection()
+    await conn.execute(
+        """
+        INSERT INTO account_snapshots (workspace_id, date, account_value, cash, market_value)
+        VALUES (?, ?, ?, ?, ?)
+        ON CONFLICT(workspace_id, date) DO UPDATE SET
+            account_value = excluded.account_value,
+            cash = excluded.cash,
+            market_value = excluded.market_value
+        """,
+        (workspace_id, date, account_value, cash, market_value),
+    )
+    await conn.commit()
+
+
+async def list_account_snapshots(workspace_id: str, days: int = 90) -> list[dict[str, Any]]:
+    conn = await get_connection()
+    async with conn.execute(
+        """
+        SELECT date, account_value, cash, market_value
+        FROM account_snapshots
+        WHERE workspace_id = ?
+        ORDER BY date ASC
+        LIMIT ?
+        """,
+        (workspace_id, days),
+    ) as cur:
+        rows = await cur.fetchall()
+        return [{"date": r["date"], "account_value": r["account_value"], "cash": r["cash"], "market_value": r["market_value"]} for r in rows]
 
 
 async def get_latest_market_snapshot(workspace_id: str) -> dict[str, Any] | None:

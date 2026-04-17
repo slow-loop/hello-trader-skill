@@ -58,7 +58,7 @@ hello-trader-skill/
 
 目前提供這些通用 tools：
 
-- `read_url_content`
+- `read_url`
 - `read_config`
 - `web_reader_server_info`
 
@@ -104,7 +104,7 @@ uv sync
           "web-reader-mcp"
         ],
         "enabledTools": [
-          "read_url_content",
+          "read_url",
           "read_config",
           "web_reader_server_info"
         ],
@@ -146,8 +146,8 @@ uv run python run_nanobot.py \
 
 [wallstreet-research](/Users/cw/Documents/GitHub/hello-trader-skill/skills/wallstreet-research/SKILL.md) 應優先使用通用 MCP tools：
 
+- `read_url`
 - `read_config`
-- `read_url_content`
 - `web_reader_server_info`
 
 不要在 skill 內再教 agent 直接跑 shell CLI。
@@ -158,5 +158,5 @@ uv run python run_nanobot.py \
 
 - MCP server 可以被 `stdio` client 連上
 - `list_tools` 可列出 `web-reader` 通用 tools
+- `read_url` 可直接讀單一 URL 或 pseudo-URL
 - `read_config` 可讀取 `skills/tw-trader/data/config/sources.tw.yaml`
-- `read_url_content` 可直接讀單一 URL 或 pseudo-URL

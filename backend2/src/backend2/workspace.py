@@ -18,7 +18,7 @@ from backend2.models import (
     WorkspaceConfig,
     WorkspaceRuntimeConfig,
 )
-from backend2.technical import AnalysisConfig, ExpressionSpec, IndicatorSpec
+from market_core.technical import AnalysisConfig, ExpressionSpec, IndicatorSpec
 
 PROJECT_ROOT = Path(__file__).resolve().parents[2]
 DEFAULT_WORKSPACE_ROOT = "../skills/tw-trader"

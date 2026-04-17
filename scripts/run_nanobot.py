@@ -1,3 +1,10 @@
+"""Run nanobot with the repo-local workspace and MCP setup.
+
+Usage:
+    cd /Users/cw/Documents/GitHub/hello-trader-skill
+    uv run --project scripts python scripts/run_nanobot.py
+"""
+
 from __future__ import annotations
 
 import argparse
@@ -9,10 +16,7 @@ from pathlib import Path
 from nanobot import Nanobot
 from nanobot.agent.hook import AgentHook
 
-try:
-    from scripts.trader_run_common import REPO_ROOT
-except ModuleNotFoundError:
-    from trader_run_common import REPO_ROOT  # type: ignore[no-redef]
+from scripts.trader_run_common import REPO_ROOT
 
 DEFAULT_SESSION_KEY_PREFIX = "sdk:trader-poc"
 DEFAULT_WORKSPACE = REPO_ROOT / ".nanobot-workspace"
@@ -61,11 +65,16 @@ def parse_args() -> argparse.Namespace:
 
 def build_stream_hook(agent_hook_cls: type[AgentHook]) -> AgentHook:
     class LiveConsoleHook(agent_hook_cls):
+        HEARTBEAT_INTERVAL_S = 5.0
+        TOOL_ARGS_PREVIEW_LIMIT = 240
+        TOOL_DETAIL_PREVIEW_LIMIT = 600
+
         def __init__(self) -> None:
             self.streamed_any = False
             self._line_open = False
             self._reasoning_line_open = False
             self._iteration_start = time.monotonic()
+            self._heartbeat_task: asyncio.Task[None] | None = None
             self._tool_started_at: dict[str, float] = {}
             self.iteration_reports: list[dict[str, object]] = []
             self.final_stop_reason: str | None = None
@@ -82,6 +91,11 @@ def build_stream_hook(agent_hook_cls: type[AgentHook]) -> AgentHook:
                 print("", flush=True)
                 self._reasoning_line_open = False
 
+        def _stop_heartbeat(self) -> None:
+            if self._heartbeat_task is not None:
+                self._heartbeat_task.cancel()
+                self._heartbeat_task = None
+
         @staticmethod
         def _tool_key(tool_call) -> str:
             payload = json.dumps(tool_call.arguments, ensure_ascii=False, sort_keys=True)
@@ -94,13 +108,31 @@ def build_stream_hook(agent_hook_cls: type[AgentHook]) -> AgentHook:
                 return clean
             return clean[:limit] + "..."
 
+        async def _heartbeat_loop(self, iteration_index: int) -> None:
+            try:
+                while True:
+                    await asyncio.sleep(self.HEARTBEAT_INTERVAL_S)
+                    elapsed = time.monotonic() - self._iteration_start
+                    self._close_line()
+                    print(
+                        f"[iter {iteration_index}] still thinking: {elapsed:.1f}s elapsed, no visible reasoning/content yet",
+                        flush=True,
+                    )
+            except asyncio.CancelledError:
+                return
+
         async def before_iteration(self, context) -> None:
+            self._stop_heartbeat()
             self._iteration_start = time.monotonic()
             print(f"\n[iter {context.iteration + 1}] thinking", flush=True)
+            self._heartbeat_task = asyncio.create_task(
+                self._heartbeat_loop(context.iteration + 1)
+            )
 
         async def on_stream(self, context, delta: str) -> None:
             if not delta:
                 return
+            self._stop_heartbeat()
             if not self._line_open:
                 print("\nassistant> ", end="", flush=True)
                 self._line_open = True
@@ -110,6 +142,7 @@ def build_stream_hook(agent_hook_cls: type[AgentHook]) -> AgentHook:
         async def on_reasoning_stream(self, context, delta: str) -> None:
             if not delta:
                 return
+            self._stop_heartbeat()
             if self._line_open:
                 print("", flush=True)
                 self._line_open = False
@@ -124,13 +157,14 @@ def build_stream_hook(agent_hook_cls: type[AgentHook]) -> AgentHook:
                 self._close_line()
 
         async def before_execute_tools(self, context) -> None:
+            self._stop_heartbeat()
             self._close_line()
             for tool_call in context.tool_calls:
                 key = self._tool_key(tool_call)
                 self._tool_started_at[key] = time.monotonic()
                 args_preview = self._truncate(
                     json.dumps(tool_call.arguments, ensure_ascii=False, sort_keys=True),
-                    limit=120,
+                    limit=self.TOOL_ARGS_PREVIEW_LIMIT,
                 )
                 print(
                     f"[iter {context.iteration + 1}] tool start: {tool_call.name}({args_preview})",
@@ -138,6 +172,7 @@ def build_stream_hook(agent_hook_cls: type[AgentHook]) -> AgentHook:
                 )
 
         async def after_iteration(self, context) -> None:
+            self._stop_heartbeat()
             elapsed = time.monotonic() - self._iteration_start
             usage = context.usage or {}
             usage_summary = {
@@ -159,7 +194,10 @@ def build_stream_hook(agent_hook_cls: type[AgentHook]) -> AgentHook:
                 started_at = self._tool_started_at.pop(key, None)
                 tool_elapsed = None if started_at is None else round(time.monotonic() - started_at, 2)
                 status = (event or {}).get("status", "unknown")
-                detail = self._truncate((event or {}).get("detail", ""))
+                detail = self._truncate(
+                    (event or {}).get("detail", ""),
+                    limit=self.TOOL_DETAIL_PREVIEW_LIMIT,
+                )
                 print(
                     f"[iter {context.iteration + 1}] tool end: {tool_call.name} status={status}"
                     + (f" elapsed={tool_elapsed}s" if tool_elapsed is not None else "")
@@ -232,7 +270,7 @@ def build_workspace_config() -> dict[str, object]:
                         "web-reader-mcp",
                     ],
                     "enabledTools": [
-                        "read_url_content",
+                        "read_url",
                         "read_config",
                         "web_reader_server_info",
                     ],
@@ -280,6 +318,24 @@ def resolve_config_path(workspace: Path, configured_path: Path | None) -> Path:
     raise SystemExit(f"Nanobot config not found. Searched:\n{searched}")
 
 
+def read_agent_defaults(config_path: Path) -> tuple[str | None, str | None]:
+    try:
+        config = json.loads(config_path.read_text(encoding="utf-8"))
+    except (OSError, json.JSONDecodeError):
+        return None, None
+
+    defaults = config.get("agents", {}).get("defaults", {})
+    if not isinstance(defaults, dict):
+        return None, None
+
+    provider = defaults.get("provider")
+    model = defaults.get("model")
+    return (
+        provider if isinstance(provider, str) and provider else None,
+        model if isinstance(model, str) and model else None,
+    )
+
+
 async def close_bot_mcp(bot: Nanobot) -> None:
     close_mcp = getattr(getattr(bot, "_loop", None), "close_mcp", None)
     if close_mcp is None:
@@ -295,8 +351,13 @@ async def run_agent(args: argparse.Namespace) -> int:
     hook = build_stream_hook(AgentHook)
     bot = Nanobot.from_config(config_path=config_path, workspace=workspace)
     session_key = args.session_key.strip() or f"{DEFAULT_SESSION_KEY_PREFIX}:{int(time.time())}"
+    provider, model = read_agent_defaults(config_path)
     print(f"[session] {session_key}", flush=True)
     print(f"[config] {config_path}", flush=True)
+    if provider:
+        print(f"[provider] {provider}", flush=True)
+    if model:
+        print(f"[model] {model}", flush=True)
     timed_out = False
     try:
         run_coro = bot.run(args.message, session_key=session_key, hooks=[hook])

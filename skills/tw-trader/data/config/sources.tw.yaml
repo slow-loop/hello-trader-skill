@@ -1,42 +1,18 @@
 # Taiwan market news sources for external web-reader CLI usage.
-# Preferred usage:
-#   uv run web-reader data/config/sources.tw.yaml --tags=tw,macro --format=md
-#   uv run web-reader data/config/sources.tw.yaml --tags=research --format=md
-#   uv run web-reader data/config/sources.tw.yaml --tags=sentiment --format=md   # PTT retail pulse
+#
+# Preferred usage (分開跑，避免每輪全掃):
+#   uv run web-reader data/config/sources.tw.yaml --tags=tw,market   # 台股新聞
+#   uv run web-reader data/config/sources.tw.yaml --tags=macro       # 國際總經
+#   uv run web-reader data/config/sources.tw.yaml --tags=sentiment   # 本地散戶情緒（PTT）
+#   uv run web-reader data/config/sources.tw.yaml --tags=research    # 半導體深度研究
 
 sources:
-  - name: yahoo-latest-news
-    reader: rss
-    url: "https://tw.stock.yahoo.com/rss?category=news"
-    tags: [general]          # removed [macro]: contains weather/sports/celebrity noise; use yahoo-intl-markets for macro
-    cache:
-      ttl: 900
-
-  # - name: yahoo-tw-market   # commented out: 高度重疊 cnyes-tw-stock + gnews-tw-macro，重複率高、雜訊多
-  #   reader: rss
-  #   url: "https://tw.stock.yahoo.com/rss?category=tw-market"
-  #   tags: [tw, market]
-  #   cache:
-  #     ttl: 900
-
-  - name: yahoo-intl-markets
-    reader: rss
-    url: "https://tw.stock.yahoo.com/rss?category=intl-markets"
-    tags: [macro, intl]
-    cache:
-      ttl: 1800
+  # === 台股新聞 (tags: tw, market) ===
 
   - name: yahoo-research
     reader: rss
     url: "https://tw.stock.yahoo.com/rss?category=research"
-    tags: [tw, research]     # Yahoo 分析師觀點欄：個股 spotlight、深度分析，比新聞更有觀點
-    cache:
-      ttl: 1800
-
-  - name: yahoo-column
-    reader: rss
-    url: "https://tw.stock.yahoo.com/rss?category=column"
-    tags: [opinion]          # removed [tw]: feed has stale articles (2025-09~11)
+    tags: [tw, research]     # Yahoo 分析師觀點欄：個股 spotlight、深度分析
     cache:
       ttl: 1800
 
@@ -44,25 +20,8 @@ sources:
     reader: cnyes
     params:
       category: tw_stock
-      limit: 10              # 從 20 降至 10：有個股 symbol 標記保留，但控制總量
-    tags: [tw, market]       # Cnyes 台股新聞 API，有個股 symbol 標記
-    cache:
-      ttl: 900
-
-  - name: cnyes-headlines
-    reader: cnyes
-    params:
-      category: headline
-      limit: 10
-    tags: [macro]            # Cnyes 國際財經頭條
-    cache:
-      ttl: 900
-
-  - name: ptt-stock
-    reader: ptt
-    params:
-      board: "Stock"
-    tags: [sentiment]        # PTT/Stock 散戶即時情緒；分開掃描: --tags=sentiment
+      limit: 10              # 有個股 symbol 標記，保留但控制總量
+    tags: [tw, market]
     cache:
       ttl: 900
 
@@ -76,14 +35,46 @@ sources:
   - name: gnews-tw-macro
     reader: gnews
     params:
-      query: "台股 外資 法人 OR 台積電 OR 半導體"
+      query: "台股 外資 法人 買賣超"
       language: "zh-TW"
       country: "TW"
       period: "1d"
-      max_results: 15
-    tags: [tw, market]       # GNews 搜尋：聚合多家媒體，針對性查詢台股法人動向
+      max_results: 10        # 聚焦三大法人動向，移除台積電/半導體（已有 research 來源）
+    tags: [tw, market]
     cache:
       ttl: 900
+
+  # === 國際總經 (tags: macro) ===
+
+  - name: yahoo-intl-markets
+    reader: rss
+    url: "https://tw.stock.yahoo.com/rss?category=intl-markets"
+    tags: [macro]
+    cache:
+      ttl: 1800
+
+  - name: cnyes-headlines
+    reader: cnyes
+    params:
+      category: headline
+      limit: 10
+    tags: [macro]            # Cnyes 國際財經頭條
+    cache:
+      ttl: 900
+
+  # === 本地散戶情緒 (tags: sentiment) ===
+
+  - name: ptt-stock
+    reader: ptt
+    params:
+      board: "Stock"
+    tags: [sentiment]        # PTT/Stock 散戶即時情緒；台股最直接的散戶 pulse
+    cache:
+      ttl: 900
+
+  # reddit-investing / reddit-stocks / reddit-wsb 移除：美股視角為主，對台股個股進場判斷信噪比低
+
+  # === 半導體深度研究 (tags: research) ===
 
   - name: gnews-semicon
     reader: gnews
@@ -93,7 +84,7 @@ sources:
       country: "US"
       period: "3d"
       max_results: 10
-    tags: [research]         # GNews 英文半導體：外資視角，補充 EE Times
+    tags: [research]         # GNews 英文半導體：外資視角
     cache:
       ttl: 3600
 
@@ -102,44 +93,14 @@ sources:
     params:
       subreddit: "semiconductors"
       sort: "hot"
-      limit: 15
-    tags: [research]         # Reddit r/semiconductors：工程師/業界人士視角，異質性高
-    cache:
-      ttl: 3600
-
-  - name: reddit-investing
-    reader: reddit
-    params:
-      subreddit: "investing"
-      sort: "hot"
-      limit: 15
-    tags: [sentiment]        # Reddit r/investing 純討論：外資散戶在關注什麼
-    cache:
-      ttl: 3600
-
-  - name: reddit-stocks
-    reader: reddit
-    params:
-      subreddit: "stocks"
-      sort: "hot"
-      limit: 15
-    tags: [sentiment]        # Reddit r/stocks 純討論：散戶股票討論
-    cache:
-      ttl: 3600
-
-  - name: reddit-wsb
-    reader: reddit
-    params:
-      subreddit: "wallstreetbets"
-      sort: "hot"
-      limit: 10
-    tags: [sentiment]        # Reddit r/wallstreetbets 純討論：高 beta 情緒指標
+      limit: 10              # 工程師/業界人士視角，異質性高；limit 從 15 降至 10
+    tags: [research]
     cache:
       ttl: 3600
 
   - name: eetimes
     reader: rss
     url: "https://eetimes.com/feed/"
-    tags: [research]         # 半導體業界情報：記憶體、AI晶片、封裝技術，外資研究視角
+    tags: [research]         # 半導體業界情報：記憶體、AI晶片、封裝技術
     cache:
       ttl: 3600

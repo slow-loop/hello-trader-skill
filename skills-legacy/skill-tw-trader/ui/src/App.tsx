@@ -1,8 +1,10 @@
-import { Routes, Route, NavLink } from 'react-router-dom';
+import { Routes, Route, NavLink, useLocation } from 'react-router-dom';
 import { Activity, Briefcase, MessageSquare, Monitor } from 'lucide-react';
 import TradingDesk from './pages/TradingDesk';
 import Portfolio from './pages/Portfolio';
 import Social from './pages/Social';
+import ResearchCard from './components/ResearchCard';
+import TradingCard from './components/TradingCard.template';
 
 function Sidebar() {
   return (
@@ -24,6 +26,16 @@ function Sidebar() {
 }
 
 export default function App() {
+  const location = useLocation();
+
+  // bare card routes — no chrome, for Playwright screenshot
+  if (location.pathname === '/research-card') {
+    return <ResearchCard />;
+  }
+  if (location.pathname === '/trading-card') {
+    return <TradingCard />;
+  }
+
   return (
     <div className="h-screen w-screen flex bg-black text-white font-sans overflow-hidden select-none">
       <Sidebar />

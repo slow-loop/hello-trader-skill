@@ -12,7 +12,7 @@ from backend2.models import (
     WorkspaceConfig,
     WorkspaceRuntimeConfig,
 )
-from backend2.policies import get_market_profile
+from market_core import get_market_profile
 from backend2.watchlist import load_evaluated_watchlist
 from backend2.workspace import save_watchlist
 

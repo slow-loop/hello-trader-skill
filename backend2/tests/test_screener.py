@@ -1,7 +1,7 @@
 from types import SimpleNamespace
 
 from backend2.models import AnalysisSettings, MarketConfig, Quote, WorkspaceConfig, WorkspaceRuntimeConfig
-from backend2.policies import get_market_profile
+from market_core import get_market_profile
 from backend2.screener import run_screener
 
 

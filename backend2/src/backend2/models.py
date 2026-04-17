@@ -1,45 +1,24 @@
 from __future__ import annotations
 
-from datetime import datetime, timezone
 from typing import Any, Literal
 
 from pydantic import BaseModel, Field
 
+# Re-export shared types from market-core
+from market_core.models import (  # noqa: F401
+    AnalysisReport,
+    AnalysisSettings,
+    Bar,
+    MarketConfig,
+    MarketOverview,
+    NewsConfig,
+    NewsItem,
+    NewsSourceConfig,
+    Quote,
+    utc_now_iso,
+)
 
-def utc_now_iso() -> str:
-    return datetime.now(timezone.utc).replace(microsecond=0).isoformat().replace("+00:00", "Z")
-
-
-class NewsSourceConfig(BaseModel):
-    name: str = ""
-    kind: Literal["rss"] = "rss"
-    url: str
-
-
-class NewsConfig(BaseModel):
-    enabled: bool = False
-    max_items: int = 10
-    sources: list[NewsSourceConfig] = Field(default_factory=list)
-
-
-class AnalysisIndicatorConfig(BaseModel):
-    name: str
-    ta_fn: str
-    params: dict[str, bool | int | float | str] = Field(default_factory=dict)
-
-
-class AnalysisExpressionConfig(BaseModel):
-    name: str
-    expr: str
-    tags: list[str] = Field(default_factory=list)
-
-
-class AnalysisSettings(BaseModel):
-    timeframe: Literal["1d", "1h"] = "1d"
-    lookback_days: int = 180
-    indicators: list[AnalysisIndicatorConfig] = Field(default_factory=list)
-    expressions: list[AnalysisExpressionConfig] = Field(default_factory=list)
-    outputs: list[str] = Field(default_factory=list)
+# --- Backend2-only types below ---
 
 
 class WorkspaceConfig(BaseModel):
@@ -108,11 +87,6 @@ class AgentConfig(BaseModel):
     tags: list[str] = Field(default_factory=list)
 
 
-class MarketConfig(BaseModel):
-    profile: str
-    benchmark_symbol: str | None = None
-
-
 class ScheduleConfig(BaseModel):
     enabled: bool = False
     snapshot_interval_minutes: int = 30
@@ -151,63 +125,6 @@ class TradingState(BaseModel):
     positions: dict[str, Position] = Field(default_factory=dict)
     orders: dict[str, ExitOrder] = Field(default_factory=dict)
     updated_at: str = Field(default_factory=utc_now_iso)
-
-
-class Quote(BaseModel):
-    symbol: str
-    market_profile: str
-    name: str | None = None
-    price: float
-    source: str
-    timestamp: str = Field(default_factory=utc_now_iso)
-    open: float | None = None
-    high: float | None = None
-    low: float | None = None
-    prev_close: float | None = None
-    change: float | None = None
-    change_pct: float | None = None
-    volume: int | None = None
-
-
-class Bar(BaseModel):
-    symbol: str
-    market_profile: str
-    bar_time: str
-    open: float
-    high: float
-    low: float
-    close: float
-    volume: int | None = None
-    source: str
-
-
-class NewsItem(BaseModel):
-    title: str
-    url: str
-    published: str = ""
-    source: str = ""
-
-
-class MarketOverview(BaseModel):
-    workspace_id: str
-    timestamp: str = Field(default_factory=utc_now_iso)
-    market_profile: str
-    session: str
-    is_open: bool
-    reason: str
-    benchmark_symbol: str | None = None
-    benchmark_quote: Quote | None = None
-    news: list[NewsItem] = Field(default_factory=list)
-    watchlist_symbols: list[str] = Field(default_factory=list)
-
-
-class AnalysisReport(BaseModel):
-    symbol: str
-    quote: Quote
-    metrics: dict[str, Any] = Field(default_factory=dict)
-    triggers: dict[str, list[str]] = Field(default_factory=dict)
-    warnings: list[str] = Field(default_factory=list)
-    news: list[NewsItem] = Field(default_factory=list)
 
 
 class ScreenerResult(BaseModel):

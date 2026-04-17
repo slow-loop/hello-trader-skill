@@ -16,7 +16,7 @@ from backend2.models import (
     WorkspaceRuntimeConfig,
     WorkspaceStatus,
 )
-from backend2.policies import MarketProfile, get_market_profile, get_market_session, normalize_symbol
+from market_core import MarketProfile, get_market_profile, get_market_session, normalize_symbol
 
 
 def get_runtime_config() -> WorkspaceRuntimeConfig:
@@ -213,6 +213,24 @@ async def heartbeat() -> dict[str, object]:
         data=overview.model_dump(mode="json"),
         captured_at=overview.timestamp,
     )
+
+    state_now = await db.get_trading_state(config.id)
+    if state_now is not None:
+        prices_now: dict[str, float] = {}
+        for symbol in state_now.positions:
+            try:
+                prices_now[symbol] = get_quote(symbol, profile).price
+            except Exception:
+                continue
+        mv = sum(pos.quantity * prices_now.get(sym, pos.avg_price) for sym, pos in state_now.positions.items())
+        await db.upsert_account_snapshot(
+            workspace_id=config.id,
+            date=date.today().isoformat(),
+            account_value=round(state_now.cash + mv, 4),
+            cash=round(state_now.cash, 4),
+            market_value=round(mv, 4),
+        )
+
     return {
         "workspace_id": config.id,
         "phase": overview.session,

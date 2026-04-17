@@ -1,18 +1,12 @@
 from __future__ import annotations
 
 from dataclasses import dataclass
-from datetime import datetime, timedelta, timezone
-import os
 
-import feedparser
-from fugle_marketdata import RestClient
-import httpx
 import pandas as pd
-import yfinance as yf
 
-from backend2.models import AnalysisReport, Bar, MarketOverview, NewsItem, Quote, WorkspaceRuntimeConfig
-from backend2.policies import MarketProfile, get_market_session, market_data_symbol, normalize_symbol
-from backend2.technical import (
+from market_core import get_quote, get_bars, bars_to_dataframe, get_news as _mc_get_news
+from market_core.policies import MarketProfile, get_market_session, normalize_symbol
+from market_core.technical import (
     AnalysisConfig,
     ExpressionSpec,
     IndicatorSpec,
@@ -20,6 +14,9 @@ from backend2.technical import (
     build_technical_analysis,
     default_analysis_config,
 )
+from market_core.data.tw import build_tw_company_context
+
+from backend2.models import AnalysisReport, Bar, MarketOverview, NewsItem, Quote, WorkspaceRuntimeConfig
 from backend2.workspace import (
     load_analysis_config as load_workspace_analysis_config,
     load_news_config as load_workspace_news_config,
@@ -35,107 +32,6 @@ class AnalysisSnapshot:
     dataframe: pd.DataFrame
     technical_config: AnalysisConfig
     technical_analysis: TechnicalAnalysis
-
-
-def get_quote(symbol: str, profile: MarketProfile) -> Quote:
-    normalized = normalize_symbol(symbol, profile)
-    if profile.id == "tw_equity" and _is_tw_equity_symbol(normalized):
-        fugle_quote = _try_fugle_quote(normalized, profile)
-        if fugle_quote is not None:
-            return fugle_quote
-
-    data_symbol = market_data_symbol(normalized, profile)
-    ticker = yf.Ticker(data_symbol)
-    info = ticker.fast_info
-
-    price = _safe_float(getattr(info, "last_price", None))
-    prev_close = _safe_float(getattr(info, "previous_close", None))
-    if price is None:
-        hist = ticker.history(period="2d", auto_adjust=False)
-        if hist.empty:
-            raise ValueError(f"no quote data for {normalized}")
-        price = _safe_float(hist["Close"].iloc[-1])
-        if len(hist) >= 2:
-            prev_close = _safe_float(hist["Close"].iloc[-2])
-
-    if price is None:
-        raise ValueError(f"no price for {normalized}")
-
-    change = None
-    change_pct = None
-    if prev_close not in (None, 0):
-        change = round(price - prev_close, 4)
-        change_pct = round((price - prev_close) / prev_close * 100, 4)
-
-    name = getattr(info, "name", None)
-    if not name:
-        try:
-            name = ticker.info.get("longName")
-        except Exception:
-            name = None
-
-    return Quote(
-        symbol=normalized,
-        market_profile=profile.id,
-        name=name,
-        price=price,
-        source="yfinance",
-        open=_safe_float(getattr(info, "open", None)),
-        high=_safe_float(getattr(info, "day_high", None)),
-        low=_safe_float(getattr(info, "day_low", None)),
-        prev_close=prev_close,
-        change=change,
-        change_pct=change_pct,
-        volume=_safe_int(getattr(info, "last_volume", None)),
-    )
-
-
-def get_bars(
-    symbol: str,
-    profile: MarketProfile,
-    *,
-    timeframe: str = "1d",
-    lookback_days: int = 180,
-) -> list[Bar]:
-    normalized = normalize_symbol(symbol, profile)
-    data_symbol = market_data_symbol(normalized, profile)
-    interval = timeframe
-    if interval not in {"1d", "1h"}:
-        raise ValueError("timeframe must be 1d or 1h")
-
-    end = datetime.now(timezone.utc)
-    start = end - timedelta(days=lookback_days)
-    ticker = yf.Ticker(data_symbol)
-    df = ticker.history(
-        start=start.strftime("%Y-%m-%d"),
-        end=end.strftime("%Y-%m-%d"),
-        interval=interval,
-        auto_adjust=True,
-    )
-    if df.empty:
-        raise ValueError(f"no bar data for {normalized}")
-
-    if isinstance(df.columns, pd.MultiIndex):
-        df.columns = df.columns.get_level_values(0)
-    df = df.rename(columns=str.lower).reset_index()
-    date_col = "date" if "date" in df.columns else df.columns[0]
-
-    bars: list[Bar] = []
-    for row in df.to_dict("records"):
-        bars.append(
-            Bar(
-                symbol=normalized,
-                market_profile=profile.id,
-                bar_time=pd.to_datetime(row[date_col]).to_pydatetime().isoformat(),
-                open=float(row["open"]),
-                high=float(row["high"]),
-                low=float(row["low"]),
-                close=float(row["close"]),
-                volume=_safe_int(row.get("volume")),
-                source="yfinance",
-            )
-        )
-    return bars
 
 
 def build_overview(config: WorkspaceRuntimeConfig, profile: MarketProfile) -> MarketOverview:
@@ -173,6 +69,14 @@ def build_analysis(symbol: str, config: WorkspaceRuntimeConfig, profile: MarketP
         if key in (technical_config.outputs or default_analysis_config().outputs)
     }
 
+    # Enrich with TW official data (revenue, valuation, peers, insider, chips)
+    tw_context: dict = {}
+    if profile.id == "tw_equity":
+        try:
+            tw_context = build_tw_company_context(snapshot.symbol, latest_price=snapshot.quote.price)
+        except Exception:
+            pass
+
     return AnalysisReport(
         symbol=snapshot.symbol,
         quote=snapshot.quote,
@@ -180,6 +84,7 @@ def build_analysis(symbol: str, config: WorkspaceRuntimeConfig, profile: MarketP
         triggers={tag: names for tag, names in analysis.triggers.items() if names},
         warnings=analysis.warnings,
         news=[item for item in get_news(config) if symbol.upper() in item.title.upper()],
+        extra=tw_context,
     )
 
 
@@ -209,6 +114,8 @@ def get_news(config: WorkspaceRuntimeConfig) -> list[NewsItem]:
     if not news_config.enabled or not news_config.sources:
         return []
 
+    import feedparser
+
     seen: set[tuple[str, str]] = set()
     items: list[NewsItem] = []
     for source in news_config.sources:
@@ -231,24 +138,6 @@ def get_news(config: WorkspaceRuntimeConfig) -> list[NewsItem]:
     return items
 
 
-def bars_to_dataframe(bars: list[Bar]) -> pd.DataFrame:
-    rows = [
-        {
-            "date": bar.bar_time,
-            "open": bar.open,
-            "high": bar.high,
-            "low": bar.low,
-            "close": bar.close,
-            "volume": bar.volume,
-        }
-        for bar in bars
-    ]
-    df = pd.DataFrame(rows).sort_values("date").reset_index(drop=True)
-    if "volume" in df.columns:
-        df["volume"] = df["volume"].fillna(0)
-    return df
-
-
 def _build_analysis_config(config: WorkspaceRuntimeConfig) -> AnalysisConfig:
     workspace_config = load_workspace_analysis_config(config)
     if workspace_config is not None:
@@ -263,51 +152,3 @@ def _build_analysis_config(config: WorkspaceRuntimeConfig) -> AnalysisConfig:
     expressions = [ExpressionSpec.model_validate(item.model_dump()) for item in config.analysis.expressions]
     outputs = config.analysis.outputs or default.outputs
     return AnalysisConfig(indicators=indicators, expressions=expressions, outputs=outputs)
-
-
-def _try_fugle_quote(symbol: str, profile: MarketProfile) -> Quote | None:
-    api_key = os.getenv("FUGLE_API_KEY")
-    if not api_key:
-        return None
-    try:
-        client = RestClient(api_key=api_key)
-        stock_id = symbol.removesuffix(".TW").removesuffix(".TWO")
-        payload = client.stock.intraday.quote(symbol=stock_id)
-        ticker = client.stock.intraday.ticker(symbol=stock_id)
-        price = payload.get("lastPrice") or payload.get("closePrice")
-        if price is None:
-            return None
-        return Quote(
-            symbol=symbol,
-            market_profile=profile.id,
-            name=ticker.get("name"),
-            price=float(price),
-            source="fugle",
-            open=_safe_float(payload.get("openPrice")),
-            high=_safe_float(payload.get("highPrice")),
-            low=_safe_float(payload.get("lowPrice")),
-            prev_close=_safe_float(payload.get("previousClose")),
-            change=_safe_float(payload.get("change")),
-            change_pct=_safe_float(payload.get("changePercent")),
-            volume=_safe_int(payload.get("tradeVolume")),
-        )
-    except Exception:
-        return None
-
-
-def _is_tw_equity_symbol(symbol: str) -> bool:
-    if not (symbol.endswith(".TW") or symbol.endswith(".TWO")):
-        return False
-    return symbol.removesuffix(".TW").removesuffix(".TWO").isdigit()
-
-
-def _safe_float(value: object) -> float | None:
-    if value is None or pd.isna(value):
-        return None
-    return float(value)
-
-
-def _safe_int(value: object) -> int | None:
-    if value is None or pd.isna(value):
-        return None
-    return int(value)
