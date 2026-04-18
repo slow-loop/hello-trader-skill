@@ -1,0 +1,33 @@
+# Lana-copycat config — copy to .env for secrets, keep this file in git
+
+binance:
+  testnet: true                     # flip to false for real trading
+  futures_base_url: "https://testnet.binancefuture.com"
+
+square:
+  url: "https://www.binance.com/en/square/feed/trending"
+  scrape_interval_min: 5
+  max_posts: 100
+  stablecoins: [USDT, USDC, BUSD, DAI, TUSD, FDUSD, USD]
+
+signals:
+  oi_window_hours: 48
+  oi_min_ratio: 3.0                 # OI% change / price% change threshold
+  top_gainers_n: 20
+
+scoring:
+  weight_square: 0.4
+  weight_oi: 0.35
+  weight_gainers: 0.25
+  top_n: 5
+
+trader:
+  max_loss_usdt: 200                # Lana's fixed-loss stop
+  leverage: 10
+  direction: "LONG"                 # single-direction, Lana's style
+  order_type: "MARKET"
+  position_size_pct: 0.05           # 5% of available balance per trade
+
+logging:
+  level: INFO
+  output: logs/lana.jsonl

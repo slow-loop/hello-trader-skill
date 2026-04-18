@@ -25,6 +25,11 @@ export interface WatchlistEvaluation {
   error?: string
 }
 
+export interface ChartData {
+  bars: Bar[]
+  indicators: Record<string, number[]>
+}
+
 export interface AnalysisReport {
   symbol: string
   name?: string
@@ -35,7 +40,8 @@ export interface AnalysisReport {
 }
 
 export interface Bar {
-  time: string
+  bar_time: string
+  time?: string
   open: number
   high: number
   low: number

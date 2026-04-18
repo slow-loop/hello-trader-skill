@@ -88,6 +88,31 @@ def create_app() -> FastAPI:
         except Exception as exc:
             raise HTTPException(status_code=500, detail=str(exc)) from exc
 
+    @app.get("/chart/{symbol:path}")
+    async def get_workspace_chart(symbol: str):
+        try:
+            config = get_runtime_config()
+            profile = get_market_profile_for_runtime(config)
+            
+            from backend2.market import analyze_symbol
+            import pandas as pd
+            
+            snapshot = analyze_symbol(symbol, config, profile)
+            
+            df = snapshot.dataframe
+            indicators = {}
+            if "SMA_20" in df.columns:
+                indicators["sma20"] = [None if pd.isna(v) else float(v) for v in df["SMA_20"]]
+            elif "sma20" in df.columns:
+                indicators["sma20"] = [None if pd.isna(v) else float(v) for v in df["sma20"]]
+            
+            return {
+                "bars": [b.model_dump() for b in snapshot.bars],
+                "indicators": indicators,
+            }
+        except Exception as exc:
+            raise HTTPException(status_code=500, detail=str(exc)) from exc
+
     @app.get("/screener")
     async def get_workspace_screener(
         strategy: str = "momentum",
@@ -180,6 +205,13 @@ def create_app() -> FastAPI:
     async def update_workspace_lessons(payload: LessonsDocument):
         try:
             return workspace.save_lessons(get_runtime_config(), payload)
+        except ValueError as exc:
+            raise HTTPException(status_code=400, detail=str(exc)) from exc
+
+    @app.put("/workspace/research-cards/{date_str}")
+    async def save_workspace_research_card(date_str: str, payload: dict):
+        try:
+            return workspace.save_research_card(get_runtime_config(), date_str, payload)
         except ValueError as exc:
             raise HTTPException(status_code=400, detail=str(exc)) from exc
 

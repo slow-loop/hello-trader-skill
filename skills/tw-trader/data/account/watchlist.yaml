@@ -1,57 +1,71 @@
-- symbol: "2330"
+- symbol: '2330'
+  thesis: AI capex 與先進製程需求仍強，台積電是最核心的結構型受益股。
   status: watch
-  thesis: "AI capex 與先進製程需求仍強，台積電是最核心的結構型受益股。"
-  notes: "2026-04-16 法說日：Q1 毛利率 66.2%、EPS 22.08 均創歷史新高，法說數據亮眼。但法說當日大盤 +1.31% 而 2330 僅漲 0.48%（盤後 2085 元），相對弱勢；量能 1.22x 未放大，利多疑已提前 price in。2026-04-17：開低 2040 (-2.15%) 回測五日線，法說後 sell the news 確認，大盤 V 轉但權值股受壓，資金明顯流向中小型股（OTC 創新高）。持續觀察量能是否回升。"
-  trigger: "站回短線整理區上緣並放量突破（volume_ratio ≥ 1.5x），再評估進場。"
-  invalidation: "收盤跌破近期關鍵支撐，代表整理失敗。"
+  notes: 2026-04-16 法說日：Q1 毛利率 66.2%、EPS 22.08 均創歷史新高，法說數據亮眼。但法說當日大盤 +1.31% 而 2330
+    僅漲 0.48%（盤後 2085 元），相對弱勢；量能 1.22x 未放大，利多疑已提前 price in。2026-04-17：開低 2040 (-2.15%)
+    回測五日線，法說後 sell the news 確認，大盤 V 轉但權值股受壓，資金明顯流向中小型股（OTC 創新高）。持續觀察量能是否回升。
+  trigger: 站回短線整理區上緣並放量突破（volume_ratio ≥ 1.5x），再評估進場。
+  invalidation: 收盤跌破近期關鍵支撐，代表整理失敗。
   trigger_conditions:
-    - "price_above_sma_20"
-    - "macd_histogram_positive"
-    - "volume_breakout_1_5x"
+  - price_above_sma_20
+  - macd_histogram_positive
+  - volume_breakout_1_5x
   invalidation_conditions:
-    - "price_below_sma_50 and macd_histogram_negative"
-    - "close < nearest_support * 0.98"
-  updated_at: "2026-04-16"
-
-- symbol: "3189"
+  - price_below_sma_50 and macd_histogram_negative
+  - close < nearest_support * 0.98
+  updated_at: '2026-04-16'
+- symbol: '3189'
+  thesis: AI 資料中心擴建推動 ABF 載板需求，景碩受益高階 ABF 基板成長，技術面結構最乾淨（ADX 30、RSI 61、距支撐僅-6%）、量比
+    1.86x，無超買壓力。
   status: hold
-  thesis: "AI 資料中心擴建推動 ABF 載板需求，景碩受益高階 ABF 基板成長，技術面結構最乾淨（ADX 30、RSI 61、距支撐僅-6%）、量比 1.86x，無超買壓力。"
-  notes: "2026-04-16 新增：screener 上榜（+3.37%，量比 1.86x），AI PCB 族群雙重確認。相較台光電（ADX 44）、聯茂（ADX 44.7）更具 RSI 空間，離支撐也最近。2026-04-17：動能持續，現價 396.5 (+0.89%)，量比 2.0x 顯著放大，ADX 30 趨勢確立，為載板族群領頭羊。Trigger 條件（價格、MACD、量比、ADX）全數達成，高優先進場候選。"
-  trigger: "RSI 維持 60 以上且量比放大至 1.5x 突破，或整理後站回週線/月線再次放量。"
-  invalidation: "ADX 開始回落至 20 以下且量縮跌破 5 日均線，結構失效。"
+  notes: 2026-04-16 新增：screener 上榜（+3.37%，量比 1.86x），AI PCB 族群雙重確認。相較台光電（ADX 44）、聯茂（ADX
+    44.7）更具 RSI 空間，離支撐也最近。2026-04-17：動能持續，現價 396.5 (+0.89%)，量比 2.0x 顯著放大，ADX 30 趨勢確立，為載板族群領頭羊。Trigger
+    條件（價格、MACD、量比、ADX）全數達成，高優先進場候選。
+  trigger: RSI 維持 60 以上且量比放大至 1.5x 突破，或整理後站回週線/月線再次放量。
+  invalidation: ADX 開始回落至 20 以下且量縮跌破 5 日均線，結構失效。
   trigger_conditions:
-    - "price_above_sma_20"
-    - "macd_histogram_positive"
-    - "volume_breakout_1_5x"
-    - "adx_14 > 25"
+  - price_above_sma_20
+  - macd_histogram_positive
+  - volume_breakout_1_5x
+  - adx_14 > 25
   invalidation_conditions:
-    - "price_below_sma_20 and macd_histogram_negative"
-    - "adx_14 < 20 and volume_ratio_20 < 1"
-  catalyst_notes: "ABF 基板需求驗證點：台積電法說後 CoWoS 擴產確認 → 直接利多"
-  updated_at: "2026-04-16"
-
-- symbol: "3711"
+  - price_below_sma_20 and macd_histogram_negative
+  - adx_14 < 20 and volume_ratio_20 < 1
+  updated_at: '2026-04-16'
+- symbol: '3711'
+  thesis: 台積電 CoWoS 等先進封裝需求強勁，日月光作為全球最大封測廠直接受益；今日法說日量能突破（1.57x）+5.31%，外資連買。
   status: watch
-  thesis: "台積電 CoWoS 等先進封裝需求強勁，日月光作為全球最大封測廠直接受益；今日法說日量能突破（1.57x）+5.31%，外資連買。"
-  notes: "2026-04-16 新增：screener 上榜，ADX 21.5（趨勢起步），RSI 73 剛進超買區，量比 1.57x 突破。台積電法說強化 AI 先進封裝需求為主催化。2026-04-17：高檔震盪，現價 456 (+1.44%)，但量比 1.16x 降溫至 1.5x 以下，RSI 74 仍在超買區。維持 watch，等候回測或帶量再攻。"
-  trigger: "回測 SMA20 量縮守穩後帶量再攻，RSI 在 65–70 區間進場風險較低。"
-  invalidation: "ADX 回落且跌破 SMA20，封測族群轉弱。"
+  notes: 2026-04-16 新增：screener 上榜，ADX 21.5（趨勢起步），RSI 73 剛進超買區，量比 1.57x 突破。台積電法說強化
+    AI 先進封裝需求為主催化。2026-04-17：高檔震盪，現價 456 (+1.44%)，但量比 1.16x 降溫至 1.5x 以下，RSI 74 仍在超買區。維持
+    watch，等候回測或帶量再攻。
+  trigger: 回測 SMA20 量縮守穩後帶量再攻，RSI 在 65–70 區間進場風險較低。
+  invalidation: ADX 回落且跌破 SMA20，封測族群轉弱。
   trigger_conditions:
-    - "price_above_sma_20"
-    - "macd_histogram_positive"
-    - "volume_breakout_1_5x"
+  - price_above_sma_20
+  - macd_histogram_positive
+  - volume_breakout_1_5x
   invalidation_conditions:
-    - "price_below_sma_20 and macd_histogram_negative"
-  catalyst_notes: "台積電 CoWoS 3/CoWoS-L 擴產計畫 → 封測需求擴大；下次驗證點：日月光自身法說會日期待確認"
-  updated_at: "2026-04-16"
-- symbol: "4979"
+  - price_below_sma_20 and macd_histogram_negative
+  updated_at: '2026-04-16'
+- symbol: 4979.TWO
+  thesis: AI 資料中心 800G/1.6T 頻寬升級，CPO 為核心技術路徑。華星光 DFB 激光器具備技術領先優勢。
   status: watch
-  thesis: "AI 資料中心 800G/1.6T 頻寬升級，CPO 為核心技術路徑。華星光 DFB 激光器具備技術領先優勢。"
-  notes: "2026-04-17 新增：CPO 強力突破（亮燈漲停），成交量大增。動能極強，等候回測或整理後尋找切入點。"
-  trigger: "回測五日線守穩，或整理後帶量突破 550 元。"
-  invalidation: "跌破 480 元支撐位或行業需求成長放緩。"
+  notes: 2026-04-17 新增：CPO 強力突破（亮燈漲停），成交量大增。動能極強，等候回測或整理後尋找切入點。
+  trigger: 回測五日線守穩，或整理後帶量突破 550 元。
+  invalidation: 跌破 480 元支撐位或行業需求成長放緩。
   trigger_conditions:
-    price_above_sma_20: true
-    macd_histogram_positive: true
-    volume_ratio_above_15: true
-    adx_14_above_25: true
+  - price_above_sma_20
+  - macd_histogram_positive
+  - volume_ratio > 1.5
+  - adx_14 > 25
+  invalidation_conditions: []
+  updated_at: ''
+- symbol: 2330.TW
+  thesis: 'LIVE TEST: TSMC setup looks strong for Q2 recovery.'
+  status: hold
+  notes: ''
+  trigger: Break 1000
+  invalidation: Below 900
+  trigger_conditions: []
+  invalidation_conditions: []
+  updated_at: '2026-04-18'

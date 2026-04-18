@@ -215,6 +215,30 @@ def lessons_path(config: WorkspaceRuntimeConfig) -> Path | None:
     return account_dir / "lessons.md"
 
 
+def research_cards_dir(config: WorkspaceRuntimeConfig) -> Path | None:
+    account_dir = account_dir_path(config)
+    if account_dir is None:
+        return None
+    return account_dir / "research-cards"
+
+
+def research_card_path(config: WorkspaceRuntimeConfig, date_str: str) -> Path | None:
+    directory = research_cards_dir(config)
+    if directory is None:
+        return None
+    return directory / f"{date_str}.yaml"
+
+
+def save_research_card(config: WorkspaceRuntimeConfig, date_str: str, payload: dict) -> dict:
+    path = research_card_path(config, date_str)
+    if path is None:
+        raise ValueError(f"workspace '{config.id}' has no local research-cards configured")
+    
+    # Write robustly as YAML through the atomic writer
+    _write_yaml_atomic(path, payload)
+    return payload
+
+
 def account_dir_path(config: WorkspaceRuntimeConfig) -> Path | None:
     root = workspace_root(config)
     if root is None:

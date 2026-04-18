@@ -1,0 +1,93 @@
+# research-card.yaml schema (draft)
+# 對應 prompts/RESEARCH_TW.md 的 Phase 1-4 輸出
+# 位置: skills/tw-trader/data/account/research-cards/{YYYY-MM-DD}.yaml
+#
+# Agent 在 Phase 5 寫 journal 時，同步輸出這份結構化檔案。
+# Frontend-nano 讀到後可直接渲染成 Research Card。
+
+date: "2026-04-16"                # YYYY-MM-DD
+session: "post-close"             # post-close | intraday | weekend
+
+# ── Phase 1: Screener ─────────────────────────────────────
+screener:
+  skipped: false                  # 非盤後時段可能 skip
+  skip_reason: null
+  strategy: "momentum"
+  rows:
+    - symbol: "2330"
+      name: "台積電"
+      close: 2080
+      change_pct: 1.22
+      volume_ratio: 1.22
+      rsi: 68.8
+      adx: 20.1
+      macd_sign: "+"              # + | - | 負/擴 | 負/收 ...
+      note: "Watchlist，量未到"
+      is_new: false               # 新面孔 ★
+      watchlist: true
+  highlights:                     # 「新面孔最值得關注」區塊
+    - symbol: "6213"
+      reason: "ADX 44.7（全場最高）、盤後漲幅 +10%，ABF 高頻基板極強"
+
+# ── Phase 2: Sentiment (PTT / Reddit) ─────────────────────
+sentiment:
+  overall: "爆量情緒"             # 一句話總結
+  hot_tickers:                    # PTT 反覆提到的 ticker
+    - symbol: "4979"
+      theme: "CPO"
+      note: "漲停帶動族群"
+  narratives:                     # 主流論點
+    - "殺 G 養中小"
+  noise_notes: []                 # 若僅為閒聊噪音
+
+# ── Phase 3: News / Macro ─────────────────────────────────
+macro:
+  market_line: "台股收盤創歷史新高"
+  main_themes:
+    - name: "AI 先進封裝"
+      detail: "台積電法說強化 CoWoS 擴產"
+  secondary_themes: []
+  macro_events:
+    - "ASML 展望低於預期，半導體上游短期承壓"
+  fund_flows:                     # 可選，與 market CLI 的籌碼資料對應
+    foreign: "+440 億"
+    investment_trust: "-43 億"
+    dealer: "+118 億"
+
+# ── Phase 4: Cross-reference ──────────────────────────────
+cross_ref:
+  triple_resonance:               # screener + sentiment + news 三方共振
+    - symbol: "3189"
+      reason: "ABF 載板結構最乾淨，量能倍增，技術/新聞/情緒共振"
+  double_confirm:                 # 雙重確認
+    - symbol: "3711"
+      sources: ["screener", "news"]
+      reason: "封測先進封裝 + 量能突破"
+  story_no_momentum: []           # 有故事但動能未到
+  screener_only: []
+  skipped: []                     # 單一來源直接跳過
+
+# ── Phase 5: Watchlist 調整摘要 ──────────────────────────
+# watchlist 本體仍在 data/account/watchlist.yaml，此處只記當日 diff
+watchlist_changes:
+  added:
+    - symbol: "3189"
+      status: "watch"
+  promoted:
+    - symbol: "3189"
+      from: "watch"
+      to: "hold"
+  removed: []
+  updated: []                     # thesis/trigger 有變動
+
+# 明日關注
+tomorrow_watch:
+  - symbol: "3189"
+    reason: "突破 400 元壓力之延續性"
+  - symbol: "CPO 族群"
+    reason: "是否過熱回調"
+
+# 送交個股深度研究的候選
+deep_research_candidates:
+  - symbol: "3189"
+  - symbol: "4979"

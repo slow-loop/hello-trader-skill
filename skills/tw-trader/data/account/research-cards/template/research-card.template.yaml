@@ -1,0 +1,82 @@
+# Research Card template
+# ─────────────────────────────────────────────────────────────
+# 位置：data/account/research-cards/{YYYY-MM-DD}.yaml
+# 由 RESEARCH_TW.md Phase 5 產出，對應 Phase 1-4 的結構化摘要。
+#
+# 設計原則：
+#   - Card 只放「agent 的判斷」，不複製原始數據
+#   - Screener 原始表 → data/account/screener/{date}.json（由 CLI redirect 寫入）
+#   - 所有 section 鍵即使空也保留，用 [] / null，不要省略
+#   - 寫完後 re-read 一次確認 YAML 可解析
+
+date: "YYYY-MM-DD"
+session: post-close              # post-close | intraday | weekend
+
+# ── Phase 1: Screener ─────────────────────────────────────
+# 原始表格在 screener/{date}.json；這裡只放 agent 挑出的亮點
+screener:
+  skipped: false
+  skip_reason: null
+  source: "screener/YYYY-MM-DD.json"
+  highlights:                    # agent 精選，通常 2-5 個
+    - symbol: "6213"
+      name: "聯茂"
+      reason: "ADX 44.7（全場最高）、盤後漲幅 +10%，ABF 高頻基板極強"
+      is_new: true               # 新面孔
+    - symbol: "3189"
+      name: "景碩"
+      reason: "RSI 61 未超買 + ADX 30 + 距支撐僅 -6%，最乾淨的結構"
+      is_new: true
+
+# ── Phase 2: Sentiment (PTT / Reddit) ─────────────────────
+sentiment:
+  overall: "偏多，外資主導市場信心"
+  hot_tickers:
+    - symbol: "4979"
+      theme: "CPO"
+      note: "漲停帶動族群"
+  narratives:
+    - "殺 G 養中小"
+  conclusion: "無 PTT 獨立催生的新 ticker"
+
+# ── Phase 3: Macro / News ─────────────────────────────────
+macro:
+  market_line: "台股 +409 點至 37,132 創歷史新高（+1.31%），成交 9,820 億"
+  main_points:
+    - "台積電法說：Q1 毛利率 66.2%、EPS 22.08 創高"
+    - "外資 +440 億連三日大買"
+  secondary_themes:
+    - "CPO/矽光子（大立光、玉晶光）"
+    - "面板輪動（友達、群創）"
+  fund_flows:                    # optional
+    foreign: "+440 億"
+    investment_trust: "-43 億"
+    dealer: "+118 億"
+
+# ── Phase 4: Cross-reference ──────────────────────────────
+# 每個來源欄位填「事實性短句」或 null；強弱由 tier 決定，不要用 ★
+cross_ref:
+  rows:
+    - symbol: "3189"
+      name: "景碩"
+      screener: "ADX 30，量 1.86x"    # 事實短句或 null
+      sentiment: null
+      news: "ABF，AI PCB"
+      verdict: "最乾淨 → watchlist"
+      tier: double_confirm            # triple_resonance | double_confirm | story_only | screener_only | skip
+  tomorrow_watch:
+    - symbol: "3189"
+      name: "景碩"
+      tag: NEW                        # NEW | null
+      reason: "量縮守穩後逢低評估（進場區 370-385，停損 360）"
+
+# ── Phase 5: Watchlist 調整摘要 ──────────────────────────
+watchlist_changes:
+  added:    []                   # [{symbol, status}]
+  promoted: []                   # [{symbol, from, to}]
+  removed:  []                   # [{symbol, reason}]
+  updated:  []                   # [{symbol, what_changed}]
+
+# 送交個股深度研究的候選
+deep_research_candidates:
+  - symbol: "3189"

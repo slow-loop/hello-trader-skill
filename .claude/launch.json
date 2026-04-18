@@ -7,6 +7,13 @@
       "runtimeArgs": ["run", "dev"],
       "port": 5173,
       "cwd": "skills-legacy/skill-tw-trader/ui"
+    },
+    {
+      "name": "nano",
+      "runtimeExecutable": "npm",
+      "runtimeArgs": ["run", "dev"],
+      "port": 5174,
+      "cwd": "frontend-nano"
     }
   ]
 }

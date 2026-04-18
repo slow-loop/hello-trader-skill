@@ -1,7 +1,7 @@
 import { useEffect, useRef } from 'react'
 import { createChart, type IChartApi, type ISeriesApi, CandlestickSeries, LineSeries } from 'lightweight-charts'
 import { api } from '../api/client.ts'
-import type { Bar } from '../api/types.ts'
+// import type { Bar } from '../api/types.ts' // Removed because Bar is no longer explicitly typed here
 
 interface Props {
   symbol: string
@@ -56,21 +56,27 @@ export default function Chart({ symbol }: Props) {
 
   useEffect(() => {
     if (!candleRef.current || !smaRef.current) return
-    api.analysis(symbol).then(report => {
-      const bars: Bar[] = report.bars ?? []
+    api.chart(symbol).then(data => {
+      const bars = data.bars ?? []
       candleRef.current!.setData(
-        bars.map(b => ({ time: b.time as never, open: b.open, high: b.high, low: b.low, close: b.close }))
+        bars.map(b => {
+          const parsedTime = (b.bar_time || b.time || '').split('T')[0]
+          return { time: parsedTime as never, open: b.open, high: b.high, low: b.low, close: b.close }
+        })
       )
-      const sma20 = (report.indicators?.['sma20'] ?? report.indicators?.['SMA_20'] ?? []) as number[]
+      const sma20 = (data.indicators?.['sma20'] ?? data.indicators?.['SMA_20'] ?? []) as number[]
       if (sma20.length > 0) {
         smaRef.current!.setData(
-          bars.slice(-sma20.length).map((b, i) => ({ time: b.time as never, value: sma20[i]! }))
+          bars.slice(-sma20.length).map((b, i) => {
+            const parsedTime = (b.bar_time || b.time || '').split('T')[0]
+            return { time: parsedTime as never, value: sma20[i]! }
+          })
         )
       } else {
         smaRef.current!.setData([])
       }
       chartRef.current?.timeScale().fitContent()
-    }).catch(() => {})
+    }).catch(() => { })
   }, [symbol])
 
   return <div ref={containerRef} className="w-full h-full" />

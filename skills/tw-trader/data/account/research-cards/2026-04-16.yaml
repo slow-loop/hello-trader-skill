@@ -1,0 +1,77 @@
+date: "2026-04-16"
+session: post-close
+
+screener:
+  skipped: false
+  skip_reason: null
+  source: "screener/2026-04-16.json"
+  highlights:
+    - symbol: "6213"
+      name: "聯茂"
+      reason: "ADX 44.7（全場最高）、盤後漲幅 +10%，ABF 高頻基板極強"
+      is_new: true
+    - symbol: "2383"
+      name: "台光電"
+      reason: "ADX 44.1，但已超買（RSI 75 + BB 突破上軌）"
+      is_new: true
+    - symbol: "3189"
+      name: "景碩"
+      reason: "RSI 61（未超買）+ ADX 30 + 距支撐僅 -6%，最乾淨的結構"
+      is_new: true
+    - symbol: "3711"
+      name: "日月光"
+      reason: "volume_breakout 1.5x + ADX 21.5，封測先進封裝概念"
+      is_new: true
+
+sentiment:
+  overall: "偏多，外資主導市場信心"
+  hot_tickers:
+    - symbol: "2330"
+      theme: "法說"
+      note: "夜盤下跌 260 點引發利多出盡討論"
+  narratives:
+    - "外資大哥低買高賣贏麻了"
+  conclusion: "大盤整體偏多。法說後夜盤修正引發「利多出盡」疑慮，但聲量少，多方仍佔主流。無 PTT 獨立催生的新 ticker。"
+
+macro:
+  market_line: "台股 +409 點至 37,132 創歷史新高（+1.31%），成交 9,820 億"
+  main_points:
+    - "台積電法說：Q1 毛利率 66.2%、EPS 22.08 均創歷史新高，AI capex thesis 強化"
+    - "美股創高：標普首破 7,000、那指連 11 紅首破 20,000"
+    - "馬斯克 AI5 晶片流片確認（台積電 + 三星）"
+    - "GTC 台北：黃仁勳 6/1 主題演講確認"
+    - "籌碼確認：外資 +440 億（連三日大買）"
+  secondary_themes:
+    - "CPO/矽光子（大立光、玉晶光）"
+    - "面板輪動（友達、群創）"
+    - "被動元件（國巨法說強）"
+  fund_flows:
+    foreign: "+440 億"
+    investment_trust: "-43 億"
+    dealer: "+118 億"
+
+cross_ref:
+  rows:
+    - {symbol: "2383", name: "台光電", screener: "ADX 44, +5.7%", sentiment: null, news: "AI 基板、CPO", verdict: "三方共振但超買，等整理", tier: story_only}
+    - {symbol: "6213", name: "聯茂",   screener: "ADX 44.7, +10%", sentiment: null, news: "高頻基板",   verdict: "三方共振但超買，等整理", tier: story_only}
+    - {symbol: "3189", name: "景碩",   screener: "ADX 30, 量 1.86x", sentiment: null, news: "ABF, AI PCB", verdict: "雙重確認，最乾淨 → watchlist", tier: double_confirm}
+    - {symbol: "3711", name: "日月光", screener: "量 1.57x, RSI 73", sentiment: null, news: "CoWoS 封測", verdict: "雙重確認 → watchlist", tier: double_confirm}
+    - {symbol: "2454", name: "聯發科", screener: "量 2.48x, 止穩",    sentiment: null, news: "AI 晶片設計", verdict: "雙重確認，MACD 仍負，等確認", tier: double_confirm}
+    - {symbol: "2330", name: "台積電", screener: "watchlist",         sentiment: "討論最多", news: "法說亮眼", verdict: "Trigger 未達，保留 watch", tier: screener_only}
+  tomorrow_watch:
+    - {symbol: "3189", name: "景碩",   tag: NEW,  reason: "量縮守穩後逢低評估（進場區 370-385，停損 360）"}
+    - {symbol: "3711", name: "日月光", tag: NEW,  reason: "進 watchlist 觀察封測需求持續性"}
+    - {symbol: "2383", name: "台光電", tag: null, reason: "超買整理後再評估"}
+    - {symbol: "2330", name: "台積電", tag: null, reason: "法說消化期，看量能回到 1.5x"}
+
+watchlist_changes:
+  added:
+    - {symbol: "3189", status: watch}
+    - {symbol: "3711", status: watch}
+  promoted: []
+  removed: []
+  updated: []
+
+deep_research_candidates:
+  - {symbol: "3189"}
+  - {symbol: "3008"}

@@ -11,6 +11,7 @@ import type {
   TradeRecord,
   WorkspaceConfig,
   WorkspaceStatus,
+  ChartData,
 } from './types.ts'
 
 const BASE = '/api'
@@ -52,6 +53,7 @@ export const api = {
 
   quote: (symbol: string) => get<Quote>(`/quote/${encodeURIComponent(symbol)}`),
   analysis: (symbol: string) => get<AnalysisReport>(`/analysis/${encodeURIComponent(symbol)}`),
+  chart: (symbol: string) => get<ChartData>(`/chart/${encodeURIComponent(symbol)}`),
   screener: (strategy = 'momentum', limit = 30) =>
     get<ScreenerResponse>(`/screener?strategy=${strategy}&limit=${limit}`),
 

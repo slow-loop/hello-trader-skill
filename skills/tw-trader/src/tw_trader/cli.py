@@ -23,6 +23,7 @@ from typing import Optional
 
 import httpx
 import typer
+import yaml
 
 app = typer.Typer(help="TW Trader CLI")
 
@@ -124,20 +125,31 @@ def journal_add(
     at: str = typer.Option("", "--at", help="HH:MM"),
     action: list[str] = typer.Option([], "--action"),
     note: list[str] = typer.Option([], "--note"),
+    file: Optional[Path] = typer.Option(None, "--file", help="Path to JSON/YAML file containing JournalEntry data"),
 ):
     """Append a journal entry through the backend workspace API."""
     effective_date = journal_date or date.today().isoformat()
-    data = _api(
-        "POST",
-        f"/workspace/journals/{effective_date}/entries",
-        json={
+    
+    if file:
+        try:
+            data = yaml.safe_load(file.read_text(encoding="utf-8"))
+        except Exception as exc:
+            typer.echo(f"Failed to parse file {file}: {exc}", err=True)
+            raise typer.Exit(1)
+    else:
+        data = {
             "at": at,
             "type": entry_type,
             "actions": action,
             "notes": note,
-        },
+        }
+        
+    result = _api(
+        "POST",
+        f"/workspace/journals/{effective_date}/entries",
+        json=data,
     )
-    typer.echo(json.dumps(data, indent=2, ensure_ascii=False))
+    typer.echo(json.dumps(result, indent=2, ensure_ascii=False))
 
 
 @app.command()
@@ -173,6 +185,37 @@ def watchlist():
     """Show the watchlist with analysis/evaluation from backend."""
     data = _api("GET", "/workspace/watchlist")
     typer.echo(json.dumps(data, indent=2, ensure_ascii=False))
+
+
+@app.command()
+def watchlist_update(
+    file: Path = typer.Option(..., "--file", help="Path to JSON/YAML file containing WatchlistItem data"),
+):
+    """Update or add a watchlist item using a JSON/YAML file."""
+    try:
+        data = yaml.safe_load(file.read_text(encoding="utf-8"))
+    except Exception as exc:
+        typer.echo(f"Failed to parse file {file}: {exc}", err=True)
+        raise typer.Exit(1)
+        
+    result = _api("POST", "/workspace/watchlist/items", json=data)
+    typer.echo(f"Updated watchlist for {data.get('symbol', 'unknown')}")
+
+
+@app.command()
+def research_card_save(
+    date_str: str = typer.Option(..., "--date", "-d", help="YYYY-MM-DD"),
+    file: Path = typer.Option(..., "--file", help="Path to JSON/YAML file containing the research card"),
+):
+    """Save a research card from a JSON/YAML file."""
+    try:
+        data = yaml.safe_load(file.read_text(encoding="utf-8"))
+    except Exception as exc:
+        typer.echo(f"Failed to parse file {file}: {exc}", err=True)
+        raise typer.Exit(1)
+        
+    result = _api("PUT", f"/workspace/research-cards/{date_str}", json=data)
+    typer.echo(f"Saved research card for {date_str}.")
 
 
 @app.command()

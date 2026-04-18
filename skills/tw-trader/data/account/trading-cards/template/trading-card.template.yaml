@@ -1,0 +1,86 @@
+# Trading Card template (draft — pending user review)
+# ─────────────────────────────────────────────────────────────
+# 位置：data/account/trading-cards/{YYYY-MM-DD}-run-{N}.yaml
+# 由 TRADING_TW.md 主流程結束後產出。
+# 一天可能多次 trading run（盤前/盤中/盤後），所以檔名帶 run 編號。
+#
+# 規則：
+#   - watchlist_eval 的 conditions 與 watchlist.yaml 的 trigger_conditions 對齊
+#   - decisions 的 action 固定為 BUY | SELL | SKIP | HOLD | SET_EXIT
+#   - observations 的 kind 固定為 ALERT | NOTE
+
+date: "YYYY-MM-DD"
+run: 1                              # 當日第幾次 trading run
+session: intraday                   # pre-market | intraday | post-close
+timestamp: "YYYY-MM-DD HH:MM"
+
+# ── Section 1: Market Context ─────────────────────────────
+market:
+  taiex:
+    close: 37132
+    change_pct: 1.31
+  volume_billion: 9820              # 成交額（億）
+  fund_flows:
+    foreign: "+440 億"
+    investment_trust: "-43 億"
+    dealer: "+118 億"
+  judgement: "收盤創歷史新高，但台指期夜盤閃崩 600 點，明日開低壓力大"
+
+# ── Section 2: Watchlist Evaluation ───────────────────────
+# 對應 `cli watchlist` 的 evaluation 結果
+watchlist_eval:
+  - symbol: "2330"
+    name: "台積電"
+    close: 2085
+    change_pct: 0.48
+    trigger_met: false
+    conditions:
+      - {label: "SMA20", met: true}
+      - {label: "MACD", met: true}
+      - {label: "Vol 1.5x", met: false}
+    risk: "量比 1.22x 未達、相對弱勢、夜盤閃崩"
+
+  - symbol: "3189"
+    name: "景碩"
+    close: 383.5
+    change_pct: 3.37
+    trigger_met: true
+    conditions:
+      - {label: "SMA20", met: true}
+      - {label: "MACD", met: true}
+      - {label: "Vol 1.5x", met: true}
+      - {label: "ADX>25", met: true}
+    risk: "ATR 7.2% 高波動、夜盤閃崩待消化"
+
+# ── Section 3: Trading Decisions ──────────────────────────
+decisions:
+  - symbol: "3189"
+    name: "景碩"
+    action: BUY                     # BUY | SELL | SKIP | HOLD | SET_EXIT
+    qty: 750
+    price: 396.5
+    stop_loss: 360
+    take_profit: 450                # 最終 TP；若有分批 TP 放 tp_levels
+    tp_levels: [410, 450]           # optional 分批
+    strategy: momentum
+    reason: "三方共振（技術面突破 + 新聞利多 + 散戶情緒熱烈）"
+    next: "跌破 360 止損；觸 410 先出一半"
+
+  - symbol: "2330"
+    name: "台積電"
+    action: SKIP
+    reason: "Trigger 未全達（量比 1.22x < 1.5x），法說日相對弱勢"
+    next: "等待量能回升至 1.5x"
+
+# ── Section 4: Key Observations ───────────────────────────
+observations:
+  - kind: ALERT                     # ALERT | NOTE
+    text: "台指期夜盤閃崩 600 點 — 明日開低壓力大，全部標的暫緩進場"
+  - kind: NOTE
+    text: "2330 法說日個股僅 +0.48% vs 大盤 +1.31% — 利多已提前 price in"
+
+# ── 執行摘要（給 journal / log 用）────────────────────────
+summary:
+  trades_executed: 1                # 實際下單次數
+  positions_held: 1                 # 當前持倉數
+  equity: null                      # 可選，接 cli account

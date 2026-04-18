@@ -54,6 +54,10 @@ uv run python -m tw_trader.cli sell 2330.TW --qty 100 --price 980 --reason "觸�
 
 # Watchlist trigger/invalidation 摘要（optional shorthand）
 uv run python -m tw_trader.cli check-triggers
+
+# --- 資料更新指令 (Agent 專用) ---
+# 新增 Journal (透過暫存檔)
+uv run python -m tw_trader.cli journal-add --file tmp/journal_entry.yaml
 ```
 
 ## 流程
@@ -75,11 +79,11 @@ uv run python -m tw_trader.cli check-triggers
    - 先跑 `cli market <symbol>` 獲取最新狀態
    - 依據當下最新的支撐、壓力與均線，重新精算出合理的 `stop-loss` 與 `take-profit`
    - 若重新計算後發現風控賠率不佳，應直接 `skip`；確認合理才執行 `buy`（需附上清晰 reason）
-5. **紀錄**：append `type: trade` journal 或正式 research
-6. **盤後回顧**：若目前為盤後時段，執行 `prompts/TRADING_TW_REFLECT.md`（盤中略過這一步）
+5. **紀錄**：生成 `JournalEntry` 並寫入 `tmp/journal_entry_{date}.yaml`，執行 `uv run python -m tw_trader.cli journal-add --file tmp/journal_entry_{date}.yaml`。
+6. **盤後回顧**：若目前為盤後時段，執行 `prompts/RESEARCH_TW_REFLECT.md`（盤中略過這一步）
 
 
 ## 原則
 
 - 如果 thesis 不清楚、盤勢不配合、或風控不允許，就 `skip`
-- 不要為了新聞研究另外建立 `data/feeds/*.yaml`；直接讀 `web-reader` CLI 輸出，最後只整理進 journal 或正式研究
+- **嚴禁直接寫入結構化 YAML 檔案**：對於 `watchlist.yaml` 或 `journals/*.yaml`，必須先寫入 `tmp/` 下的暫存檔，再透過 `cli` 更新。

@@ -15,6 +15,9 @@
 - `data/config/technical_config.yaml`: 全域技術分析設定
 - `data/config/sources.tw.yaml`: 外部 `web-reader` 新聞來源設定
 - `data/account/research/{YYYY-MM-DD}-tw-{symbol_or_theme}.md` 投資標的或主題研究
+- `data/account/research-cards/{YYYY-MM-DD}.yaml`: 當日研究卡片（Phase 1-4 結構化摘要，供前端渲染）
+- `data/account/research-cards/template/research-card.template.yaml`: 研究卡片輸出格式範本
+- `data/account/screener/{YYYY-MM-DD}.json`: screener 原始輸出（由 Phase 1 redirect 寫入）
 
 ## CLI
 
@@ -48,6 +51,14 @@ uv run web-reader data/config/sources.tw.yaml --tags=tw,macro
 
 # 深度研究用
 uv run web-reader data/config/sources.tw.yaml --tags=research
+
+# --- 資料更新指令 (Agent 專用) ---
+# 更新 Watchlist (透過暫存檔)
+uv run python -m tw_trader.cli watchlist-update --file tmp/update_item.yaml
+# 新增 Journal (透過暫存檔)
+uv run python -m tw_trader.cli journal-add --file tmp/journal_entry.yaml
+# 儲存 Research Card (透過暫存檔)
+uv run python -m tw_trader.cli research-card-save --date 2026-04-18 --file tmp/card.yaml
 ```
 
 ## 規則
@@ -57,15 +68,16 @@ uv run web-reader data/config/sources.tw.yaml --tags=research
 - 預設先做交易研究，不做全面 deep research
 - 不是每次都要更新正式個股研究
 - 不要只貼資料，要做明確判斷
-- 新聞蒐集優先使用外部 `web-reader` CLI，不要另外產出 `data/feeds/*.yaml`
 - **新增 watchlist 時，同步建立研究文件**（送交個股交易研究子流程），不要事後幾天才補
 - **研究文件強制更新觸發條件**：個股現價相對前次研究的基準價格移動 >10%，或 thesis 的成立/失效條件對應的關鍵技術指標（支撐/壓力/籌碼）已不適用，則強制重跑個股交易研究
+- **嚴禁直接讀寫結構化 YAML 檔案**：對於 `watchlist.yaml`、`journals/*.yaml` 與 `research-cards/*.yaml`，嚴禁使用 `write_to_file` 直接修改或覆寫。必須先將內容寫入 `tmp/` 下的 YAML 暫存檔，再透過對應的 `cli` 指令更新。這能確保 YAML 格式正確且經過後端驗證。
 
 ## 主流程
 
 ### Phase 0：準備
 
 1. 讀 `data/account/lessons.md`、`data/account/watchlist.yaml`、最近 journal、查看目前持倉 `cli account`
+   - 同時讀 `data/account/research-cards/template/research-card.template.yaml` 作為 Phase 5 結構化輸出的格式參考
 2. 跑 `cli watchlist` 取得 watchlist 的 raw + analysis + evaluation
    - `watchlist` 是唯一完整來源；不要再期待獨立的 trigger 檔案或獨立資料來源
    - `check-triggers` 只是 `watchlist.evaluation` 的摘要 view，適合快速看 trigger/invalidation 狀態
@@ -77,9 +89,10 @@ uv run web-reader data/config/sources.tw.yaml --tags=research
 
 ### Phase 1：量化雷達（數據先行，鎖定名單）
 
-跑 `uv run python -m tw_trader.cli screener --strategy=momentum`
+跑 `uv run python -m tw_trader.cli screener --strategy=momentum > data/account/screener/{YYYY-MM-DD}.json`
 
 Screener 現在自動附帶技術指標（RSI, ADX, 量比）與籌碼資訊（外資/投信連買天數, 融資趨勢），可直接用於篩選：
+- **原始輸出固定寫入 `data/account/screener/{date}.json`**；card 只引用 `source` 與 `highlights`，不重抄整張表
 - 記錄上榜名單（含指標），標注哪些是 watchlist 已有、哪些是新面孔
 - 優先關注：ADX > 20 + 外資或投信連買 ≥ 3 日的新面孔
 - **名單鎖定**：Phase 1 輸出固定後，後續 Phase 不得追加 screener 名單
@@ -117,29 +130,24 @@ Screener 現在自動附帶技術指標（RSI, ADX, 量比）與籌碼資訊（�
 
 ### Phase 5：Watchlist 更新 & 個股研究 & Journal
 
-1. 更新 `data/account/watchlist.yaml`：
-   - 新增值得追蹤的新股票
-   - 保留 thesis 仍成立的股票
-   - 移除 thesis 已失效的股票
-   - 更新 thesis、trigger、invalidation 或 status 已改變的股票
-   - **注意：必須在 watchlist 備註「催化劑驗證點（如近期法說會）」與「嚴格的技術面失效價位」**
+1. **更新 Watchlist**：
+   - 對於需要新增或修改的標的，將 `WatchlistItem` 資料寫入 `tmp/watchlist_update_{symbol}.yaml`。
+   - 執行 `uv run python -m tw_trader.cli watchlist-update --file tmp/watchlist_update_{symbol}.yaml`。
+   - 移除標的則直接在 journal 記錄並在未來維護時處理。
 2. 判斷哪些股票需要進行到「個股交易研究」：
    - 新股票想加入 watchlist
    - 股票想從 `watch` 升級成 `hold`
    - thesis 明顯改變
    - 持有中的股票出現重大催化或重大風險
-   - 新聞多但無法只靠 headline 判斷
 3. 對需要個股交易研究的股票，每一個標的指派一個 sub-agent 執行 `### 子流程：個股交易研究`
-4. 在今天的 journal append 一則研究紀錄：
-   - 今天的大盤判斷
-   - Phase 1 screener 上榜摘要（新面孔特別標注）
-   - Phase 2 sentiment 結論
-   - Phase 3 macro/news 結論
-   - Phase 4 交叉比對結果
-   - watchlist 做了哪些調整
-   - 明天最值得繼續看的股票
-   - 哪些股票被列為個股交易研究候選或已送交個股交易研究
-   - **append 前先確認 journal YAML 可正常解析；若前一輪留下格式錯誤，先修好再寫**
+4. **寫 Research Card**：
+   - 依 `research-cards/template/research-card.template.yaml` 結構生成內容。
+   - 先寫入 `tmp/research_card_{date}.yaml`。
+   - 執行 `uv run python -m tw_trader.cli research-card-save --date {YYYY-MM-DD} --file tmp/research_card_{date}.yaml`。
+5. **更新 Journal**：
+   - 生成當日的 `JournalEntry` 內容。
+   - 先寫入 `tmp/journal_entry_{date}.yaml`。
+   - 執行 `uv run python -m tw_trader.cli journal-add --date {YYYY-MM-DD} --file tmp/journal_entry_{date}.yaml`。
 
 ### 子流程：個股交易研究
 
