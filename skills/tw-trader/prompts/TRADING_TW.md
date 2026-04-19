@@ -62,6 +62,7 @@ uv run python -m tw_trader.cli journal-add --file tmp/journal_entry.yaml
 
 ## 流程
 
+0. **確認 backend2**：若任一 `cli` 指令回傳 `Cannot connect to backend at http://localhost:8000`，先切到 `/Users/cw/Documents/GitHub/hello-trader-skill/backend2` 執行 `uv run backend2`，確認服務可用後再繼續。
 1. **讀上下文**：`data/account/lessons.md`、`data/account/watchlist.yaml`、近 3 日 `data/account/journals/{YYYY-MM-DD}.yaml`
 2. **掃全局**：
    - `cli market`（大盤 + headline）
@@ -74,13 +75,13 @@ uv run python -m tw_trader.cli journal-add --file tmp/journal_entry.yaml
 3. **持倉管理**（有持倉時）：逐一檢視持倉標的：
    - 是否觸及 stop-loss / take-profit？
    - thesis 是否仍成立？（新聞、籌碼有無反轉）
-   - → `sell`（必帶 `--reason`）/ `set-exit`（更新止損止盈）/ `hold`
+   - → `sell`（必帶 `--reason`）/ `hold`
 4. **新進場評估**（有候選時）：對 trigger 已達標或接近的標的：
    - 先跑 `cli market <symbol>` 獲取最新狀態
    - 依據當下最新的支撐、壓力與均線，重新精算出合理的 `stop-loss` 與 `take-profit`
    - 若重新計算後發現風控賠率不佳，應直接 `skip`；確認合理才執行 `buy`（需附上清晰 reason）
 5. **紀錄**：生成 `JournalEntry` 並寫入 `tmp/journal_entry_{date}.yaml`，執行 `uv run python -m tw_trader.cli journal-add --file tmp/journal_entry_{date}.yaml`。
-6. **盤後回顧**：若目前為盤後時段，執行 `prompts/RESEARCH_TW_REFLECT.md`（盤中略過這一步）
+6. **盤後回顧**：若目前為盤後時段，執行 `prompts/TRADING_TW_REFLECT.md`（盤中略過這一步）
 
 
 ## 原則

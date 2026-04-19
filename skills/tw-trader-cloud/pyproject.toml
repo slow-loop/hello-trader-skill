@@ -1,0 +1,17 @@
+[project]
+name = "tw-trader-cloud"
+version = "0.1.0"
+description = "tw-trader cloud skill CLI — backend3 client"
+requires-python = ">=3.13"
+dependencies = [
+    "httpx>=0.28.1",
+    "pyyaml>=6.0.3",
+    "typer>=0.15.1",
+]
+
+[project.scripts]
+tw = "tw_trader_cloud.cli:app"
+
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"

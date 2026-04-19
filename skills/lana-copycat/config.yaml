@@ -34,6 +34,16 @@ cattrade:
     short_impact_threshold: 1.0
   filters:
     min_oi_usdt: 5_000_000
+  run:
+    min_entry_score: 40.0            # don't enter unless top candidate >= this
+    min_conviction_healthy: 0.95     # conviction >= this → hold, don't trim
+    max_close_pct_per_run: 0.10      # cap: close at most 10% per run
+    min_close_pct: 0.02              # below this, skip (not worth fees)
+    # absent-from-sheet handling: ranking churn is noisy, so don't exit on 1 tick.
+    absent_streak_threshold: 3       # ticks of continuous absence before trimming
+    absent_trim_pct: 0.05            # % to trim per tick once streak hits threshold
+    # time stop: close if held this long without being in profit (hours)
+    time_stop_hours: 24              # 0 = disabled
 
 scoring:
   weight_square: 0.4

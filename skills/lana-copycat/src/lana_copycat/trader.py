@@ -71,12 +71,22 @@ class BinanceTrader:
         else:
             return round(entry + stop_gap, 4)
 
+    def _qty_precision(self, symbol: str) -> int:
+        """Fetch quantityPrecision for symbol from exchangeInfo (cached per trader instance)."""
+        if not hasattr(self, "_qty_precision_cache"):
+            self._qty_precision_cache: dict[str, int] = {}
+        if symbol not in self._qty_precision_cache:
+            info = self._client.futures_exchange_info()
+            for s in info.get("symbols", []):
+                self._qty_precision_cache[s["symbol"]] = s.get("quantityPrecision", 3)
+        return self._qty_precision_cache.get(symbol, 3)
+
     def _calc_quantity(self, symbol: str, balance_usdt: float, position_size_pct: float) -> float:
         price = self._get_price(symbol)
         notional = balance_usdt * position_size_pct * self.leverage
         qty = notional / price
-        # round to reasonable precision
-        return round(qty, 3)
+        precision = self._qty_precision(symbol)
+        return round(qty, precision)
 
     def open_long(
         self,
@@ -121,19 +131,18 @@ class BinanceTrader:
         order_id = str(order["orderId"])
         log.info("Opened LONG %s qty=%s orderId=%s", symbol, qty, order_id)
 
-        # stop-loss
+        # stop-loss (closePosition=True so Binance auto-closes full position)
         stop_price = self._calc_stop_price(entry_price, qty, "BUY")
         sl_order = self._client.futures_create_order(
             symbol=symbol,
             side="SELL",
             type="STOP_MARKET",
-            quantity=qty,
             stopPrice=stop_price,
-            closePosition=False,
-            timeInForce="GTE_GTC",
+            closePosition=True,
         )
-        sl_order_id = str(sl_order["orderId"])
-        log.info("Set stop-loss %s stopPrice=%s orderId=%s", symbol, stop_price, sl_order_id)
+        # closePosition orders return algoId, not orderId
+        sl_order_id = str(sl_order.get("orderId") or sl_order.get("algoId", "unknown"))
+        log.info("Set stop-loss %s stopPrice=%s id=%s", symbol, stop_price, sl_order_id)
 
         return TradeResult(
             symbol=symbol,

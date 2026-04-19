@@ -15,6 +15,7 @@
 - `data/config/technical_config.yaml`: 全域技術分析設定
 - `data/config/sources.tw.yaml`: 外部 `web-reader` 新聞來源設定
 - `data/account/research/{YYYY-MM-DD}-tw-{symbol_or_theme}.md` 投資標的或主題研究
+- `data/account/research/template/template.md`: 個股交易研究範本
 - `data/account/research-cards/{YYYY-MM-DD}.yaml`: 當日研究卡片（Phase 1-4 結構化摘要，供前端渲染）
 - `data/account/research-cards/template/research-card.template.yaml`: 研究卡片輸出格式範本
 - `data/account/screener/{YYYY-MM-DD}.json`: screener 原始輸出（由 Phase 1 redirect 寫入）
@@ -73,6 +74,11 @@ uv run python -m tw_trader.cli research-card-save --date 2026-04-18 --file tmp/c
 - **嚴禁直接讀寫結構化 YAML 檔案**：對於 `watchlist.yaml`、`journals/*.yaml` 與 `research-cards/*.yaml`，嚴禁使用 `write_to_file` 直接修改或覆寫。必須先將內容寫入 `tmp/` 下的 YAML 暫存檔，再透過對應的 `cli` 指令更新。這能確保 YAML 格式正確且經過後端驗證。
 
 ## 主流程
+
+### Step 0：確認 backend2
+
+- 若任一 `cli` 指令回傳 `Cannot connect to backend at http://localhost:8000`，先切到 `/Users/cw/Documents/GitHub/hello-trader-skill/backend2` 執行 `uv run backend2`
+- 確認 backend2 已啟動後，再開始 Phase 0；不要在 backend 未就緒時直接往下做
 
 ### Phase 0：準備
 

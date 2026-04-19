@@ -1,0 +1,3 @@
+backend_url: http://localhost:8100
+agent_name: tw-cloud-demo
+token: ""  # 由 POST /auth/register 取得後填入

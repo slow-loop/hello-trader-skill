@@ -1,4 +1,3 @@
-import { Link } from 'react-router-dom'
 import { tradesFromJournals } from '../data'
 
 export default function Trades() {
@@ -11,7 +10,7 @@ export default function Trades() {
         {trades.map((t, i) => (
           <div key={i} className="px-4 py-3 border-b border-neutral-100 last:border-b-0">
             <div className="flex items-center gap-3 text-sm">
-              <Link to={`/day/${t.date}`} className="font-mono font-bold text-blue-700 hover:underline">{t.date}</Link>
+              <span className="font-mono font-bold text-neutral-900">{t.date}</span>
               <span className="font-mono text-neutral-500">{t.at}</span>
             </div>
             <ul className="mt-1 space-y-0.5 text-sm">

@@ -225,18 +225,29 @@ def _score(cand: CattradeCandidate, cfg: dict[str, Any]) -> None:
 def pick_cattrade(
     sections: dict[str, list[dict]],
     cfg: dict[str, Any],
+    include_symbols: set[str] | None = None,
 ) -> list[CattradeCandidate]:
-    """Filter + score + rank. Returns longs only, positive-scored."""
+    """Filter + score + rank. Returns longs only, positive-scored.
+
+    include_symbols: base tickers (e.g. {"PAXG"}) that are always included in
+    the result even if their score is <= 0, so callers can distinguish
+    "weak signal" from "completely absent from sheet".
+    """
     pool = _build_candidates(sections)
     min_oi = cfg.get("filters", {}).get("min_oi_usdt", 5_000_000)
     out: list[CattradeCandidate] = []
     for cand in pool.values():
         if cand.oi_usdt and cand.oi_usdt < min_oi:
-            continue
+            if not (include_symbols and cand.symbol in include_symbols):
+                continue
         _score(cand, cfg)
         if cand.direction == "veto":
+            if include_symbols and cand.symbol in include_symbols:
+                out.append(cand)
             continue
         if cand.direction == "long" and cand.score > 0:
+            out.append(cand)
+        elif include_symbols and cand.symbol in include_symbols:
             out.append(cand)
     out.sort(key=lambda c: c.score, reverse=True)
     return out

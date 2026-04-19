@@ -17,7 +17,8 @@ export default function ResearchDoc() {
   return (
     <div className="space-y-4">
       <div className="flex items-center gap-3">
-        <Link to={`/day/${doc.date}`} className="text-sm text-neutral-500 hover:underline">← {doc.date}</Link>
+        <Link to="/" className="text-sm text-neutral-500 hover:underline">← Timeline</Link>
+        <span className="text-sm text-neutral-500 font-mono">{doc.date}</span>
         <h1 className="text-lg font-black font-mono">{doc.filename}</h1>
         <Link to={`/ticker/${doc.symbolOrTheme}`} className="ml-auto text-sm text-blue-700 hover:underline">
           查看 {doc.symbolOrTheme}

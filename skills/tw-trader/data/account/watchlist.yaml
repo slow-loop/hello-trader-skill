@@ -48,18 +48,21 @@
   - price_below_sma_20 and macd_histogram_negative
   updated_at: '2026-04-16'
 - symbol: 4979.TWO
-  thesis: AI 資料中心 800G/1.6T 頻寬升級，CPO 為核心技術路徑。華星光 DFB 激光器具備技術領先優勢。
+  thesis: AI 資料中心 800G / 1.6T 光連接升級延續，華星光受惠 DFB / CPO 與美系資料中心需求，仍是台股 CPO 純度最高的觀察股之一。
   status: watch
-  notes: 2026-04-17 新增：CPO 強力突破（亮燈漲停），成交量大增。動能極強，等候回測或整理後尋找切入點。
-  trigger: 回測五日線守穩，或整理後帶量突破 550 元。
-  invalidation: 跌破 480 元支撐位或行業需求成長放緩。
+  notes: 2026-04-17 新增：CPO 強力突破（亮燈漲停），成交量大增。2026-04-19 強制更新研究：現價 644，較前次研究基準 533 上漲
+    20.8%；RSI 80.6、ADX 33.3，三大法人合計買超 225 萬股，題材與籌碼仍強，但已遠離支撐，不宜追價。等待 600-610 回測守穩或高檔平台整理後再評估。
+  trigger: 回測 600-610 守穩後再轉強，或高檔平台整理後帶量突破前高。
+  invalidation: 收盤跌破 580，或跌破 SMA20 且 MACD 翻負，代表強勢結構失效。
   trigger_conditions:
   - price_above_sma_20
   - macd_histogram_positive
-  - volume_ratio > 1.5
   - adx_14 > 25
-  invalidation_conditions: []
-  updated_at: ''
+  - rsi_14 < 75
+  invalidation_conditions:
+  - price_below_sma_20 and macd_histogram_negative
+  - close < 580
+  updated_at: '2026-04-19'
 - symbol: 2330.TW
   thesis: 'LIVE TEST: TSMC setup looks strong for Q2 recovery.'
   status: hold

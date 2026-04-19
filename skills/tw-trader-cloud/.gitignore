@@ -1,0 +1,5 @@
+data/config/agent.yaml
+data/account/
+.venv/
+__pycache__/
+*.pyc
