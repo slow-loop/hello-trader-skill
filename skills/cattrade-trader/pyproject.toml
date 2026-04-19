@@ -1,0 +1,26 @@
+[project]
+name = "cattrade-trader"
+version = "0.1.0"
+description = "Signal picker that consumes cattrade's public Google Sheet as the sole input"
+requires-python = ">=3.11"
+dependencies = [
+    "typer>=0.15.0",
+    "httpx>=0.28.1",
+    "rich>=13.0.0",
+    "pyyaml>=6.0",
+]
+
+[project.scripts]
+cattrade = "cattrade_trader.cli:app"
+
+[build-system]
+requires = ["setuptools>=61"]
+build-backend = "setuptools.build_meta"
+
+[tool.setuptools.packages.find]
+where = ["src"]
+
+[dependency-groups]
+dev = [
+    "pytest>=8.0.0",
+]

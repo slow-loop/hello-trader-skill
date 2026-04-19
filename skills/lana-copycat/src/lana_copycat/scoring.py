@@ -35,7 +35,9 @@ def _normalise(values: list[float]) -> list[float]:
         return []
     mn, mx = min(values), max(values)
     if mx == mn:
-        return [1.0] * len(values)
+        # All equal — no signal from this dimension. Return zeros so it
+        # contributes nothing to the score (instead of a spurious 1.0).
+        return [0.0] * len(values)
     return [(v - mn) / (mx - mn) for v in values]
 
 

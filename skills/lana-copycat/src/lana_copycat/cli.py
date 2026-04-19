@@ -16,7 +16,7 @@ from rich.table import Table
 app = typer.Typer(help="Lana-copycat: Square sentiment + OI momentum trader")
 console = Console()
 
-CONFIG_PATH = Path(__file__).parent.parent.parent.parent / "config.yaml"
+CONFIG_PATH = Path(__file__).resolve().parents[2] / "config.yaml"
 
 
 def _load_config() -> dict:
@@ -184,6 +184,69 @@ def scan(
     console.print(f"[green]Trade opened:[/] {json.dumps(result.to_dict(), indent=2)}")
 
 
+# ── cattrade ──────────────────────────────────────────────────────────────────
+
+@app.command()
+def cattrade(
+    top_n: int = typer.Option(10, help="Top candidates to return"),
+    json_out: bool = typer.Option(False, "--json"),
+) -> None:
+    """Pure cattrade gsheet pipeline — MM-structure signals, no Square.
+
+    Independent filtering logic from `scan`. Uses only the 11 cattrade
+    rankings + Pattern B (大戶領先做多) to pick candidates.
+    """
+    _setup_logging()
+    cfg = _load_config()
+    cattrade_cfg = cfg.get("cattrade", {})
+    sheet_id = cattrade_cfg.get("sheet_id")
+    if not sheet_id:
+        console.print("[red]cattrade.sheet_id missing in config.yaml[/]")
+        raise typer.Exit(1)
+
+    from .signals.cattrade import fetch_cattrade_sections, pick_cattrade, DEFAULT_CATTRADE_CFG
+
+    merged = {**DEFAULT_CATTRADE_CFG, **cattrade_cfg}
+    console.print("[bold cyan]Fetching cattrade sheet...[/]")
+    try:
+        sections = fetch_cattrade_sections(
+            sheet_id, timeout_sec=cattrade_cfg.get("fetch_timeout_sec", 15)
+        )
+    except Exception as e:
+        console.print(f"[red]cattrade fetch failed: {e}[/]")
+        raise typer.Exit(1)
+    cands = pick_cattrade(sections, merged)[:top_n]
+
+    if json_out:
+        print(json.dumps([{
+            "symbol": c.symbol,
+            "score": c.score,
+            "patterns": c.patterns,
+            "oi_usdt": c.oi_usdt,
+            "reasons": c.reasons,
+        } for c in cands], ensure_ascii=False, indent=2))
+        return
+
+    table = Table(title=f"Cattrade Candidates (top {top_n})", show_lines=True)
+    table.add_column("#", style="dim")
+    table.add_column("Sym", style="bold")
+    table.add_column("Score", justify="right")
+    table.add_column("Patterns")
+    table.add_column("OI", justify="right")
+    table.add_column("Reasons")
+
+    for i, c in enumerate(cands, 1):
+        table.add_row(
+            str(i),
+            c.symbol,
+            f"{c.score:.2f}",
+            ",".join(c.patterns) or "-",
+            f"{c.oi_usdt/1_000_000:.1f}M",
+            "; ".join(c.reasons),
+        )
+    console.print(table)
+
+
 # ── signals ───────────────────────────────────────────────────────────────────
 
 @app.command()
@@ -295,6 +358,109 @@ def square(
 
     for ticker, count in list(snapshot.ticker_counts.items())[:20]:
         table.add_row(ticker, str(count))
+    console.print(table)
+
+
+# ── trade / positions ─────────────────────────────────────────────────────────
+
+def _make_trader(cfg: dict, dry_run: bool) -> "BinanceTrader":
+    from .trader import BinanceTrader
+    api_key = os.environ.get("BINANCE_API_KEY", "")
+    api_secret = os.environ.get("BINANCE_API_SECRET", "")
+    if not api_key or not api_secret:
+        console.print("[red]Set BINANCE_API_KEY and BINANCE_API_SECRET env vars.[/]")
+        raise typer.Exit(1)
+    binance_cfg = cfg.get("binance", {})
+    trader_cfg = cfg.get("trader", {})
+    return BinanceTrader(
+        api_key=api_key,
+        api_secret=api_secret,
+        testnet=binance_cfg.get("testnet", True),
+        max_loss_usdt=trader_cfg.get("max_loss_usdt", 200.0),
+        leverage=trader_cfg.get("leverage", 10),
+        dry_run=dry_run,
+    )
+
+
+@app.command()
+def trade(
+    symbol: str = typer.Argument(help="Futures symbol e.g. HIGHUSDT"),
+    dry_run: bool = typer.Option(True, help="Simulate only, no real order"),
+    json_out: bool = typer.Option(False, "--json"),
+) -> None:
+    """Open a LONG position on SYMBOL with fixed 200 USDT stop-loss."""
+    _setup_logging()
+    cfg = _load_config()
+    trader = _make_trader(cfg, dry_run)
+    trader_cfg = cfg.get("trader", {})
+
+    result = trader.open_long(
+        symbol=symbol.upper(),
+        position_size_pct=trader_cfg.get("position_size_pct", 0.05),
+    )
+
+    if json_out:
+        print(json.dumps(result.to_dict(), indent=2))
+        return
+
+    mode = "[yellow]DRY RUN[/]" if result.dry_run else ("[dim]testnet[/]" if result.testnet else "[red]LIVE[/]")
+    console.print(f"{mode}  LONG {result.symbol}  entry={result.entry_price}  qty={result.quantity}")
+    if not result.dry_run:
+        console.print(f"  order={result.order_id}  stop={result.stop_loss_order_id}")
+
+
+@app.command()
+def positions(
+    json_out: bool = typer.Option(False, "--json"),
+) -> None:
+    """Show all open Futures positions."""
+    _setup_logging()
+    cfg = _load_config()
+
+    api_key = os.environ.get("BINANCE_API_KEY", "")
+    api_secret = os.environ.get("BINANCE_API_SECRET", "")
+    if not api_key or not api_secret:
+        console.print("[red]Set BINANCE_API_KEY and BINANCE_API_SECRET env vars.[/]")
+        raise typer.Exit(1)
+
+    from binance.client import Client
+    binance_cfg = cfg.get("binance", {})
+    testnet = binance_cfg.get("testnet", True)
+    client = Client(api_key, api_secret, testnet=testnet)
+    if testnet:
+        client.FUTURES_URL = "https://testnet.binancefuture.com/fapi"
+
+    all_pos = client.futures_position_information()
+    open_pos = [p for p in all_pos if float(p.get("positionAmt", 0)) != 0]
+
+    if json_out:
+        print(json.dumps(open_pos, indent=2))
+        return
+
+    if not open_pos:
+        console.print("[dim]No open positions.[/]")
+        return
+
+    table = Table(title="Open Positions", show_lines=True)
+    table.add_column("Symbol", style="bold")
+    table.add_column("Side")
+    table.add_column("Qty", justify="right")
+    table.add_column("Entry", justify="right")
+    table.add_column("Mark", justify="right")
+    table.add_column("PnL", justify="right")
+
+    for p in open_pos:
+        amt = float(p["positionAmt"])
+        pnl = float(p["unRealizedProfit"])
+        pnl_fmt = f"[green]+{pnl:.2f}[/]" if pnl >= 0 else f"[red]{pnl:.2f}[/]"
+        table.add_row(
+            p["symbol"],
+            "LONG" if amt > 0 else "SHORT",
+            str(abs(amt)),
+            p["entryPrice"],
+            p.get("markPrice", "-"),
+            pnl_fmt,
+        )
     console.print(table)
 
 

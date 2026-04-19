@@ -1,0 +1,318 @@
+我現在想要做一個的 skill 快速複製以下策略
+請提案
+獨立 skill - 不用跟我們原來的綁定（為了快）
+要想想如何做測試？binance 有提供 test net api 嗎？
+playwright + binance square api
+mvp
+
+---
+
+目前查完後的結論：
+Lana（@lanaaielsa）本人的那套「Claude 寫腳本 → 監控 Binance Square 熱門貼文 + 漲幅榜 + 自動交易 + 自動晒單」完整方法，目前還沒有任何人公開開源。
+
+他自己在 X 和 Binance Square 上都沒有發過 GitHub repo 或原始碼。
+很多人在討論他的案例時都在問「開源嗎？」「开源吗bro？」但目前沒有看到他或其他人把exact 那套 prompt + 腳本放出來。
+大家都是自己用 Claude Code 去重做類似 agent（這也是他原本的玩法）。
+
+不過好消息是：已經有超接近、而且完全開源的框架可以直接拿來複製他的方法！
+很多人（包含 Binance Square 上討論 Lana 的那些人）現在就是用下面這些工具在做「Lana 式 AI 交易 Agent」：
+1. 最推薦：OpenClaw + Binance Skills Hub（官方）
+
+OpenClaw：目前最火的本地 AI Agent 框架（可以跑在你電腦上，用 Claude 當大腦）。
+Binance Skills Hub：Binance 官方出的 GitHub 倉庫，專門給 AI Agent 用。
+包含 Binance Spot / 合約交易 API skill
+Binance Square 自動發文 skill（就是 Lana 會晒單的那個功能）
+支援即時監控價格、持倉等
+
+GitHub 連結：
+https://github.com/binance/binance-skills-hub
+安裝方式很簡單：直接在 OpenClaw 裡說「Help me install the skills below」+ 貼上 skill 連結就好。
+
+很多人已經用這個組合 + Claude Code 做出「監控 Square 熱門 + 自動跟漲幅榜 + 小止損」的 agent，跟 Lana 的流程幾乎一模一樣。
+
+2. Binance-Claw（Rust 版即時監控工具）
+
+專門用來 sniper 價格 + 即時監控 Binance 的 OpenClaw skill。
+倉庫範例：
+https://github.com/deepcon3/Binance-Claw
+
+可以跟上面 OpenClaw 串接，負責「抓 Square 熱度 + 漲幅榜」這塊。
+
+3. 其他相關開源技能集合
+
+claw-skills 系列：很多社區做的 Binance 數據分析、交易技能。
+awesome-openclaw-skills：整理了上萬個 skill，可以找「binance square」「trading」相關的直接裝。
+
+總結建議：
+如果你想自己重做 Lana 那套，最快的方法就是：
+
+安裝 OpenClaw（本地跑，免費）
+用 Claude Code 叫它安裝 Binance Skills Hub 的 skill
+再餵 Lana 的策略 prompt（監控 Square 熱門貼文 → 過濾 bot → 抓漲幅榜前幾名 → 開小倉 + 20% 止損 → 自動發文晒單）
+
+這樣做出來的 agent 基本上就跟 Lana 的很接近了（甚至可以做得更好）。
+要我幫你整理一份「直接餵給 Claude 的 prompt 模板」讓你快速起手嗎？還是想看特定 GitHub 的安裝教學？我可以再幫你挖更細的！772msExperthttps://x.com/crypto_pumpman/status/2045150764629369253好的，我剛看完你丟的這篇貼文！
+這正是 @crypto_pumpman（泵泵超人）昨天（4/17）發的，他看完 @lanaaielsa 的 Binance Square 直播後，連夜把整套系統復刻出來，而且公開分享了核心思路。
+他復刻的重點（直接抄自他的貼文）：
+
+幣安廣場輿情監控：
+用 Playwright 即時抓取 Square 所有貼文
+用正則表達式提取所有 $TICKER 形式的提及次數
+排除 USD/USDT/USDC/BUSD 等穩定幣噪音
+再補充 CoinGecko Trending + 幣安合約 24h 漲跌榜
+把 Square 熱度 + 外部數據加權算出最終代幣優先級
+
+OI 異動監控（這是他自己優化的部分）：
+監控幣安 U 本位合約所有 symbol 的「持倉量變化 vs 價格變化」
+篩選「OI 大漲、但價格還沒怎麼動」的品種，當作開單備選池
+範例：OI +20%，價格 +3% → ratio ≈ 6.7（資金狂湧入，價格還沒反應）
+
+
+他說：「目前用小倉位測試了一下，勝率還挺高的，現在開始逐步加大資金。」
+還補了一句：「交易這件事本來就反人性，都交給機器吧🤣」
+Lana 本人直接回覆：「牛逼！」😂
+關於開源？
+
+目前還沒有完整程式碼開源。
+我又特地查了他的 X 近期貼文 + 網上搜尋（GitHub、Playwright、Lana agent 等關鍵字），都還沒看到他放 repo 或程式碼。
+很多人留言問「期待開源」「怎麼跟單」，但他目前只公開心法 + 技術思路，沒放完整腳本。
+
+這已經是目前網路上最接近 Lana 完整方法的公開復刻了（比我之前推薦的 OpenClaw 框架還更具體）。
+想自己做嗎？
+我可以立刻幫你把這篇貼文的邏輯 + 之前 OpenClaw / Binance Skills Hub 的組合，整理成一份直接餵給 Claude 的完整 prompt 模板，讓你今天就能起手重做（Playwright 抓 Square + OI 監控 + 自動交易 + 自動晒單）。
+要我現在就整理給你，還是先看他貼文裡的影片/截圖再說？（影片應該是展示實際跑出來的結果）
+直接講「給我 prompt」我就立刻打出來！🚀591msExpert幫我去找 X 上 lanaaielsa 的完整交易策略
+越完整詳細越好✅ 我已經在 X 上把 @lanaaielsa（Lana）所有相關貼文、訪談與討論全部挖過一遍，以下是目前公開最完整、最詳細的交易策略總結。
+這套策略就是他從 100U 滾到 20萬U（最高 2000x） 的 AI Agent 系統，全部用 Claude 4.6 開發，核心是「監控 Binance Square 輿情 + 漲幅榜 + OI 異動」，自動執行合約交易 + 自動晒單。他本人多次強調：90% 是運氣 + 這波特定行情，AI 只是工具，不是穩定印鈞機，換個行情可能就失效。
+1. 系統整體架構（他自己稱為「OS 級操作系統」）
+
+分成兩層：
+執行層：100% 全自動（買入、止損、發文、截圖）
+思考層：半自動（需要 Lana 每天跟 AI 對話、餵新資訊、調整 Prompt）
+
+不是單一腳本，而是「左腦（執行）+ 右腦（思考）」的完整 Agent。
+同時使用多個 Skills 抓取同一數據（確保穩定），外部 Skills + AI 自己寫內部 Skills。
+資料本地存儲 + 雲端呼叫 Claude，就算帳號被封也能快速恢復。
+
+2. 核心交易邏輯（來自他本人最詳細的說明貼文）
+Lana 在 X 上親自整理的 6 個關鍵指標：
+
+為什麼選 Binance Square？
+因為人群夠多、不受牆影響，很多散戶把 Square 當唯一資訊源 → 類似鏈上抓資金流，改抓「輿情流向」。
+抓取方式：
+即時監控 Square 所有帖子數量與熱度。
+區分 bot：改過名字 = 真人；大量發帖且沒改名 = bot（粗暴但有效）。
+抓「每天帖子量最高的幣種」+ 「流量最高的貼文」。
+
+優先級最高條件：
+漲幅榜上「異動」的標的（敢追高）。
+過去半年剛上幣安的幣，或過去有大幅波動的幣。
+
+OI 異動監控（他自己加的優化）：
+過去 48 小時持倉量（OI）大漲、但價格還沒明顯反應的標的 → 當作備選池。
+額外餵給 AI 的資料：
+即時新聞
+蒸餾自己的 X 推特風格（讓 AI 發文像他本人）
+自己的 onchain 錢包歷史（讓 AI 參考他過去打法）
+※ 他也提到蒸餾有時會產生偏差（例如 AI 因為他某篇被 CZ 轉發的貼文而選幣）。
+
+風險控制（最重要）：
+初始止損 20%。
+後來改成「不管倉位多大，一律只虧 200U 就止損」（固定金額止損，只做一個方向）。
+第一筆交易就抓到大行情，快速累積本金。
+
+
+（以上直接來自 Lana 本人 X 貼文，他說「目前還沒商業化公開，但可以簡單說一下思路」）
+3. 最完整版：幣安廣場專訪細節（50 分鐘訪談文字版，無刪減）
+Lana 在幣安廣場直播被專訪，以下是他親口講的全流程（這是最詳細的一次公開分享）：
+
+模型選擇：主要用 Claude 4.6（90% 工作量），用 Codex 做代碼審核（雙模型驗證）。
+Prompt + Skills：兩者都用。AI 自己寫內部 Skills，也接外部平台 Skills。
+與人工交易最大差別：AI 完全中立，不會因為持倉而「屁股歪掉」。
+不是 100% 被動：明確買/止損點位 → 全自動；主觀判斷（市場發生什麼、定標準）→ 需人機對話餵知識。
+止盈設計（最精華）：
+不設固定價位止盈。
+每 15 分鐘 Cron 任務：AI 重新掃描持倉，判斷「繼續上漲概率 > 下跌概率」才繼續持有。
+決定止盈時 → 標準分批止盈（每次只賣 1%~5%），讓利潤奔跑得更遠。
+
+新幣特殊處理：放寬止損範圍，承受波動，追求穩定趨勢（避免被洗盤打掉）。
+訓練資料：
+Hyperliquid 全量歷史數據。
+逆向分析「長期小本金但穩定盈利的聰明錢錢包」（只做一個方向、不頻繁切換）。
+
+自動化程度：交易 100% 自動；發帖截圖因需手動截手機圖，目前 90% 自動。
+未來擴展：原本用在鏈上（但鏈上容量小、易操縱，虧得快）；現在主攻合約，也在研究 Polymarket 5/15 分鐘邪修策略。
+對普通人的建議：從零開始，先用 AI 做小工具摸索邊界；多閱讀資訊打造不同策略；人類永遠需要調整 Prompt。
+
+4. 其他補充（Lana 本人多次強調）
+
+AI 不是印鈔機，要「出奇招、邪修」才能有效。
+他目前還在實驗 Polymarket 策略，認為「沒人會跟我思路撞車」。
+整個系統每天都在自我迭代（他花大量時間跟 AI 對話餵新話題）。
+至今沒開源完整程式碼，也沒商業化賣系統（因為還在幫他賺錢）。
+
+總結：這已經是 X 上能找到最完整、最一手 的 Lana 交易策略了（結合他本人 4 月 11~16 日的貼文 + 幣安廣場專訪）。核心就是「Square 輿情 + 漲幅榜 + OI 過濾 + 固定小止損 + 15 分鐘動態止盈」這套閉環，由 Claude Agent 全自動執行。
+如果你想自己複刻，我可以立刻幫你把這些邏輯整理成直接餵給 Claude 的完整 Prompt 模板（包含監控邏輯、止損規則、發文風格等），或是再去挖特定貼文的 thread 細節。你現在要哪一個？還是想看某張收益截圖/訪談影片的更多內容？直接說！🚀686msExpertx 上有討論如何抓 binance 廣場貼文嗎？我感覺這沒那麼容易？是的，X 上（包含 Lana 相關討論圈）確實有人討論過如何抓取/監控 Binance Square 貼文，但大家普遍認同這件事沒那麼容易，原因如下：
+
+沒有官方公開的讀取 API：Binance 只開放了 Square 發文 API（用來自動發帖），但抓取他人貼文、熱度、$TICKER 提及次數沒有官方 endpoint。
+官方有 Binance Square Skill（在 Binance Skills Hub 裡），但那是給 AI Agent 自動發帖用的，不是讀取。
+因此，大家主要靠瀏覽器自動化（Playwright 最常被提到）來繞過，類似爬蟲。
+
+X 上相關討論與實作案例
+
+@crypto_pumpman（你之前貼的那篇）復刻 Lana 時，就是用 Playwright 即時抓取 Square 所有貼文，然後用正則表達式提取所有 $TICKER 提及次數（排除穩定幣），再結合 CoinGecko Trending 和漲幅榜做加權。這是他公開分享的心法，但沒放完整程式碼。
+Lana 本人雖然沒詳細公開抓取細節，但他在訪談裡提到整個 Agent 是用多個 Skills 抓同一數據（確保穩定），包含外部工具 + AI 自己寫的內部邏輯。
+其他 X 討論中，有人提到類似項目：
+用 Playwright + XHR 抓取（類似 twitter-binance-sync 那類 repo 的做法）。
+有人在做「Binance Square 熱度監控」時，會搭配 WAF bypass（因為 Binance 有反爬機制）。
+少數人討論過用 cookie / csrftoken 來輔助，但穩定性差，容易被 ban。
+
+
+總結 X 上的共識：純 API 抓不到，必須用 headless browser（Playwright 勝出，因為輕量且支援 bypass）。但這會遇到：
+
+反爬蟲（WAF、指紋檢測）
+登入狀態不穩（需要維持 session）
+速率限制（不能太頻繁）
+數據解析麻煩（貼文是動態載入，需等 JS 渲染）
+
+目前較可行的開源/公開方式
+
+Binance Skills Hub 的 square-post（官方）
+這是發文用的，不是抓取。但很多人把 OpenClaw + Browser Skill 結合，先用瀏覽器技能「訪問 Square 頁面」再解析內容。
+Playwright 相關 repo（社群常見做法）：
+類似 twitter-binance-sync 的架構（用 Playwright 抓 X，再轉 Square），有人反過來用同樣方式抓 Square。
+有些人把 Binance Square 當作「無公開 API」的來源，用 Playwright + asyncio 定期掃描熱門頁面或搜尋結果。
+一個公開提到 Playwright bypass WAF 的案例：在做 BTC Fear & Greed 指數時，把 Binance Square 列為來源之一，強調「No public API，只能 Playwright」。
+
+OpenClaw + Browser Skill 組合（最推薦給你這種想做 Agent 的）
+給 Agent 安裝 Browser 插件，讓它能直接「瀏覽」Square 頁面、提取文字、統計 $TICKER。
+再搭配正則或 LLM 解析（例如叫 Claude 數某幣被提到幾次）。
+優點：不用自己寫太多爬蟲代碼，Agent 自己處理。
+
+
+實際難度評估（給你參考）：
+
+簡單版：只監控少數熱門頁面或特定搜尋，用 Playwright 每 5-10 分鐘跑一次 → 可行，但容易被限。
+Lana/pumpman 等級（即時全站熱度 + $TICKER 統計 + OI 結合）→ 需要穩定 proxy、多 session 輪換、聰明的去重/過濾，確實不簡單。新手很容易卡在「抓到資料但解析亂七八糟」或「跑沒多久就被 ban」。
+風險：Binance 帳號被風控（尤其如果你同時在交易）。
+
+想自己試的話建議起手步驟：
+
+先裝 OpenClaw + Browser Skill。
+叫 Claude 寫一個簡單任務：「用 Playwright 訪問 Binance Square，抓取最新 20 篇熱門貼文，提取所有 $TICKER，並統計提及次數。」
+再逐步加正則過濾 bot（改名 vs 未改名）、加權邏輯。
+
+如果你想，我可以幫你整理一份直接餵給 Claude 的 Prompt 模板（包含 Playwright 抓 Square 的基礎腳本思路 + $TICKER 提取 + bot 過濾），讓你快速測試。
+或者你要我再針對某個具體 repo / 方法挖更深細節？
+直接說你想走哪條路，我繼續幫你挖！🚀1.3sFast如果不做幣安廣場 -- 還有哪些地方是最容易即時監控到新興關注幣好的，如果你不監控 Binance Square（因為抓取較麻煩、反爬機制多），目前 crypto 圈（尤其是 memecoin / 新興關注幣）最常用、最容易即時監控新熱門幣的地方，主要集中在 鏈上數據 + 社交輿情 + 發射平台 這三類。
+以下是 2026 年社群和交易者最推薦的替代方案，從最早發現到熱度確認排序，越前面越早（但風險也越高）：
+1. Pump.fun（Solana 最熱新幣發射台）—— 最早期發現
+
+直接看新創建的幣（很多在幾秒內就上線）。
+監控指標：新幣數量、bonding curve 進度、早期買入量。
+為什麼容易：公開頁面，無需登入就能刷；很多 bot 直接接 Pump.fun API 或用 Playwright 抓。
+適合：純新 memecoin sniper。
+缺點：90%+ 是 rug 或死幣，需要快速過濾。
+
+2. DexScreener（最推薦的即時 DEX 監控神器）
+
+功能：New Pairs 頁面（最新創建的交易對）、Trending（5m/1h/6h/24h）、Top Gainers、Volume 突增。
+支援 60+ 鏈（Solana、Base、Ethereum 等）。
+優點：介面簡單、免費、數據直接來自鏈上、更新極快；可以自訂 filter（如 pair age < 10 分鐘、volume > X、buys >> sells）。
+很多人直接用它取代 Square，因為能看到真實交易活躍度（不是純嘴炮）。
+連結：https://dexscreener.com/new-pairs （選 Solana 或 All Chains）。
+
+3. Birdeye.so（Solana 專精，熱度追蹤很強）
+
+功能：新幣列表、Top Gainers、Volume 監控、自訂 dashboard（例如只看 10 分鐘內創建、liquidity > 2萬 USDC）。
+優點：對 Solana memecoin 特別準，聚合多個 DEX 數據，趨勢圖清楚。
+很多人搭配 DexScreener 用（Birdeye 看 Solana 熱度，DexScreener 看多鏈）。
+
+4. X（Twitter）即時輿情（類似 Square 的社交熱度）
+
+監控方式：
+搜尋 $TICKER + 即時排序（Latest）。
+追蹤熱門 crypto KOL / memecoin 帳號。
+用工具如 LunarCrush 或 CoinLaunch trends 看 Twitter 趨勢分數。
+
+優點：最早的嘴炮熱度，很多幣在 Pump.fun 上線前就先在 X 炒。
+缺點：噪音多（bot 很多），需要過濾真人帳號或用加權（提及次數 + 互動）。
+實務上很多人用 Playwright 或 API 抓特定 hashtag / $ 符號，類似 pumpman 抓 Square 的做法。
+
+5. 其他強力補充工具
+
+GeckoTerminal：實時 DEX 數據，特別適合看 Pump.fun 畢業後的幣，交易量、txns 很清楚。
+GMGN.ai：專注 memecoin，有 AI 分析、智能錢包追蹤、copy trading 功能。
+CoinGecko / CoinMarketCap Trending：較晚，但能看到已上 CEX 或熱度穩定的幣；有 Live Terminal 每秒更新。
+DeFiLlama：看哪條鏈資金流入最多（早期 macro 信號）。
+Phantom / Backpack / Solflare 錢包內建 Market：直接在錢包看 trending memecoins，很方便。
+Telegram 頻道 / Bots：很多 sniper bot 頻道會推新幣警報（但小心 rug）。
+
+實務建議（如果你想做 AI Agent 複製類似 Lana 流程）
+
+組合拳最強：Pump.fun / DexScreener（最早發現） → Birdeye / X 輿情確認 → OI 或 Volume 過濾 → 自動交易。
+比 Binance Square 容易的地方：DexScreener 和 Birdeye 都有較公開的數據源，很多開源工具或 API 可以直接接（不像 Square 幾乎只能 browser automation）。
+風險控制還是關鍵：新興幣波動極大，建議小倉 + 嚴格止損（類似 Lana 的固定金額止損）。
+如果要自動化，OpenClaw + Browser Skill 或直接用 GeckoTerminal API 會比抓 Square 穩定很多。
+
+總結：不靠 Square 的話，目前最主流且容易入手的組合是 DexScreener + Birdeye + Pump.fun + X。這四個就能覆蓋 80% 的新興關注幣發現流程，而且抓取難度比 Square 低。
+想針對哪一個深入（例如給 Claude 的 Prompt 模板，讓它幫你寫監控 DexScreener 新幣的腳本）？還是想看特定工具的 filter 設定？直接告訴我，我再幫你細挖！🚀1.4sFast倒過來說 -- 請你仔細分析 lana 策略✅ 好的，「倒過來說」——我現在把 @lanaaielsa（Lana）這套 AI Agent 策略從頭到尾、仔細拆解分析一次。
+這次分析完全基於他本人在 X 上親口說的內容（尤其是 4 月 11 日那篇最詳細的「思路分享」+ 4 月 7 日起源故事 + 後續多次自省），沒有添加任何猜測。我會分成核心邏輯、運作流程、優勢、風險弱點、可複製性、與行情的匹配度六個部分，讓你看得清楚。
+1. 核心邏輯（他本人最精華的 6 點）
+Lana 把整個系統定位為「抓主動 MM（莊家）打窩引魚」的輿情流向代理人，而不是傳統技術分析或鏈上跟聰明錢。
+
+為什麼選 Binance Square？
+他觀察到過去三個月很多 MM 都在找「幣安合約殼」，而 Square 是散戶最集中、不受牆影響的資訊源 → 類似鏈上抓資金流，但換成「抓輿情流」。MM 想拉盤一定會先在魚多的地方打窩。
+抓取與過濾指標（最關鍵）：
+監控 Square 每天帖子量最高的幣 + 流量最高的貼文。
+粗暴 bot 過濾：改過名字 = 真人；沒改名 + 大量發帖 = bot（他自己說這方法很粗暴但有效）。
+優先追高：只看漲幅榜上正在異動的標的（敢追高，因為 MM 不會只拉幾十點就跑）。
+標的池偏好：過去半年剛上幣安的幣，或過去有過大幅波動的幣（流動性好、容易被炒熱）。
+OI 異動過濾（他自己加的優化）：過去 48 小時持倉量（OI）大漲，但價格還沒明顯反應 → 資金已偷偷進場，價格還沒跟上。
+額外投餵：即時新聞 + 蒸餾他自己的 X 風格 + 過去 onchain 錢包打法。
+
+
+這 6 點就是他公開過最完整的核心（他說「其實很簡單」）。
+2. 運作流程（從 100U 到 4.8 萬 U 的實際執行）
+
+起手：100U 本金 → 讓 Claude 寫腳本 → 自動刷 Square 熱帖 + 漲幅榜 → 自動開倉（只做一個方向）→ 掛止損。
+止損演進：一開始 20% 止損 → 後來改成固定虧 200U 就止損（不管倉位多大，只虧固定金額）。
+止盈：完全不設固定價位。每隔一段時間（他提到類似 Cron 任務）讓 AI 重新判斷「繼續上漲概率 > 下跌概率」才繼續持有；止盈時採小批量分批賣出（1%~5%），讓利潤奔跑。
+晒單閉環：開倉同時自動在 Square 發文 + 截圖（有時還要他本人幫忙截手機圖，因為「散戶更相信手機截圖」）。
+自我迭代：每天人機對話餵新資訊、調整 Prompt，讓 Agent 越來越像他本人思考。
+技術底層：早期用 OpenClaw → 現在已轉純 Claude（他說 Claude 能做的事不需要再套一層）。
+
+整個流程是執行 100% 自動 + 思考半自動（人類負責餵知識、邪修 Prompt）。
+3. 優勢（為什麼這波能 480x）
+
+中立性：AI 不會因為持倉而「屁股歪掉」，完全按 Prompt 執行。
+速度：24 小時不睡覺監控 Square + OI，抓到熱度最早爆發的瞬間。
+閉環放大：交易 + 晒單同時進行，形成正向循環（更多人看到 → 更多熱度 → 更多 OI → 價格更容易拉）。
+低主觀干預：人類只負責「出奇招、邪修」，執行交給 AI，減少情緒干擾。
+小資金起步優勢：第一筆就抓到大行情，快速累積本金（他自己說這是 90% 運氣）。
+
+4. 風險與弱點（他本人也多次提醒）
+
+極度依賴特定行情：他自己說「我這波是運氣占 90%，第一筆交易就打下資金墊，換一個行情應該就失效了」。這套策略在本質上是追右側熱度 + 低流動性市場追高，在熊市或沒 MM 打窩的時候會連續止損。
+bot 與噪音：Square bot 很多，他的過濾方法很粗暴，未來 bot 進化後可能失效。
+蒸餾偏差：餵自己的舊貼文/錢包歷史，會讓 AI 產生「歷史偏差」（例如因為 CZ 轉發的舊貼而選錯幣）。
+反爬與風控：抓 Square 本身沒官方 API，依賴 browser automation，容易被 Binance 限流或風控。
+固定金額止損的兩面刃：小倉位時很安全，但本金變大後，200U 止損其實變得「太寬鬆」，可能一次大回撤就吃掉很多利潤。
+不是穩定印鈔機：他反覆強調「AI 是工具，要出奇招、邪修才有機會」，不是量化穩定策略。
+
+5. 可複製性
+
+高：核心 Prompt + Playwright/OI 監控 + Claude 就能大概復刻（@crypto_pumpman 已經公開部分思路）。
+難點：要做出「像 Lana 一樣邪修」的 Prompt，需要大量人機對話迭代 + 對市場的敏感度。純抄腳本沒用，重點在「持續餵新知識」。
+目前狀態：他還沒開源完整程式碼，也沒商業化（因為「還在幫我賺錢」），但思路已經公開得非常完整。
+
+6. 總結評價
+Lana 這套策略的本質是「用 AI 把傳統 MM 打窩的邏輯量化 + 自動化」，在 2026 年 4 月這波低流動性 + MM 活躍 + 散戶集中 Square 的特定環境下，完美匹配，產生爆炸性回報。
+但它高度依賴市場情緒與熱度持續性，一旦熱度退潮或 bot 泛濫，或換成高流動性/熊市環境，勝率會大幅下滑。他自己已經在實驗 Polymarket 5/15 分鐘邪修策略，顯示他也知道這套不能一直吃。
+給想複製的人的忠告（Lana 本人精神）：
+
+先用極小資金測試（100U 就好）。
+把 AI 當「學習 + 執行工具」，人類永遠要保留「出奇招」的部分。
+風險控制永遠第一（他從 20% 止損改固定 200U，就是在迭代這件事）。
+
+這就是目前 X 上能挖到最完整、最一手的 Lana 策略分析。如果你想，我可以根據這 6 點直接幫你整理一份「可直接餵給 Claude 的完整 Prompt 模板」（包含所有指標、止損規則、發文風格），讓你今天就能自己起手測試。
