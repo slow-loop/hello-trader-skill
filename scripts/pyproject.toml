@@ -10,4 +10,4 @@ dependencies = [
 ]
 
 [tool.uv.sources]
-web-reader = { path = "../../hello-invest/libs/web-reader", editable = true }
+web-reader = { path = "../libs/web-reader", editable = true }

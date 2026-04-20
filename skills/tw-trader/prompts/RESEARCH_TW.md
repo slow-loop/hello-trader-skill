@@ -23,19 +23,19 @@
 ## CLI
 
 ```bash
-# 量化雷達（含技術指標 + 籌碼 enrichment）
-uv run python -m tw_trader.cli screener --strategy=momentum
+# 量化雷達（含技術指標 + 籌碼 enrichment）— 直接呼叫 market-core，不需 backend
+uv run market screener --strategy momentum
 # 快速版（不做 enrichment，只看成交值與漲跌）
-uv run python -m tw_trader.cli screener --strategy=momentum --no-enrich
+uv run market screener --strategy momentum --no-enrich
 
 # 大盤總覽
-uv run python -m tw_trader.cli market
+uv run market overview
 
 # 個股分析
-uv run python -m tw_trader.cli market 2330
-uv run python -m tw_trader.cli market 2330 2303 2454
+uv run market analysis 2330
+uv run market quote 2330
 
-# 帳戶狀態
+# 帳戶狀態（local YAML）
 uv run python -m tw_trader.cli account
 
 # Watchlist（含 raw + analysis + evaluation）
@@ -75,10 +75,9 @@ uv run python -m tw_trader.cli research-card-save --date 2026-04-18 --file tmp/c
 
 ## 主流程
 
-### Step 0：確認 backend2
+### Step 0：無 backend 需求
 
-- 若任一 `cli` 指令回傳 `Cannot connect to backend at http://localhost:8000`，先切到 `/Users/cw/Documents/GitHub/hello-trader-skill/backend2` 執行 `uv run backend2`
-- 確認 backend2 已啟動後，再開始 Phase 0；不要在 backend 未就緒時直接往下做
+所有指令都是 local 執行，直接讀寫 `data/account/` 下的 YAML。不需要啟動任何 server。
 
 ### Phase 0：準備
 
@@ -95,7 +94,7 @@ uv run python -m tw_trader.cli research-card-save --date 2026-04-18 --file tmp/c
 
 ### Phase 1：量化雷達（數據先行，鎖定名單）
 
-跑 `uv run python -m tw_trader.cli screener --strategy=momentum > data/account/screener/{YYYY-MM-DD}.json`
+跑 `uv run market screener --strategy momentum > data/account/screener/{YYYY-MM-DD}.json`
 
 Screener 現在自動附帶技術指標（RSI, ADX, 量比）與籌碼資訊（外資/投信連買天數, 融資趨勢），可直接用於篩選：
 - **原始輸出固定寫入 `data/account/screener/{date}.json`**；card 只引用 `source` 與 `highlights`，不重抄整張表
@@ -118,7 +117,7 @@ Screener 現在自動附帶技術指標（RSI, ADX, 量比）與籌碼資訊（�
 跑 `uv run web-reader data/config/sources.tw.yaml --tags=tw,macro`
 
 - 整理：今天的市場主線、次主線、重要宏觀催化
-- **輔以大盤動能與籌碼觀察**：透過 `cli market` 總覽，確認市場資金真實流向（強勢族群、投信外資動向），驗證新聞敘事是否被真金白銀買單
+- **輔以大盤動能與籌碼觀察**：透過 `market overview` 總覽，確認市場資金真實流向（強勢族群、投信外資動向），驗證新聞敘事是否被真金白銀買單
 - 記下結論，不要和 Phase 2 的輸出混在一起
 
 ### Phase 4：交叉比對

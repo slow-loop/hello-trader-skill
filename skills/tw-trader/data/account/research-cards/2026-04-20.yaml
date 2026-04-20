@@ -1,0 +1,156 @@
+date: '2026-04-20'
+session: post-close
+screener:
+  skipped: false
+  skip_reason: null
+  source: screener/2026-04-20.json
+  highlights:
+  - symbol: '2303'
+    name: 聯電
+    reason: 成交量最大（36123 億），+6.88%，晶圓代工調漲代工價，三方共振最高優先
+    is_new: true
+  - symbol: '2360'
+    name: 致茂
+    reason: 漲停 +10%，但 screener only，跳過
+    is_new: true
+  - symbol: '4958'
+    name: 臻鼎-KY
+    reason: +9.94%，PCB 族群強，與景碩同族群，雙重確認
+    is_new: true
+  - symbol: '3450'
+    name: 聯鈞
+    reason: +7.33%，OTC 光通訊族群，PTT 盤後閒聊點名漲停
+    is_new: true
+  - symbol: '6213'
+    name: 聯茂
+    reason: +7.34%，ABF 族群持續強，前期已知
+    is_new: false
+  - symbol: '2404'
+    name: 漢唐
+    reason: +9.63%，AI 廠房工程，screener+隱約 news，觀察名單
+    is_new: true
+  - symbol: '6139'
+    name: 亞翔
+    reason: +8.07%，AI 廠房工程同族群，screener+隱約 news
+    is_new: true
+sentiment:
+  overall: 強烈偏多，空軍困境，漲停板數量極多（上市 55 + 上櫃 70）
+  hot_tickers:
+  - symbol: '2303'
+    theme: 晶圓代工調價
+    note: 爆量熱討，多篇報導，漲停後仍有買單
+  - symbol: '3189'
+    theme: PCB/ABF
+    note: PTT 盤後閒聊點名漲停
+  - symbol: '4958'
+    theme: PCB
+    note: PTT 點名 PCB 族群（景碩、臻鼎）
+  - symbol: '4979'
+    theme: CPO/光通訊
+    note: 光通訊族群（光聖、華星光、上詮、聯鈞）齊漲
+  - symbol: '3450'
+    theme: CPO/光通訊
+    note: PTT 盤後閒聊點名聯鈞漲停
+  narratives:
+  - 空軍困境，市場充滿做空難度論調
+  - AI 題材設備廠與載板延續漲勢
+  - 光通訊族群第二輪補漲
+  conclusion: 市場情緒極度偏多，但須注意連續多日漲停後的回測風險
+macro:
+  market_line: 台股收 36958.80 (+0.42%，+109 點)，成交 9199.77 億；大盤高檔震盪偏多，多頭格局不變
+  main_points:
+  - 聯電宣告下半年調漲代工價，股價漲停，成交逾 360 億，矽光子題材加持
+  - 英特爾 14A 製程傳獲輝達、蘋果青睞，市場懷疑執行力，台積電競爭疑慮未實質影響
+  - 台積電法說後 ADR 持續回穩，分析師維持偏多格局
+  - 美伊戰事反覆干擾市場，但台股在 3.7 萬附近維持強勢
+  secondary_themes:
+  - 光通訊族群（CPO）全面漲停，第二輪補漲
+  - PCB/ABF 族群（景碩、臻鼎）漲停，ABF 需求確認延續
+  - AI 廠房工程（漢唐、亞翔）受益資料中心建設加速
+  - 中東局勢：阿聯酋揚言棄石油美元（PTT push:72），宏觀不確定性仍在
+  fund_flows:
+    foreign: 外資買超 40 億，三大法人整體偏買
+    investment_trust: null
+    dealer: 自營避險賣壓，但外資抵銷
+cross_ref:
+  rows:
+  - symbol: '2303'
+    name: 聯電
+    screener: +6.88%，成交最大 36123 億
+    sentiment: PTT 爆量熱討，漲停話題
+    news: 調漲代工價，矽光子題材
+    verdict: 三方共振最高優先 → 加 watchlist
+    tier: triple_resonance
+  - symbol: '4958'
+    name: 臻鼎-KY
+    screener: +9.94%，11734 億
+    sentiment: PTT 點名 PCB 漲停
+    news: null
+    verdict: 雙重確認 → 加 watchlist
+    tier: double_confirm
+  - symbol: '3450'
+    name: 聯鈞
+    screener: +7.33%，OTC
+    sentiment: PTT 點名光通訊漲停
+    news: null
+    verdict: 雙重確認 → 加 watchlist
+    tier: double_confirm
+  - symbol: '3189'
+    name: 景碩
+    screener: trigger_met=true，+9.96%，ADX 31.3，量比 1.82x
+    sentiment: PTT 點名 PCB 漲停
+    news: ABF 族群持續強
+    verdict: 三方共振，trigger 已達標，高優先進場候選
+    tier: triple_resonance
+  - symbol: '2404'
+    name: 漢唐
+    screener: +9.63%，11197 億
+    sentiment: null
+    news: AI 廠房工程（隱約）
+    verdict: 觀察，等確認新聞後再評估
+    tier: double_confirm
+  - symbol: '6139'
+    name: 亞翔
+    screener: +8.07%，6733 億
+    sentiment: null
+    news: AI 廠房工程同族群
+    verdict: 觀察，screener+隱約 news
+    tier: double_confirm
+  tomorrow_watch:
+  - symbol: '2303'
+    name: 聯電
+    tag: NEW
+    reason: 等回測 SMA20 守穩後評估，不追漲停後高點
+  - symbol: '3189'
+    name: 景碩
+    tag: null
+    reason: trigger_met=true，但今日大漲 +9.96%，RSI 69.4，等開盤量價確認後評估進場
+  - symbol: '4958'
+    name: 臻鼎-KY
+    tag: NEW
+    reason: PCB 族群強，等回測守穩後評估
+  - symbol: '3450'
+    name: 聯鈞
+    tag: NEW
+    reason: 光通訊族群，等整理後確認量能再評估
+  - symbol: 4979.TWO
+    name: 華星光
+    tag: null
+    reason: RSI 83.7 極度超買，量比 0.87x 未放大，等 650-680 回測後再評估
+watchlist_changes:
+  added:
+  - symbol: '2303'
+    status: watch
+  - symbol: '4958'
+    status: watch
+  - symbol: '3450'
+    status: watch
+  promoted: []
+  removed: []
+  updated:
+  - symbol: 4979.TWO
+    what_changed: 強制更新研究：基準價由 644 更新為 708，trigger 條件加入 rsi_14 < 78，invalidation 價位調整為
+      640
+deep_research_candidates:
+- symbol: '2303'
+- symbol: '3189'

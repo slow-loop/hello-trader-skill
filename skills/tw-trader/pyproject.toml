@@ -9,7 +9,9 @@ dependencies = [
     "typer>=0.15.0",
     "pillow>=10.0.0",
     "pyyaml>=6.0",
+    "python-dotenv>=1.0",
     "web-reader",
+    "market-core[tw]",
 ]
 
 [project.scripts]
@@ -23,4 +25,5 @@ build-backend = "setuptools.build_meta"
 where = ["src"]
 
 [tool.uv.sources]
-web-reader = { path = "../../../hello-invest/libs/web-reader", editable = true }
+web-reader = { path = "../../libs/web-reader", editable = true }
+market-core = { path = "../../libs/market-core", editable = true }

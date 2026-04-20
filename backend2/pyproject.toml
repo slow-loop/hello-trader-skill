@@ -28,7 +28,7 @@ requires = ["hatchling"]
 build-backend = "hatchling.build"
 
 [tool.uv.sources]
-market-core = { path = "../../hello-note/libs/market-core" }
+market-core = { path = "../libs/market-core" }
 
 [dependency-groups]
 dev = [

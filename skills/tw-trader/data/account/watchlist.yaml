@@ -50,25 +50,59 @@
 - symbol: 4979.TWO
   thesis: AI 資料中心 800G / 1.6T 光連接升級延續，華星光受惠 DFB / CPO 與美系資料中心需求，仍是台股 CPO 純度最高的觀察股之一。
   status: watch
-  notes: 2026-04-17 新增：CPO 強力突破（亮燈漲停），成交量大增。2026-04-19 強制更新研究：現價 644，較前次研究基準 533 上漲
-    20.8%；RSI 80.6、ADX 33.3，三大法人合計買超 225 萬股，題材與籌碼仍強，但已遠離支撐，不宜追價。等待 600-610 回測守穩或高檔平台整理後再評估。
-  trigger: 回測 600-610 守穩後再轉強，或高檔平台整理後帶量突破前高。
-  invalidation: 收盤跌破 580，或跌破 SMA20 且 MACD 翻負，代表強勢結構失效。
+  notes: 2026-04-20 強制更新研究：現價 708，較上次研究基準 644 上漲 9.94%（接近 10% 門檻觸發強制更新）；RSI 83.7、ADX
+    36.0、Stoch 100，極度超買，BB 在上軌外（bb_position_ratio=1.167）。量比僅 0.87x，量能未放大反而萎縮，代表漲幅主要來自低掛單造成的浮動，非真實動能放大。4979.TWO
+    今日漲幅 +9.94%，與光通訊族群（光聖、上詮、聯鈞）漲停同步，但基本面催化未見新增。技術上已嚴重過熱，不宜追價。等待 650-680 回測守穩或高檔平台整理後再評估。trigger
+    條件調整：加入 rsi_14 < 78 以避免追高。
+  trigger: 回測 650-680 守穩後再轉強，或高檔平台整理後帶量突破前高（708 元）。
+  invalidation: 收盤跌破 640 元，或跌破 SMA20 且 MACD 翻負，代表強勢結構失效。
   trigger_conditions:
   - price_above_sma_20
   - macd_histogram_positive
   - adx_14 > 25
-  - rsi_14 < 75
+  - rsi_14 < 78
   invalidation_conditions:
   - price_below_sma_20 and macd_histogram_negative
-  - close < 580
-  updated_at: '2026-04-19'
-- symbol: 2330.TW
-  thesis: 'LIVE TEST: TSMC setup looks strong for Q2 recovery.'
-  status: hold
+  - close < 640
+  updated_at: '2026-04-20'
+- symbol: '2303'
+  thesis: 晶圓代工二哥聯電宣告下半年調漲代工價，矽光子題材加持，股價自底部大幅反彈，是半導體族群中補漲潛力最強的次主流。
+  status: watch
+  notes: 2026-04-20 新增：三方共振（screener +6.88% 量最大、PTT 爆量熱討漲停、新聞調漲代工價）。4/20 收 73 元，漲幅
+    6.88%，成交吸金逾 360 億。分析師警告短線追價有風險，但趨勢反轉訊號明確。等回測 SMA20 守穩後評估進場。
+  trigger: 回測 SMA20 量縮守穩後帶量再攻，或突破 80 元關卡並放量（volume_ratio ≥ 1.5x）。
+  invalidation: 收盤跌破 SMA20 且 MACD 翻負，或量縮無法守住 68-70 元支撐。
+  trigger_conditions:
+  - price_above_sma_20
+  - macd_histogram_positive
+  - volume_breakout_1_5x
+  invalidation_conditions:
+  - price_below_sma_20 and macd_histogram_negative
+  updated_at: '2026-04-20'
+- symbol: '4958'
+  thesis: 臻鼎-KY 是台灣最大 PCB 廠之一，AI 資料中心建置驅動高階 PCB 需求，且為 ABF 族群中盈餘彈性最大的標的之一。
+  status: watch
+  notes: 2026-04-20 新增：screener 上榜（+9.94%，trade_value 11734 億），PTT 盤後閒聊點名 PCB 族群（景碩、臻鼎）漲停。PCB
+    族群氣勢強，但今日已近漲停，不宜追高，等回測。
+  trigger: 回測 SMA20 量縮守穩後帶量再攻，或整理後突破今日高點並放量（volume_ratio ≥ 1.5x）。
+  invalidation: 收盤跌破 SMA20 且 MACD 翻負，PCB 族群動能明顯熄火。
+  trigger_conditions:
+  - price_above_sma_20
+  - macd_histogram_positive
+  - volume_breakout_1_5x
+  invalidation_conditions:
+  - price_below_sma_20 and macd_histogram_negative
+  updated_at: '2026-04-20'
+- symbol: '3450'
+  thesis: 800G/1.6T 光連接升級，聯鈞受惠光模組需求；screener 上榜 + PTT 確認漲停
+  status: watch
   notes: ''
-  trigger: Break 1000
-  invalidation: Below 900
-  trigger_conditions: []
-  invalidation_conditions: []
-  updated_at: '2026-04-18'
+  trigger: ''
+  invalidation: ''
+  trigger_conditions:
+  - price_above_sma_20
+  - macd_histogram_positive
+  - volume_breakout_1_5x
+  invalidation_conditions:
+  - price_below_sma_20 and macd_histogram_negative
+  updated_at: '2026-04-20'

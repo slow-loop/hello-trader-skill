@@ -1,121 +1,88 @@
-"""
-tw-trader CLI — thin client that calls the backend API.
+"""tw-trader CLI — local-first. No backend required.
 
-Usage:
-  tw-trader account
-  tw-trader buy <symbol> <qty> --price 800 --stop-loss 750 --reason "breakout"
-  tw-trader sell <symbol> <qty> --reason "TP hit"
-  tw-trader watchlist
-  tw-trader journal
-  tw-trader journal-add --note "..." --note "..."
-  tw-trader lessons
-  tw-trader lessons-set --file data/account/lessons.md
-  tw-trader trades
+Reads/writes YAML under data/account/ via tw_trader.state (paper trading)
+and tw_trader.workspace (journal/lessons/watchlist/research-card).
+Market data comes from the sibling `market` CLI (market_core).
 """
 
 from __future__ import annotations
 
 import json
-import os
 from datetime import date
 from pathlib import Path
 from typing import Optional
 
-import httpx
+import dotenv
+
+dotenv.load_dotenv(Path(__file__).resolve().parents[2] / ".env")
+
 import typer
 import yaml
 
-app = typer.Typer(help="TW Trader CLI")
+from tw_trader import state, workspace
+from tw_trader.workspace import JournalEntry
 
-BACKEND_URL = os.getenv("TRADER_BACKEND_URL", "http://localhost:8000")
+app = typer.Typer(help="TW Trader CLI (local-first)")
 
 
-def _api(method: str, path: str, **kwargs) -> dict:
-    url = f"{BACKEND_URL}{path}"
-    try:
-        r = httpx.request(method, url, timeout=30, **kwargs)
-        r.raise_for_status()
-        return r.json()
-    except httpx.HTTPStatusError as e:
-        typer.echo(f"Error {e.response.status_code}: {e.response.text}", err=True)
-        raise typer.Exit(1)
-    except httpx.ConnectError:
-        typer.echo(f"Cannot connect to backend at {BACKEND_URL}", err=True)
-        raise typer.Exit(1)
+def _echo(obj) -> None:
+    typer.echo(json.dumps(obj, indent=2, ensure_ascii=False, default=str))
 
 
 @app.command()
 def account():
     """Show portfolio and trading account status."""
-    data = _api("GET", "/account")
-    typer.echo(json.dumps(data, indent=2, ensure_ascii=False))
+    _echo(state.get_account_status())
 
 
 @app.command()
 def buy(
     symbol: str = typer.Argument(...),
-    qty: int = typer.Argument(...),
+    qty: float = typer.Argument(...),
     price: Optional[float] = typer.Option(None, "--price", "-p"),
     stop_loss: Optional[float] = typer.Option(None, "--stop-loss"),
     take_profit: Optional[float] = typer.Option(None, "--take-profit"),
     reason: str = typer.Option("", "--reason", "-r"),
     strategy: str = typer.Option("", "--strategy"),
 ):
-    """Buy shares."""
-    data = _api(
-        "POST",
-        "/orders",
-        json={
-            "symbol": symbol,
-            "side": "BUY",
-            "quantity": qty,
-            "price": price,
-            "stop_loss": stop_loss,
-            "take_profit": take_profit,
-            "reason": reason,
-            "strategy": strategy,
-        },
+    """Buy shares (paper)."""
+    msg = state.place_buy(
+        symbol,
+        qty,
+        price,
+        stop_loss=stop_loss,
+        take_profit=take_profit,
+        reason=reason,
+        strategy=strategy,
     )
-    typer.echo(data.get("message", data))
+    typer.echo(msg)
 
 
 @app.command()
 def sell(
     symbol: str = typer.Argument(...),
-    qty: int = typer.Argument(...),
+    qty: float = typer.Argument(...),
     price: Optional[float] = typer.Option(None, "--price", "-p"),
     reason: str = typer.Option("", "--reason", "-r"),
 ):
-    """Sell shares."""
-    data = _api(
-        "POST",
-        "/orders",
-        json={
-            "symbol": symbol,
-            "side": "SELL",
-            "quantity": qty,
-            "price": price,
-            "reason": reason,
-        },
-    )
-    typer.echo(data.get("message", data))
+    """Sell shares (paper)."""
+    msg = state.place_sell(symbol, qty, price, reason=reason)
+    typer.echo(msg)
 
 
 @app.command()
 def trades(limit: int = typer.Option(20, "--limit", "-n")):
     """Show recent trades."""
-    data = _api("GET", "/trades", params={"limit": limit})
-    typer.echo(json.dumps(data, indent=2, ensure_ascii=False))
+    records = state.list_trades(limit=limit)
+    _echo([r.model_dump(mode="json") for r in records])
 
 
 @app.command()
-def journal(date: Optional[str] = typer.Option(None, "--date", "-d", help="YYYY-MM-DD")):
-    """Show journal."""
-    if date:
-        data = _api("GET", f"/workspace/journals/{date}")
-    else:
-        data = _api("GET", "/workspace/journals", params={"limit": 5})
-    typer.echo(json.dumps(data, indent=2, ensure_ascii=False))
+def journal(date_str: Optional[str] = typer.Option(None, "--date", "-d", help="YYYY-MM-DD")):
+    """Show journal for a date (defaults to today)."""
+    target = date_str or date.today().isoformat()
+    doc = workspace.load_journal(target)
+    _echo(doc.model_dump(mode="json"))
 
 
 @app.command()
@@ -125,38 +92,29 @@ def journal_add(
     at: str = typer.Option("", "--at", help="HH:MM"),
     action: list[str] = typer.Option([], "--action"),
     note: list[str] = typer.Option([], "--note"),
-    file: Optional[Path] = typer.Option(None, "--file", help="Path to JSON/YAML file containing JournalEntry data"),
+    file: Optional[Path] = typer.Option(None, "--file", help="Path to YAML file containing JournalEntry data"),
 ):
-    """Append a journal entry through the backend workspace API."""
+    """Append a journal entry."""
     effective_date = journal_date or date.today().isoformat()
-    
+
     if file:
         try:
             data = yaml.safe_load(file.read_text(encoding="utf-8"))
         except Exception as exc:
-            typer.echo(f"Failed to parse file {file}: {exc}", err=True)
+            typer.echo(f"Failed to parse {file}: {exc}", err=True)
             raise typer.Exit(1)
+        entry = JournalEntry.model_validate(data)
     else:
-        data = {
-            "at": at,
-            "type": entry_type,
-            "actions": action,
-            "notes": note,
-        }
-        
-    result = _api(
-        "POST",
-        f"/workspace/journals/{effective_date}/entries",
-        json=data,
-    )
-    typer.echo(json.dumps(result, indent=2, ensure_ascii=False))
+        entry = JournalEntry(at=at, type=entry_type, actions=action, notes=note)
+
+    doc = workspace.append_journal_entry(effective_date, entry)
+    typer.echo(f"Appended entry to {effective_date} ({len(doc.entries)} total).")
 
 
 @app.command()
 def lessons():
     """Show lessons markdown."""
-    data = _api("GET", "/workspace/lessons")
-    typer.echo(data.get("content", ""))
+    typer.echo(workspace.load_lessons())
 
 
 @app.command()
@@ -164,118 +122,95 @@ def lessons_set(
     content: Optional[str] = typer.Option(None, "--content", help="Replacement markdown content"),
     file: Optional[Path] = typer.Option(None, "--file", help="Read replacement markdown from file"),
 ):
-    """Replace lessons markdown through the backend workspace API."""
+    """Replace lessons markdown."""
     if (content is None) == (file is None):
         typer.echo("Provide exactly one of --content or --file.", err=True)
         raise typer.Exit(1)
-
     if file is not None:
         try:
             content = file.read_text(encoding="utf-8")
         except OSError as exc:
             typer.echo(f"Unable to read {file}: {exc}", err=True)
             raise typer.Exit(1) from exc
-
-    data = _api("PUT", "/workspace/lessons", json={"content": content or ""})
-    typer.echo(f"Updated lessons ({len(data.get('content', ''))} chars).")
+    workspace.save_lessons(content or "")
+    typer.echo(f"Updated lessons ({len(content or '')} chars).")
 
 
 @app.command()
 def watchlist():
-    """Show the watchlist with analysis/evaluation from backend."""
-    data = _api("GET", "/workspace/watchlist")
-    typer.echo(json.dumps(data, indent=2, ensure_ascii=False))
+    """Show watchlist (raw + analysis + evaluation)."""
+    evaluated = workspace.load_evaluated_watchlist()
+    _echo(evaluated.model_dump(mode="json"))
 
 
 @app.command()
 def watchlist_update(
-    file: Path = typer.Option(..., "--file", help="Path to JSON/YAML file containing WatchlistItem data"),
+    file: Path = typer.Option(..., "--file", help="Path to YAML file containing WatchlistItem data"),
 ):
-    """Update or add a watchlist item using a JSON/YAML file."""
+    """Upsert a watchlist item from a YAML file."""
     try:
         data = yaml.safe_load(file.read_text(encoding="utf-8"))
     except Exception as exc:
-        typer.echo(f"Failed to parse file {file}: {exc}", err=True)
+        typer.echo(f"Failed to parse {file}: {exc}", err=True)
         raise typer.Exit(1)
-        
-    result = _api("POST", "/workspace/watchlist/items", json=data)
-    typer.echo(f"Updated watchlist for {data.get('symbol', 'unknown')}")
+    from market_core.models import WatchlistItem
+
+    item = WatchlistItem.model_validate(data)
+    workspace.upsert_watchlist_item(item)
+    typer.echo(f"Updated watchlist for {item.symbol}.")
+
+
+@app.command()
+def watchlist_delete(
+    symbol: str = typer.Option(..., "--symbol", help="Symbol to remove from watchlist"),
+):
+    """Remove a watchlist entry by symbol."""
+    try:
+        workspace.delete_watchlist_item(symbol)
+        typer.echo(f"Deleted watchlist entry for {symbol}.")
+    except KeyError:
+        typer.echo(f"Symbol {symbol!r} not found in watchlist.", err=True)
+        raise typer.Exit(1)
 
 
 @app.command()
 def research_card_save(
     date_str: str = typer.Option(..., "--date", "-d", help="YYYY-MM-DD"),
-    file: Path = typer.Option(..., "--file", help="Path to JSON/YAML file containing the research card"),
+    file: Path = typer.Option(..., "--file", help="Path to YAML file containing the research card"),
 ):
-    """Save a research card from a JSON/YAML file."""
+    """Save a research card from a YAML file."""
     try:
         data = yaml.safe_load(file.read_text(encoding="utf-8"))
     except Exception as exc:
-        typer.echo(f"Failed to parse file {file}: {exc}", err=True)
+        typer.echo(f"Failed to parse {file}: {exc}", err=True)
         raise typer.Exit(1)
-        
-    result = _api("PUT", f"/workspace/research-cards/{date_str}", json=data)
-    typer.echo(f"Saved research card for {date_str}.")
-
-
-@app.command()
-def market(
-    symbols: list[str] = typer.Argument(None, help="Ticker symbols to analyze"),
-    snapshot: bool = typer.Option(False, "--snapshot", help="Show latest market snapshot"),
-):
-    """Show market overview or individual stock analysis."""
-    if symbols:
-        for sym in symbols:
-            data = _api("GET", f"/analysis/{sym}")
-            typer.echo(f"=== Analysis for {sym} ===")
-            typer.echo(json.dumps(data, indent=2, ensure_ascii=False))
-            typer.echo("-" * 40)
-    else:
-        path = "/snapshots/latest" if snapshot else "/overview"
-        data = _api("GET", path)
-        typer.echo(json.dumps(data, indent=2, ensure_ascii=False))
-
-
-@app.command()
-def screener(
-    strategy: str = typer.Option("momentum", "--strategy"),
-    no_enrich: bool = typer.Option(False, "--no-enrich"),
-):
-    """Run quantitative screener."""
-    try:
-        data = _api("GET", f"/screener", params={"strategy": strategy, "enrich": not no_enrich})
-        typer.echo(json.dumps(data, indent=2, ensure_ascii=False))
-    except Exception:
-        typer.echo("Unable to run screener from backend.")
+    path = workspace.save_research_card(date_str, data)
+    typer.echo(f"Saved research card → {path}")
 
 
 @app.command()
 def check_triggers():
-    """Evaluate watchlist trigger/invalidation conditions."""
-    try:
-        data = _api("GET", "/workspace/watchlist")
-        rows = []
-        for item in data.get("items", []):
-            evaluation = item.get("evaluation")
-            if evaluation is None:
-                continue
-            rows.append(
-                {
-                    "symbol": item.get("symbol"),
-                    "status": item.get("status"),
-                    **evaluation,
-                }
-            )
-        typer.echo(json.dumps(rows, indent=2, ensure_ascii=False))
-    except Exception:
-        typer.echo("Unable to evaluate watchlist triggers from backend.")
+    """Evaluate watchlist trigger/invalidation conditions (shorthand view)."""
+    evaluated = workspace.load_evaluated_watchlist()
+    rows = []
+    for item in evaluated.items:
+        if item.evaluation is None:
+            continue
+        rows.append(
+            {
+                "symbol": item.symbol,
+                "status": item.status,
+                **item.evaluation.model_dump(mode="json"),
+            }
+        )
+    _echo(rows)
 
 
 @app.command()
-def heartbeat():
-    """Manually trigger a heartbeat."""
-    data = _api("POST", "/heartbeat")
-    typer.echo(json.dumps(data, indent=2, ensure_ascii=False))
+def sweep():
+    """Manually sweep exit orders against current prices."""
+    triggered = state.sweep_exit_orders()
+    _echo([t.model_dump(mode="json") for t in triggered])
 
 
 @app.command()
@@ -284,7 +219,7 @@ def publish(
         None, "--date", "-d", help="Target date YYYY-MM-DD (default: today)"
     ),
 ):
-    """Render daily publish artifacts (poster.png) from post.yaml + backend2 state."""
+    """Render daily publish artifacts (poster.png) from post.yaml + local state."""
     from tw_trader.publish import render_poster
 
     try:

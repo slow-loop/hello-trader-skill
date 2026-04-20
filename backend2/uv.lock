@@ -199,7 +199,7 @@ requires-dist = [
     { name = "fastapi", extras = ["standard"], specifier = ">=0.135.3" },
     { name = "finmind", specifier = ">=1.9.6" },
     { name = "httpx", specifier = ">=0.28.1" },
-    { name = "market-core", directory = "../../hello-note/libs/market-core" },
+    { name = "market-core", directory = "../libs/market-core" },
     { name = "pyarrow", specifier = ">=23.0.1" },
     { name = "python-dotenv", specifier = ">=1.2.2" },
     { name = "pyyaml", specifier = ">=6.0.3" },
@@ -1149,7 +1149,7 @@ wheels = [
 [[package]]
 name = "market-core"
 version = "0.1.0"
-source = { directory = "../../hello-note/libs/market-core" }
+source = { directory = "../libs/market-core" }
 dependencies = [
     { name = "feedparser" },
     { name = "fugle-marketdata" },
@@ -1158,21 +1158,24 @@ dependencies = [
     { name = "pandas-ta" },
     { name = "pydantic" },
     { name = "simpleeval" },
+    { name = "typer" },
     { name = "yfinance" },
 ]
 
 [package.metadata]
 requires-dist = [
     { name = "feedparser", specifier = ">=6.0" },
+    { name = "finmind", marker = "extra == 'tw'", specifier = ">=1.9.6" },
     { name = "fugle-marketdata", specifier = ">=2.4.1" },
     { name = "pandas", specifier = ">=2.3.3" },
     { name = "pandas-ta", specifier = ">=0.4.71b0" },
     { name = "pydantic", specifier = ">=2.0" },
     { name = "pytest", marker = "extra == 'dev'", specifier = ">=8.0" },
     { name = "simpleeval", specifier = ">=1.0.7" },
+    { name = "typer", specifier = ">=0.15.0" },
     { name = "yfinance", specifier = ">=1.2.0" },
 ]
-provides-extras = ["dev"]
+provides-extras = ["dev", "tw"]
 
 [[package]]
 name = "markupsafe"

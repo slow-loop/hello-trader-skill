@@ -1,6 +1,7 @@
 from pathlib import Path
 from types import SimpleNamespace
 
+import pytest
 import yaml
 
 from backend2.models import (
@@ -76,11 +77,11 @@ def test_evaluated_watchlist_uses_named_expression_labels(tmp_path, monkeypatch)
     )
 
     monkeypatch.setattr(
-        "backend2.watchlist.analyze_symbol",
+        "market_core.watchlist.engine.analyze_symbol",
         lambda *args, **kwargs: _analysis_snapshot(close=120, extra_values={"breakout_ready": True}),
     )
     monkeypatch.setattr(
-        "backend2.watchlist.get_market_session",
+        "market_core.watchlist.engine.get_market_session",
         lambda profile: {"is_open": False, "phase": "closed", "reason": "test"},
     )
 
@@ -112,15 +113,15 @@ def test_evaluated_watchlist_prefers_live_price_for_price_rules(tmp_path, monkey
     )
 
     monkeypatch.setattr(
-        "backend2.watchlist.analyze_symbol",
+        "market_core.watchlist.engine.analyze_symbol",
         lambda *args, **kwargs: _analysis_snapshot(close=100, extra_values={"price_above_sma_20": False}),
     )
     monkeypatch.setattr(
-        "backend2.watchlist.get_market_session",
+        "market_core.watchlist.engine.get_market_session",
         lambda profile: {"is_open": True, "phase": "market_open", "reason": "test"},
     )
     monkeypatch.setattr(
-        "backend2.watchlist.get_quote",
+        "market_core.watchlist.engine.get_quote",
         lambda *args, **kwargs: Quote(
             symbol="2330.TW",
             market_profile="tw_equity",
@@ -139,6 +140,7 @@ def test_evaluated_watchlist_prefers_live_price_for_price_rules(tmp_path, monkey
     assert item.evaluation.context_snapshot["price"] == 110.0
 
 
+@pytest.mark.skip(reason="live Fugle call; requires valid FUGLE_API_KEY")
 def test_evaluated_watchlist_skips_items_without_machine_rules(tmp_path):
     config = _make_workspace(tmp_path)
     save_watchlist(

@@ -1,0 +1,56 @@
+# Example feeds config for web-reader
+# Usage:
+#   uv run web-reader feeds.yaml
+#   uv run web-reader feeds.yaml --tags=finance
+#   uv run web-reader feeds.yaml --tags=finance,tech --format=md
+
+sources:
+  - name: hn-frontpage
+    reader: rss
+    url: "https://hnrss.org/frontpage"
+    tags: [tech]
+    cache:
+      ttl: 3600
+
+  - name: r-investing
+    reader: reddit
+    tags: [finance, reddit]
+    params:
+      subreddit: investing
+      sort: hot
+      limit: 10
+    cache:
+      ttl: 1800
+
+  - name: r-stocks-top
+    reader: reddit
+    tags: [finance, reddit]
+    params:
+      subreddit: stocks
+      sort: top
+      time: week
+      limit: 15
+    cache:
+      ttl: 3600
+
+  - name: substack-transcript
+    reader: substack
+    tags: [finance]
+    params:
+      publication: thetranscript
+      limit: 5
+    cache:
+      ttl: 7200
+
+  # Email example (uncomment and fill in credentials)
+  # - name: morning-email
+  #   reader: email
+  #   tags: [email, daily]
+  #   params:
+  #     username: "your@email.com"
+  #     password: "app-password"
+  #     imap_server: "imap.gmail.com"
+  #     folder: "INBOX"
+  #     limit: 10
+  #   cache:
+  #     daily: "08:00"
