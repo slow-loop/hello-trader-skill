@@ -1,0 +1,163 @@
+# Research Card template
+# ─────────────────────────────────────────────────────────────
+# 位置：data/account/research-cards/{YYYY-MM-DD}.yaml
+# 由 RESEARCH_TW.md Phase 5 產出，對應 Phase 1-4 的結構化摘要。
+#
+# 設計原則：
+#   - Card 只放「agent 的判斷」，不複製原始數據
+#   - Screener 原始表 → data/account/screener/{date}.json（由 CLI redirect 寫入）
+#   - 所有 section 鍵即使空也保留，用 [] / null，不要省略
+#   - 寫完後 re-read 一次確認 YAML 可解析
+
+date: "2026-04-21"
+session: post-close
+
+screener:
+  skipped: false
+  skip_reason: null
+  source: "screener/2026-04-21-postclose.json"
+  highlights:
+    - symbol: "3189"
+      name: "景碩"
+      reason: "連三日漲停（4/19-4/21），ADX 33.1 趨勢強，vol 1.90x，欣興被關→法人資金外溢300億，上萬張買單排隊"
+      is_new: false
+    - symbol: "4958"
+      name: "臻鼎-KY"
+      reason: "ADX 41.3，漲停T-1，投信今日買超2,168張，ABF族群延續"
+      is_new: false
+    - symbol: "2303"
+      name: "聯電"
+      reason: "投信今日買超9,464張（全上市第一！），vol 2.18x，4/22財報明日公布"
+      is_new: false
+    - symbol: "6213"
+      name: "聯茂"
+      reason: "ADX 54.1（全場最高），高頻ABF基板，RSI 84.3 超買，等回測"
+      is_new: true
+    - symbol: "3653"
+      name: "健策"
+      reason: "ADX 32.1，4/20漲停後4/21續強+7%，NVIDIA Feynman催化，投信373張，EPS跳升潛力"
+      is_new: true
+
+sentiment:
+  overall: "極度偏多接近狂熱。PTT 盤後閒聊爆文，漲停100家，無跌停。「什麼時候賣」push 94 + 嘲諷空方投顧 = 高位滿倉情緒。外資嘎空回補是主驅動力。"
+  hot_tickers:
+    - symbol: "2454"
+      theme: "IC設計 Google TPU"
+      note: "聯發科漲停，市值超車台積電，PTT爆量討論，IC設計整排漲停"
+    - symbol: "3189"
+      theme: "ABF 連漲停"
+      note: "景碩連三停，欣興被關資金外溢，PTT確認漲停名單"
+    - symbol: "2337"
+      theme: "NAND記憶體"
+      note: "旺宏漲停（三星停產DDR4 + Kioxia地震），但外資態度分歧"
+  narratives:
+    - "外資今日買超+601億（歷史第七），空方被嘎回補是今日最大驅動力"
+    - "聯發科市值超車台積電（某口徑），IC設計成今日新主線（Google TPU）"
+    - "三星停產LPDDR4，帶動旺宏/南亞科/華邦電漲停（記憶體次主線確認）"
+    - "蘋果換主帥（Cook退任→Ternus接CEO），新日興漲停、兆利+7%"
+    - "老蘇被嘎 + 空方全面被回補 = 市場情緒極度偏多，注意短期反轉風險"
+  conclusion: "機構主導買盤（外資歷史第七），情緒極度偏多但無結構轉折信號。高位注意三主線（ABF、IC設計、記憶體）任何一條出現資金退出。"
+
+macro:
+  market_line: "^TWII 收 37,605.11 (+1.75%, +646pts)；台指期 38,048 (+2.17% 大幅溢價)；成交 9,815億；上市漲停45家，上櫃漲停55家，跌停0家"
+  main_points:
+    - "外資買超+601.53億（歷史第七名），本輪外資回補力道空前（4/8, 4/14, 4/21三次佔前七名中三位）"
+    - "投信全上市買超：聯電9,464張第一、臻鼎2,168張、台達電1,060張、聯發科1,052張 = 籌碼全面共振"
+    - "欣興被關（禁置改20分鐘撮合）→ 景碩+南電資金外溢，一小時吸金300億元"
+    - "Google 新一代 TPU 亮相 → 聯發科/世芯漲停，IC設計成今日第二主線"
+    - "三星正式停產LPDDR4 → 旺宏漲停，南亞科/華邦電飆漲（記憶體第三主線）"
+    - "蘋果換主帥（Cook退任，Ternus接CEO）→ 新日興漲停，兆利+7%"
+  secondary_themes:
+    - "4979.TWO 強市-7.49%，CPO/光通訊族群出現分化，華星光接近invalidation門檻"
+    - "美伊停火第二輪談判4/22（巴基斯坦登場），宏觀為正面偏中性"
+    - "台股市值躍升全球第六（盤中數據）"
+  fund_flows:
+    foreign: "+601.53億（歷史第七）"
+    investment_trust: "聯電9,464張第一，上市整體偏多"
+    dealer: "台指期自營 -938口"
+
+cross_ref:
+  rows:
+    - symbol: "3189"
+      name: "景碩"
+      screener: "ADX 33.1，漲停連三日，vol 1.90x"
+      sentiment: "PTT確認漲停名單，正面共鳴"
+      news: "欣興被關→法人資金外溢300億，上萬買單排隊"
+      verdict: "三方共振，第三漲停主升浪確認。持倉健康（進場473.5，目標525，停損440）"
+      tier: triple_resonance
+    - symbol: "2303"
+      name: "聯電"
+      screener: "ADX 21，vol 2.18x，RSI 73"
+      sentiment: "投信9,464張今日全市場第一"
+      news: "4/22財報明日，下半年漲價敘事"
+      verdict: "雙重確認，籌碼極強。等A點：4/22財報正向後回測73-76守穩進場"
+      tier: double_confirm
+    - symbol: "2454"
+      name: "聯發科"
+      screener: null
+      sentiment: "PTT確認漲停，投信1,052張"
+      news: "Google TPU亮相，市值超車台積電，漲停"
+      verdict: "雙重確認，今日加入watchlist。漲停後不追，等回測2000-2050守穩"
+      tier: double_confirm
+    - symbol: "3653"
+      name: "健策"
+      screener: "ADX 32.1，4/20漲停後4/21續強"
+      sentiment: "PTT相關討論，投信373張"
+      news: "NVIDIA Feynman催化，估EPS跳升3-5倍"
+      verdict: "雙重確認，今日加入watchlist。等法說會確認訂單或回測4800-5000"
+      tier: double_confirm
+    - symbol: "4979.TWO"
+      name: "華星光"
+      screener: "ADX 37.4（強但向下），vol 0.48x"
+      sentiment: "PTT跌停預警驗證正確"
+      news: "強市-7.49%，距invalidation 640僅2.3%"
+      verdict: "紅旗升級警戒。收655>640 invalidation未觸發，明日繼續監控"
+      tier: skip
+    - symbol: "2337"
+      name: "旺宏"
+      screener: "screener有，漲停"
+      sentiment: "PTT確認漲停"
+      news: "三星停產LPDDR4，旺宏漲停"
+      verdict: "有故事有動能，但外資態度分歧。不在watchlist，觀察後盤後評估是否加入"
+      tier: story_only
+  tomorrow_watch:
+    - symbol: "3189"
+      name: "景碩"
+      tag: null
+      reason: "持有200股@473.5。明日高開守460+考慮加碼至300股；回測440-455量縮守穩亦為加碼點"
+    - symbol: "2303"
+      name: "聯電"
+      tag: null
+      reason: "4/22財報（NYSE盤前），若EPS達標+Q2毛利>30%，等回測73-76守穩 = A點進場"
+    - symbol: "2454"
+      name: "聯發科"
+      tag: NEW
+      reason: "漲停後明日開盤確認，若守穩2050+不崩，等回測2000-2050再進場"
+    - symbol: "3653"
+      name: "健策"
+      tag: NEW
+      reason: "法說會前密切追蹤，NVIDIA Feynman訂單確認是關鍵催化；等回測4800-5000"
+    - symbol: "4979.TWO"
+      name: "華星光"
+      tag: null
+      reason: "監控收盤：若 < 640 = invalidation觸發，立即移除；若守穩650+且大盤強，重新評估"
+
+watchlist_changes:
+  added:
+    - symbol: "2454"
+      status: watch
+    - symbol: "3653"
+      status: watch
+  promoted: []
+  removed: []
+  updated:
+    - symbol: "3189"
+      what_changed: "持倉確認（連三漲停），補充欣興被關資金外溢催化，trigger加入加碼條件"
+    - symbol: "4979.TWO"
+      what_changed: "警戒升級，強市-7.49%，記錄距invalidation 2.3%紅旗"
+    - symbol: "2303"
+      what_changed: "投信9,464張第一籌碼數據入notes，A點條件精化"
+
+deep_research_candidates:
+  - symbol: "2454"
+  - symbol: "3653"

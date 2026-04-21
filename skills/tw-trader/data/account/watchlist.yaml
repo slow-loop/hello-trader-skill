@@ -15,23 +15,32 @@
   - close < nearest_support * 0.98
   updated_at: '2026-04-16'
 - symbol: '3189'
-  thesis: AI 資料中心擴建推動 ABF 載板需求，景碩受益高階 ABF 基板成長，技術面結構最乾淨（ADX 30、RSI 61、距支撐僅-6%）、量比
-    1.86x，無超買壓力。
+  thesis: AI 資料中心擴建推動 ABF 載板需求，景碩受惠高階 ABF 基板成長。連四日大漲（4/18-4/21，其中4/19-4/21三連漲停）確認主升浪，ADX
+    33 趨勢強，是 ABF 族群（南電、臻鼎）的領頭羊。欣興被關（禁置改撮合）當日資金直接外溢至景碩，外資投信共同加持。
   status: hold
-  notes: 2026-04-16 新增：screener 上榜（+3.37%，量比 1.86x），AI PCB 族群雙重確認。相較台光電（ADX 44）、聯茂（ADX
-    44.7）更具 RSI 空間，離支撐也最近。2026-04-17：動能持續，現價 396.5 (+0.89%)，量比 2.0x 顯著放大，ADX 30 趨勢確立，為載板族群領頭羊。Trigger
-    條件（價格、MACD、量比、ADX）全數達成，高優先進場候選。
-  trigger: RSI 維持 60 以上且量比放大至 1.5x 突破，或整理後站回週線/月線再次放量。
-  invalidation: ADX 開始回落至 20 以下且量縮跌破 5 日均線，結構失效。
+  notes: '2026-04-21 12:52 建倉：200 股 @ 473.5，停損 440，目標 525，R:R 1.53。
+
+    技術面 (post-close)：RSI 74.92（趨勢健康），ADX 33.1（趨勢強），vol_ratio 1.90x（量確認），is_limit_up=true，連三漲停。
+
+    今日 open=453, high=473.5（漲停），low=446，TWII +1.75% 強市下相對強弱最佳。
+
+    催化劑升級：欣興被關禁置，法人資金轉移景碩+南電，一小時吸金300億元，上萬張買單排隊。
+
+    外資+投信今日雙買（投信690張）。
+
+    停損設在 440（今日低 446 下方，1 ATR 緩衝）。
+
+    '
+  trigger: 守 440 以上繼續持有；若明日開高守 460+ 且量比 ≥1.5x，可考慮加碼至 300 股（停損升至 450）；若回測 440-455 量縮守穩亦為加碼點。
+  invalidation: 收盤跌破 440（停損觸發）；或 ADX < 25 且 MACD 翻負（趨勢失效）；或 ABF 族群（南電、臻鼎）同步轉弱連兩日。
   trigger_conditions:
   - price_above_sma_20
   - macd_histogram_positive
-  - volume_breakout_1_5x
   - adx_14 > 25
   invalidation_conditions:
   - price_below_sma_20 and macd_histogram_negative
-  - adx_14 < 20 and volume_ratio_20 < 1
-  updated_at: '2026-04-16'
+  - close < 440
+  updated_at: '2026-04-21'
 - symbol: '3711'
   thesis: 台積電 CoWoS 等先進封裝需求強勁，日月光作為全球最大封測廠直接受益；今日法說日量能突破（1.57x）+5.31%，外資連買。
   status: watch
@@ -50,11 +59,22 @@
 - symbol: 4979.TWO
   thesis: AI 資料中心 800G / 1.6T 光連接升級延續，華星光受惠 DFB / CPO 與美系資料中心需求，仍是台股 CPO 純度最高的觀察股之一。
   status: watch
-  notes: 2026-04-20 強制更新研究：現價 708，較上次研究基準 644 上漲 9.94%（接近 10% 門檻觸發強制更新）；RSI 83.7、ADX
-    36.0、Stoch 100，極度超買，BB 在上軌外（bb_position_ratio=1.167）。量比僅 0.87x，量能未放大反而萎縮，代表漲幅主要來自低掛單造成的浮動，非真實動能放大。4979.TWO
-    今日漲幅 +9.94%，與光通訊族群（光聖、上詮、聯鈞）漲停同步，但基本面催化未見新增。技術上已嚴重過熱，不宜追價。等待 650-680 回測守穩或高檔平台整理後再評估。trigger
-    條件調整：加入 rsi_14 < 78 以避免追高。
-  trigger: 回測 650-680 守穩後再轉強，或高檔平台整理後帶量突破前高（708 元）。
+  notes: '2026-04-20 強制更新研究：現價 708，較上次研究基準 644 上漲 9.94%；RSI 83.7、ADX 36.0 極度超買。
+
+    2026-04-21 盤後嚴重警示升級：TWII +1.75% 強勢日，華星光收 655 (-7.49%)，相對弱勢 -9.24%（歷史最差）。
+
+    今日 open=708, high=708, low=651，量比 0.48x（量縮下跌=持續默默出貨）。
+
+    ADX=37.43（強趨勢，但方向為向下），RSI 73 but falling（bearish divergence）。
+
+    距 invalidation 硬門檻 640 = 2.3%。若明日繼續強市下跌，invalidation 幾乎確定觸發。
+
+    PTT 12:05 明確點名「波若威、華星光準備跌停」= 散戶端出貨信號已驗證。
+
+    操作：本週留意收盤位置；若收盤 < 640 → 立即移除 watchlist。
+
+    '
+  trigger: 回測 650-680 守穩後再轉強，或高檔平台整理後帶量突破前高（708 元）。（門檻偏高，需大幅改善）
   invalidation: 收盤跌破 640 元，或跌破 SMA20 且 MACD 翻負，代表強勢結構失效。
   trigger_conditions:
   - price_above_sma_20
@@ -64,21 +84,39 @@
   invalidation_conditions:
   - price_below_sma_20 and macd_histogram_negative
   - close < 640
-  updated_at: '2026-04-20'
+  updated_at: '2026-04-21'
 - symbol: '2303'
-  thesis: 晶圓代工二哥聯電宣告下半年調漲代工價，矽光子題材加持，股價自底部大幅反彈，是半導體族群中補漲潛力最強的次主流。
+  thesis: 聯電進入「成熟製程定價能力修復 + 評價重估」週期：4/17 正式通知客戶下半年調漲代工價（Morgan Stanley 估 5-10%），矽光子（imec
+    iSiPP300，2026-27 試產）提供長線成長敘事，蘋果訂單佔比上升，22nm 良率 >90% 為護城河。外資近期單週買超逾 8.5 萬張，4/21
+    投信買超 9,464 張（上市投信今日第一名），籌碼面強力加持。關鍵驗證點：4/22 Q1 財報（NYSE 盤前）+ 4/29 法說會管理層確認 H2 定價。
   status: watch
-  notes: 2026-04-20 新增：三方共振（screener +6.88% 量最大、PTT 爆量熱討漲停、新聞調漲代工價）。4/20 收 73 元，漲幅
-    6.88%，成交吸金逾 360 億。分析師警告短線追價有風險，但趨勢反轉訊號明確。等回測 SMA20 守穩後評估進場。
-  trigger: 回測 SMA20 量縮守穩後帶量再攻，或突破 80 元關卡並放量（volume_ratio ≥ 1.5x）。
-  invalidation: 收盤跌破 SMA20 且 MACD 翻負，或量縮無法守住 68-70 元支撐。
+  notes: '2026-04-21 研究補做（4/20 已加入 watchlist）。
+
+    技術面：收 76.2 (-0.91%)，open=78 開高走低，high=78.5，low=74，收帶上影線（高點有賣壓）。
+
+    RSI 73.5 超買，ADX 21.05（趨勢仍未確立），vol_ratio 2.18x（大量但下跌=換手非突破）。
+
+    投信籌碼爆強：今日投信買超 9,464 張（全上市第一），外資前期累計大買 8.5 萬張。
+
+    4/22 財報（NYSE 盤前）= 明日台股開盤前即知結果。
+
+    若財報正向（EPS ≥預期，Q2毛利指引 ≥30%），等回測 73-76 守穩 = A 點進場。
+
+    停損設 70 元（跳空缺口 + EMA20 失守）。
+
+    '
+  trigger: (A) 財報進場點：4/22 財報正向後回測 73-76 元量縮守穩，ADX 升破 20；(B) 法說進場點：4/29 法說管理層確認 H2
+    漲價 + 股價守 73 元以上。觸發條件：量縮回測守穩後帶量再攻，volume_ratio ≥ 1.5x，或突破 82 元新高放量。
+  invalidation: 跌破 68-70 元（跳空缺口填補 + EMA20 失守）且 MACD 翻負；或 4/29 法說管理層未確認 H2 定價調升；或外資連續
+    3 週賣超；或中國廠商大幅降價觸發族群估值下修。
   trigger_conditions:
   - price_above_sma_20
   - macd_histogram_positive
+  - obv_rising_5d
   - volume_breakout_1_5x
   invalidation_conditions:
-  - price_below_sma_20 and macd_histogram_negative
-  updated_at: '2026-04-20'
+  - price_below_ema_20 and macd_histogram_negative
+  updated_at: '2026-04-21'
 - symbol: '4958'
   thesis: 臻鼎-KY 是台灣最大 PCB 廠之一，AI 資料中心建置驅動高階 PCB 需求，且為 ABF 族群中盈餘彈性最大的標的之一。
   status: watch
@@ -94,15 +132,78 @@
   - price_below_sma_20 and macd_histogram_negative
   updated_at: '2026-04-20'
 - symbol: '3450'
-  thesis: 800G/1.6T 光連接升級，聯鈞受惠光模組需求；screener 上榜 + PTT 確認漲停
+  thesis: 聯鈞受惠 AI 資料中心 800G/1.6T 光連接升級與 CPO/光模組需求；4/20 +4.64%、量比 1.97x 放量為光通訊族群三檔共振之一。4/21
+    鴻海工業富聯發表 CPO 全光交換機再強化族群題材。
   status: watch
-  notes: ''
-  trigger: ''
-  invalidation: ''
+  notes: '2026-04-21 更新：4/20 收 383，RSI 75.5/Stoch 94 超買，但 ADX 23.2 趨勢成形、trigger_met=true。族群同族比較：4979.TWO
+    RSI 83.7 極度過熱且量比 0.87x 背離；6442 光聖昨日漲停（+9.98%）；聯鈞技術面相對健康但亦偏高。不追漲停後高點，等回測 355-370（SMA20
+    附近）量縮守穩，或整理突破 388 高點再評估。停損設 350（EMA20 + 結構守位）。
+
+    '
+  trigger: 回測 355-370 SMA20 附近量縮守穩後帶量再攻，或整理後突破 388 高點且 volume_ratio >= 1.5x
+  invalidation: 收盤跌破 350 元且 MACD 翻負；或 ADX 回落 < 20 且量縮
   trigger_conditions:
   - price_above_sma_20
   - macd_histogram_positive
   - volume_breakout_1_5x
+  - adx_14 > 22
   invalidation_conditions:
   - price_below_sma_20 and macd_histogram_negative
-  updated_at: '2026-04-20'
+  - close < 350
+  updated_at: '2026-04-21'
+- symbol: '2454'
+  thesis: 聯發科進入「AI 設計話語權重估 + AI SoC 超級週期」階段。Google 新一代 TPU 亮相（聯發科為 Google Tensor IP/設計夥伴），4/21
+    漲停至 2090 元，投信今日買超 1,052 張，是 IC 設計族群中流動性最佳且 AI 敘事最完整的標的。
+  status: watch
+  notes: '2026-04-21 新增：Google TPU 催化漲停，PTT 爆量討論，投信買超1,052張（上市第19名）。
+
+    技術面：RSI 77.19（超買），ADX 28.21（趨勢成形），vol 1.75x，BB 1.117（上軌外）。
+
+    族群比較：聯發科 > 世芯-KY（流動性與題材廣度優）> 瑞昱/聯詠（落後）。
+
+    不追高（漲停後），等回測 2000-2050 守穩後進場（A點）；若跌回 1900-1950 為更佳加倉點。
+
+    催化劑日曆：4/22 明日開盤動向確認；5月中旬 Q1財報+法說（核心驗證點）；H2 Google Tensor 新款發布。
+
+    停損：1850 元（EMA20 + 結構失守）。目標：2200-2300/2400-2500。
+
+    '
+  trigger: 回測 2000-2050 守穩後帶量再攻（volume_ratio ≥ 1.5x），或明日開高確認守穩；ADX 升破 30 為趨勢強化信號。
+  invalidation: 跌破 1850 元（EMA20 失守）且 MACD 翻負；或 Q1 法說未提及 Google TPU 合作進展；或 IC 設計族群整體反轉。
+  trigger_conditions:
+  - price_above_sma_20
+  - macd_histogram_positive
+  - volume_breakout_1_5x
+  - adx_14 > 25
+  invalidation_conditions:
+  - price_below_ema_20 and macd_histogram_negative
+  updated_at: '2026-04-21'
+- symbol: '3653'
+  thesis: 健策是 AI 伺服器散熱基板（vapor chamber）台灣龍頭，直供 NVIDIA/AMD，毛利率 40-50%。NVIDIA Feynman
+    高功耗催化，公司已公開表態「明年可賺超過 15 元股本」，EPS 跳升 3-5 倍潛力。千金股本放大彈性。4/20 漲停、4/21 續強 +7%，投信買超
+    373 張。
+  status: watch
+  notes: '2026-04-21 新增：4/20 漲停（NVIDIA Feynman + AMD MI300X 催化），4/21 盤後約 5370（守4900+
+    條件達成）。
+
+    技術面：RSI 79（超買），ADX 32.1（趨勢確立），vol 1.13x（溫和量），BB 1.24（上軌外）。
+
+    投信 4/21 買超 373 張（第41名），機構初期佈局。
+
+    族群比較：健策 > 奇鋐（毛利/客戶層級/成長空間均優）。
+
+    等回測 4800-5000 守穩或法說會確認 Feynman 訂單後進場。停損 4000 元。
+
+    催化劑：4月底法說（管理層確認訂單量+毛利指引，最重要催化）；2026H2 Feynman 量產導入。
+
+    '
+  trigger: 回測 4800-5000 量縮守穩後帶量再攻；或法說會確認 Feynman 訂單且股價守 5000 以上（volume_ratio ≥ 1.5x）。
+  invalidation: 跌破 4000 元（中期支撐失守）且 MACD 翻負；或法說會未確認 Feynman 訂單；或毛利率指引維持 <30%。
+  trigger_conditions:
+  - price_above_sma_20
+  - macd_histogram_positive
+  - adx_14 > 25
+  - volume_breakout_1_5x
+  invalidation_conditions:
+  - price_below_sma_20 and macd_histogram_negative
+  updated_at: '2026-04-21'

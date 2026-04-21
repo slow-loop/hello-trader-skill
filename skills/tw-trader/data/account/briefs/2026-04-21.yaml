@@ -1,0 +1,94 @@
+date: '2026-04-21'
+session: intraday
+screener:
+  skipped: true
+  skip_reason: 第三輪盤中（12:14）；screener 仍反映 4/20 收盤，聚焦盤中量價驗證
+  source: screener/2026-04-21.json
+  highlights: []
+sentiment:
+  overall: 極度偏多，市值躍升全球第六催化信心；PTT 閒聊爆文持續；CPO 族群 12:05 開始出現跌停預警（4979.TWO、波若威）
+  hot_tickers:
+  - symbol: '3189'
+    theme: ABF/PCB 領頭
+    note: 第三日漲停，PTT 南電討論但輿論分化（'廢物南電' vs 持倉者）
+  - symbol: '2454'
+    theme: IC 設計 Google TPU
+    note: 聯發科漲停，IC 設計整排漲停（PTT 確認），但不在 watchlist，盤中不追
+  - symbol: 4979.TWO
+    theme: CPO 跌
+    note: PTT 12:05 明確點名『華星光、波若威準備跌停』，強市下大跌 -5.37%
+  narratives:
+  - Google 新一代 TPU 亮相 → 聯發科漲停，IC 設計成今日新主線
+  - 廣達林百里家庭日談話 → AI server 廣達衝 21 個月新高
+  - CPO 族群出現分化：部分標的在強市下反向大跌（4979.TWO -5.37%）
+  - 美伊 4/22 停火談判（CNN），若停火延長為正面宏觀雜訊
+  conclusion: IC 設計漲停為盤中新主線，但已漲停不追。4979.TWO 繼續惡化接近 invalidation。
+macro:
+  market_line: ^TWII 12:14 = 37,678 +1.33%（強勢日持續，台股市值升全球第六）
+  main_points:
+  - Google 新一代 TPU 即將亮相，聯發科（2454）衝漲停、市值 3.3 兆元創新高 — IC 設計今日最大 catalyst
+  - 廣達（2382）衝 21 個月新高，AI server 族群仍強
+  - 美伊停火第二輪談判 4/22 巴基斯坦登場（CNN）；范斯啟程 — 若停火延長為正面
+  - ABF 族群：3189 景碩第三日漲停確認 ABF 大行情持續；8046 南電持倉者壓力回調觀察中
+  secondary_themes:
+  - 光通訊/CPO：4979.TWO 強市大跌 -5.37%（open=708, low=651），接近 640 invalidation
+  - 兆利（3548）光通訊基礎設施研究報告出現
+  - 記憶體/NAND：Kioxia push 30，旺宏繼續被散戶炒，但外資早盤已出貨
+  fund_flows:
+    foreign: null
+    investment_trust: null
+    dealer: null
+cross_ref:
+  rows:
+  - symbol: '3189'
+    name: 景碩
+    screener: close 430.5，T-1 漲停（第二日）
+    sentiment: PTT 關注持續
+    news: ABF 族群大行情第三日確認，vol_ratio 1.82x
+    verdict: 第三日漲停（+9.99%），RSI 69.4（趨勢中健康），ADX 31.4，vol 1.82x — 訊號最強；但漲停中無法追買，等回測或明日確認
+    tier: triple_resonance
+  - symbol: '2454'
+    name: 聯發科
+    screener: null
+    sentiment: PTT 閒聊確認漲停
+    news: Google TPU 亮相催化，IC 設計整排漲停
+    verdict: 今日新面孔且已漲停，盤中不加 watchlist；盤後若持續確認 ADX>20 可評估
+    tier: double_confirm
+  - symbol: 4979.TWO
+    name: 華星光
+    screener: close 708，T-1 +9.94%
+    sentiment: PTT 12:05 點名『準備跌停』
+    news: 強市大跌 -5.37%，今日低點 651 vs invalidation 640
+    verdict: 紅旗升級：強市大跌 + PTT 跌停預警 + 今日低 651 = invalidation 觸發風險極高；收盤若跌破 640 需立即執行
+      invalidation 流程
+    tier: skip
+  - symbol: '2303'
+    name: 聯電
+    screener: close 76.9，T-1 +5.34%
+    sentiment: null
+    news: 開高走低（open 78 → 75.1），vol_ratio 2.63x（賣壓大）；4/22 財報催化待驗證
+    verdict: 強市下相對弱（-2.34% vs 市場 +1.33%），A 點未到，等 4/22 財報後
+    tier: story_only
+  tomorrow_watch:
+  - symbol: '3189'
+    name: 景碩
+    tag: null
+    reason: 第三日漲停後等明日量價確認：若高開且量縮守 460+，可考慮追價；或等回測 440-455 建倉，停損 430
+  - symbol: 4979.TWO
+    name: 華星光
+    tag: null
+    reason: 收盤跌破 640 = invalidation 觸發，執行移除；今日收盤是關鍵
+  - symbol: '2303'
+    name: 聯電
+    tag: null
+    reason: 4/22 財報（NYSE 盤前），若正向後回測 73-76 守穩 = A 點進場
+  - symbol: '2454'
+    name: 聯發科
+    tag: NEW
+    reason: Google TPU 催化漲停，盤後若守 930+ 且 ADX 成形，評估加入 watchlist
+watchlist_changes:
+  added: []
+  promoted: []
+  removed: []
+  updated: []
+deep_research_candidates: []

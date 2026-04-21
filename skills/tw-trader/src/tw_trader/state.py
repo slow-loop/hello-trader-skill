@@ -1,32 +1,54 @@
 """Local trading state for tw-trader.
 
-Wraps market_core.paper with tw-trader's workspace layout. Resolves paths
+Wraps market_core.broker with tw-trader's workspace layout. Resolves paths
 from TW_TRADER_ROOT env var or falls back to the skill directory.
 """
 
 from __future__ import annotations
 
 import os
+from datetime import datetime, timezone
 from pathlib import Path
 
 import yaml
 
 from market_core import MarketConfig, MarketRuntimeConfig, get_market_profile, get_quote
-from market_core.models import OrderRequest, Position, TradeRecord, TradingState
-from market_core.paper import (
+from market_core.market import get_bars
+from market_core.models import Bar, Order, OrderRequest, Quote, TradeRecord, TradingState
+from market_core.broker import (
     append_trade,
-    check_exit_orders,
+    cancel_order as _cancel_order,
     default_cash,
-    execute_buy,
-    execute_sell,
+    evaluate_orders,
     load_state,
     load_trades,
+    place_order as _place_order,
     save_state,
     workspace_paths,
 )
 
+from tw_trader.events import append_event
+
 SKILL_ROOT = Path(__file__).resolve().parents[2]
 STATE_SUBDIR = "data/account/state"
+SWEEP_TIMEFRAME = "5m"
+# Entry LIMIT orders auto-cancel after this many days. STOP_LOSS/TAKE_PROFIT
+# don't expire — they're tied to the position's lifetime.
+LIMIT_EXPIRY_DAYS = 3
+# Fallback bar lookback when no pending order has a placed_at to anchor from.
+# Normally lookback is computed dynamically from the oldest pending order.
+SWEEP_LOOKBACK_FALLBACK_DAYS = 3
+# Hard cap on bar lookback — a STOP_LOSS held longer than this won't see
+# older bars. Fills via quote still work; only historical bar evaluation is bounded.
+SWEEP_LOOKBACK_MAX_DAYS = 30
+
+
+def _trade_payload(trade: TradeRecord) -> dict:
+    return trade.model_dump(mode="json", exclude_none=True)
+
+
+def _order_payload(order: Order) -> dict:
+    return order.model_dump(mode="json", exclude_none=True)
 
 
 def workspace_root() -> Path:
@@ -89,92 +111,179 @@ def list_trades(limit: int | None = None) -> list[TradeRecord]:
     return trades[-limit:]
 
 
-def place_buy(
+# ─── order placement ────────────────────────────────────────────────────────
+
+
+def place_order(request: OrderRequest) -> tuple[Order, list[TradeRecord]]:
+    """Place an order then immediately sweep — MARKET fills now if possible."""
+    state = get_state()
+    profile = _profile()
+    order = _place_order(state, profile, request)
+    append_event("order.placed", _order_payload(order))
+    triggered = _sweep_state(state, profile)
+    save(state)
+    _persist_trades(triggered)
+    return order, triggered
+
+
+def cancel_order(order_id: str, reason: str = "") -> Order:
+    state = get_state()
+    order = _cancel_order(state, order_id, reason)
+    save(state)
+    append_event("order.cancelled", _order_payload(order))
+    return order
+
+
+def buy(
     symbol: str,
     quantity: float,
-    price: float | None,
     *,
+    limit_price: float | None = None,
     stop_loss: float | None = None,
     take_profit: float | None = None,
     reason: str = "",
     strategy: str = "",
-) -> str:
-    config = _market_config()
-    profile = get_market_profile(config.market.profile)
-    state = get_state()
-    fill_price = price if price is not None else get_quote(symbol, profile).price
+) -> tuple[Order, list[TradeRecord]]:
     request = OrderRequest(
         symbol=symbol,
         side="BUY",
+        type="LIMIT" if limit_price is not None else "MARKET",
         quantity=quantity,
-        price=fill_price,
+        limit_price=limit_price,
         stop_loss=stop_loss,
         take_profit=take_profit,
         reason=reason,
         strategy=strategy,
     )
-    msg, trade = execute_buy(state, profile, symbol, quantity, fill_price, request)
-    if trade is not None:
-        save(state)
-        _, trades_path = _paths()
-        append_trade(trades_path, trade)
-    return msg
+    return place_order(request)
 
 
-def place_sell(
+def sell(
     symbol: str,
     quantity: float,
-    price: float | None,
     *,
+    limit_price: float | None = None,
     reason: str = "",
     strategy: str = "",
-) -> str:
-    config = _market_config()
-    profile = get_market_profile(config.market.profile)
-    state = get_state()
-    fill_price = price if price is not None else get_quote(symbol, profile).price
+) -> tuple[Order, list[TradeRecord]]:
     request = OrderRequest(
         symbol=symbol,
         side="SELL",
+        type="LIMIT" if limit_price is not None else "MARKET",
         quantity=quantity,
-        price=fill_price,
+        limit_price=limit_price,
         reason=reason,
         strategy=strategy,
     )
-    msg, trade = execute_sell(state, profile, symbol, quantity, fill_price, request)
-    if trade is not None:
-        save(state)
-        _, trades_path = _paths()
-        append_trade(trades_path, trade)
-    return msg
+    return place_order(request)
 
 
-def sweep_exit_orders() -> list[TradeRecord]:
-    config = _market_config()
-    profile = get_market_profile(config.market.profile)
+# ─── sweep ──────────────────────────────────────────────────────────────────
+
+
+def sweep() -> list[TradeRecord]:
+    """Fetch market data for symbols with pending orders, then evaluate."""
     state = get_state()
-    prices: dict[str, float] = {}
-    for symbol in state.orders:
-        try:
-            prices[symbol] = get_quote(symbol, profile).price
-        except Exception:
-            continue
-    triggered = check_exit_orders(state, profile, prices)
-    if triggered:
-        save(state)
-        _, trades_path = _paths()
-        for trade in triggered:
-            append_trade(trades_path, trade)
+    profile = _profile()
+    triggered = _sweep_state(state, profile)
+    save(state)
+    _persist_trades(triggered)
     return triggered
 
 
-def get_account_status() -> dict:
+def _sweep_state(state: TradingState, profile) -> list[TradeRecord]:
+    pending_symbols = sorted({o.symbol for o in state.orders if o.status == "PENDING"})
+    if not pending_symbols:
+        return []
+
+    lookback = _compute_lookback_days(state.orders)
+
+    quotes: dict[str, Quote] = {}
+    bars_by_symbol: dict[str, list[Bar]] = {}
+    for symbol in pending_symbols:
+        try:
+            quotes[symbol] = get_quote(symbol, profile)
+        except Exception:
+            continue
+        if any(o.symbol == symbol and o.type != "MARKET" for o in state.orders if o.status == "PENDING"):
+            try:
+                bars = get_bars(symbol, profile, timeframe=SWEEP_TIMEFRAME, lookback_days=lookback)
+            except Exception:
+                bars = []
+            bars_by_symbol[symbol] = _filter_bars_by_pending(state.orders, symbol, bars)
+
+    return evaluate_orders(
+        state, profile, quotes, bars_by_symbol,
+        expire_limit_after_days=LIMIT_EXPIRY_DAYS,
+    )
+
+
+def _compute_lookback_days(orders: list[Order]) -> int:
+    """Lookback = days since oldest pending non-MARKET order, clamped."""
+    earliest = None
+    for o in orders:
+        if o.status != "PENDING" or o.type == "MARKET":
+            continue
+        if earliest is None or o.placed_at < earliest:
+            earliest = o.placed_at
+    if earliest is None:
+        return SWEEP_LOOKBACK_FALLBACK_DAYS
+    age = (datetime.now(timezone.utc) - _parse_iso(earliest)).days + 1
+    return max(SWEEP_LOOKBACK_FALLBACK_DAYS, min(age, SWEEP_LOOKBACK_MAX_DAYS))
+
+
+def _persist_trades(trades: list[TradeRecord]) -> None:
+    if not trades:
+        return
+    _, trades_path = _paths()
+    for trade in trades:
+        append_trade(trades_path, trade)
+        append_event("trade.fill", _trade_payload(trade))
+
+
+def _filter_bars_by_pending(orders: list[Order], symbol: str, bars: list[Bar]) -> list[Bar]:
+    """Drop bars older than the earliest pending non-MARKET order for this symbol.
+
+    Each order strictly should be evaluated against its own placed_at, but bars
+    are shared; the engine walks chronologically and takes the first crossing,
+    so trimming to the earliest placed_at across all pending orders is safe and
+    keeps the data payload small.
+    """
+    earliest = None
+    for o in orders:
+        if o.status != "PENDING" or o.symbol != symbol or o.type == "MARKET":
+            continue
+        if earliest is None or o.placed_at < earliest:
+            earliest = o.placed_at
+    if earliest is None:
+        return bars
+    cutoff = _parse_iso(earliest)
+    return [b for b in bars if _parse_iso(b.bar_time) >= cutoff]
+
+
+def _parse_iso(value: str) -> datetime:
+    text = value.replace("Z", "+00:00")
+    dt = datetime.fromisoformat(text)
+    if dt.tzinfo is None:
+        dt = dt.replace(tzinfo=timezone.utc)
+    return dt
+
+
+def _profile():
     config = _market_config()
-    profile = get_market_profile(config.market.profile)
+    return get_market_profile(config.market.profile)
+
+
+# ─── account view ───────────────────────────────────────────────────────────
+
+
+def get_account_status() -> dict:
+    profile = _profile()
     state = get_state()
 
     prices: dict[str, float] = {}
-    for symbol in state.positions:
+    symbols_to_quote = set(state.positions) | {o.symbol for o in state.orders if o.status == "PENDING"}
+    for symbol in symbols_to_quote:
         try:
             prices[symbol] = get_quote(symbol, profile).price
         except Exception:
@@ -208,34 +317,42 @@ def get_account_status() -> dict:
         if pos_status["market_value"] is not None and account_value > 0:
             pos_status["allocation_pct"] = round(pos_status["market_value"] / account_value * 100, 4)
 
-    orders: list[dict] = []
-    for symbol, order in state.orders.items():
-        current = prices.get(symbol)
-        dist_stop = None
-        dist_take = None
-        if current and current > 0:
-            if order.stop_loss is not None:
-                dist_stop = round((order.stop_loss - current) / current * 100, 4)
-            if order.take_profit is not None:
-                dist_take = round((order.take_profit - current) / current * 100, 4)
-        orders.append(
+    pending_orders: list[dict] = []
+    committed_buy_cash = 0.0
+    for order in state.orders:
+        if order.status != "PENDING":
+            continue
+        ref_price = order.limit_price or order.trigger_price or prices.get(order.symbol)
+        dist_pct = None
+        current = prices.get(order.symbol)
+        if ref_price is not None and current and current > 0:
+            dist_pct = round((ref_price - current) / current * 100, 4)
+        pending_orders.append(
             {
-                "symbol": symbol,
-                "stop_loss": order.stop_loss,
-                "take_profit": order.take_profit,
-                "dist_to_stop_pct": dist_stop,
-                "dist_to_take_pct": dist_take,
+                "id": order.id,
+                "symbol": order.symbol,
+                "side": order.side,
+                "type": order.type,
+                "quantity": order.quantity,
+                "limit_price": order.limit_price,
+                "trigger_price": order.trigger_price,
+                "ref_distance_pct": dist_pct,
+                "placed_at": order.placed_at,
+                "reason": order.reason,
             }
         )
+        if order.side == "BUY" and ref_price is not None:
+            committed_buy_cash += order.quantity * ref_price
 
     exposure_pct = round(total_market_value / account_value * 100, 4) if account_value > 0 else 0.0
     return {
         "market_profile": profile.id,
         "cash": round(state.cash, 4),
+        "committed_in_pending": round(committed_buy_cash, 4),
         "realized_pnl": round(state.realized_pnl, 4),
         "account_value": round(account_value, 4),
         "market_value": round(total_market_value, 4),
         "exposure_pct": exposure_pct,
         "positions": positions,
-        "orders": orders,
+        "pending_orders": pending_orders,
     }

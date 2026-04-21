@@ -4,6 +4,9 @@ import json
 from typing import Any
 
 import typer
+from dotenv import find_dotenv, load_dotenv
+
+load_dotenv(find_dotenv(usecwd=True), override=True)
 
 from market_core.market import analyze_symbol, build_overview, get_news, get_quote
 from market_core.models import MarketConfig, MarketRuntimeConfig

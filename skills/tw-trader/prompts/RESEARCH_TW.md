@@ -16,8 +16,8 @@
 - `data/config/sources.tw.yaml`: 外部 `web-reader` 新聞來源設定
 - `data/account/research/{YYYY-MM-DD}-tw-{symbol_or_theme}.md` 投資標的或主題研究
 - `data/account/research/template/template.md`: 個股交易研究範本
-- `data/account/research-cards/{YYYY-MM-DD}.yaml`: 當日研究卡片（Phase 1-4 結構化摘要，供前端渲染）
-- `data/account/research-cards/template/research-card.template.yaml`: 研究卡片輸出格式範本
+- `data/account/briefs/{YYYY-MM-DD}.yaml`: 當日市場簡報（Phase 1-4 結構化摘要，供前端渲染）
+- `data/account/briefs/template/brief.template.yaml`: 市場簡報輸出格式範本
 - `data/account/screener/{YYYY-MM-DD}.json`: screener 原始輸出（由 Phase 1 redirect 寫入）
 
 ## CLI
@@ -58,8 +58,12 @@ uv run web-reader data/config/sources.tw.yaml --tags=research
 uv run python -m tw_trader.cli watchlist-update --file tmp/update_item.yaml
 # 新增 Journal (透過暫存檔)
 uv run python -m tw_trader.cli journal-add --file tmp/journal_entry.yaml
-# 儲存 Research Card (透過暫存檔)
-uv run python -m tw_trader.cli research-card-save --date 2026-04-18 --file tmp/card.yaml
+# 初始化市場簡報（建立今日草稿檔）
+uv run python -m tw_trader.cli brief init
+# 確認簡報（驗證格式並寫入事件）
+uv run python -m tw_trader.cli brief commit
+# 查看最新簡報
+uv run python -m tw_trader.cli brief show
 ```
 
 ## 規則
@@ -71,7 +75,7 @@ uv run python -m tw_trader.cli research-card-save --date 2026-04-18 --file tmp/c
 - 不要只貼資料，要做明確判斷
 - **新增 watchlist 時，同步建立研究文件**（送交個股交易研究子流程），不要事後幾天才補
 - **研究文件強制更新觸發條件**：個股現價相對前次研究的基準價格移動 >10%，或 thesis 的成立/失效條件對應的關鍵技術指標（支撐/壓力/籌碼）已不適用，則強制重跑個股交易研究
-- **嚴禁直接讀寫結構化 YAML 檔案**：對於 `watchlist.yaml`、`journals/*.yaml` 與 `research-cards/*.yaml`，嚴禁使用 `write_to_file` 直接修改或覆寫。必須先將內容寫入 `tmp/` 下的 YAML 暫存檔，再透過對應的 `cli` 指令更新。這能確保 YAML 格式正確且經過後端驗證。
+- **嚴禁直接讀寫結構化 YAML 檔案**：對於 `watchlist.yaml` 與 `journals/*.yaml`，嚴禁使用 `write_to_file` 直接修改或覆寫。必須先將內容寫入 `tmp/` 下的 YAML 暫存檔，再透過對應的 `cli` 指令更新。`briefs/*.yaml` 例外：由 `brief init` 建立草稿後，agent 直接編輯，完成後執行 `brief commit` 驗證。
 
 ## 主流程
 
@@ -82,7 +86,7 @@ uv run python -m tw_trader.cli research-card-save --date 2026-04-18 --file tmp/c
 ### Phase 0：準備
 
 1. 讀 `data/account/lessons.md`、`data/account/watchlist.yaml`、最近 journal、查看目前持倉 `cli account`
-   - 同時讀 `data/account/research-cards/template/research-card.template.yaml` 作為 Phase 5 結構化輸出的格式參考
+   - 同時讀 `data/account/briefs/template/brief.template.yaml` 作為 Phase 5 結構化輸出的格式參考
 2. 跑 `cli watchlist` 取得 watchlist 的 raw + analysis + evaluation
    - `watchlist` 是唯一完整來源；不要再期待獨立的 trigger 檔案或獨立資料來源
    - `check-triggers` 只是 `watchlist.evaluation` 的摘要 view，適合快速看 trigger/invalidation 狀態
@@ -145,10 +149,10 @@ Screener 現在自動附帶技術指標（RSI, ADX, 量比）與籌碼資訊（�
    - thesis 明顯改變
    - 持有中的股票出現重大催化或重大風險
 3. 對需要個股交易研究的股票，每一個標的指派一個 sub-agent 執行 `### 子流程：個股交易研究`
-4. **寫 Research Card**：
-   - 依 `research-cards/template/research-card.template.yaml` 結構生成內容。
-   - 先寫入 `tmp/research_card_{date}.yaml`。
-   - 執行 `uv run python -m tw_trader.cli research-card-save --date {YYYY-MM-DD} --file tmp/research_card_{date}.yaml`。
+4. **寫市場簡報（Brief）**：
+   - 執行 `uv run python -m tw_trader.cli brief init` 建立草稿（路徑會印出）。
+   - 直接編輯該草稿檔，依 `briefs/template/brief.template.yaml` 結構填入 Phase 1-4 摘要。
+   - 執行 `uv run python -m tw_trader.cli brief commit` 驗證並記錄事件。
 5. **更新 Journal**：
    - 生成當日的 `JournalEntry` 內容。
    - 先寫入 `tmp/journal_entry_{date}.yaml`。

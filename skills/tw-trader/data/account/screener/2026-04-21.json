@@ -1,0 +1,307 @@
+{
+  "strategy": "momentum",
+  "market_profile": "tw_equity",
+  "generated_at": "2026-04-21T01:03:21Z",
+  "items": [
+    {
+      "symbol": "2303",
+      "name": "聯電",
+      "close": 76.9,
+      "change": 3.9,
+      "change_pct": 5.34,
+      "trade_value": 27452.24,
+      "analysis": null,
+      "chips": {}
+    },
+    {
+      "symbol": "2308",
+      "name": "台達電",
+      "close": 1900.0,
+      "change": 60.0,
+      "change_pct": 3.26,
+      "trade_value": 23348.58,
+      "analysis": null,
+      "chips": {}
+    },
+    {
+      "symbol": "6213",
+      "name": "聯茂",
+      "close": 282.0,
+      "change": 11.5,
+      "change_pct": 4.25,
+      "trade_value": 15830.28,
+      "analysis": null,
+      "chips": {}
+    },
+    {
+      "symbol": "3450",
+      "name": "聯鈞",
+      "close": 383.0,
+      "change": 17.0,
+      "change_pct": 4.64,
+      "trade_value": 14732.52,
+      "analysis": null,
+      "chips": {}
+    },
+    {
+      "symbol": "3189",
+      "name": "景碩",
+      "close": 430.5,
+      "change": 39.0,
+      "change_pct": 9.96,
+      "trade_value": 14213.27,
+      "analysis": null,
+      "chips": {}
+    },
+    {
+      "symbol": "4958",
+      "name": "臻鼎-KY",
+      "close": 310.0,
+      "change": 28.0,
+      "change_pct": 9.93,
+      "trade_value": 14103.95,
+      "analysis": null,
+      "chips": {}
+    },
+    {
+      "symbol": "2383",
+      "name": "台光電",
+      "close": 3850.0,
+      "change": 50.0,
+      "change_pct": 1.32,
+      "trade_value": 13766.77,
+      "analysis": null,
+      "chips": {}
+    },
+    {
+      "symbol": "8046",
+      "name": "南電",
+      "close": 796.0,
+      "change": 72.0,
+      "change_pct": 9.94,
+      "trade_value": 13457.91,
+      "analysis": null,
+      "chips": {}
+    },
+    {
+      "symbol": "3231",
+      "name": "緯創",
+      "close": 140.5,
+      "change": 4.0,
+      "change_pct": 2.93,
+      "trade_value": 10958.51,
+      "analysis": null,
+      "chips": {}
+    },
+    {
+      "symbol": "3661",
+      "name": "世芯-KY",
+      "close": 3625.0,
+      "change": 110.0,
+      "change_pct": 3.13,
+      "trade_value": 10851.56,
+      "analysis": null,
+      "chips": {}
+    },
+    {
+      "symbol": "6442",
+      "name": "光聖",
+      "close": 2370.0,
+      "change": 215.0,
+      "change_pct": 9.98,
+      "trade_value": 10629.28,
+      "analysis": null,
+      "chips": {}
+    },
+    {
+      "symbol": "3711",
+      "name": "日月光投控",
+      "close": 461.5,
+      "change": 19.5,
+      "change_pct": 4.41,
+      "trade_value": 10399.84,
+      "analysis": null,
+      "chips": {}
+    },
+    {
+      "symbol": "2327",
+      "name": "國巨*",
+      "close": 319.5,
+      "change": 3.0,
+      "change_pct": 0.95,
+      "trade_value": 10181.84,
+      "analysis": null,
+      "chips": {}
+    },
+    {
+      "symbol": "6669",
+      "name": "緯穎",
+      "close": 3980.0,
+      "change": 175.0,
+      "change_pct": 4.6,
+      "trade_value": 9131.38,
+      "analysis": null,
+      "chips": {}
+    },
+    {
+      "symbol": "3017",
+      "name": "奇鋐",
+      "close": 2490.0,
+      "change": 90.0,
+      "change_pct": 3.75,
+      "trade_value": 8767.85,
+      "analysis": null,
+      "chips": {}
+    },
+    {
+      "symbol": "6531",
+      "name": "愛普*",
+      "close": 682.0,
+      "change": 38.0,
+      "change_pct": 5.9,
+      "trade_value": 8439.06,
+      "analysis": null,
+      "chips": {}
+    },
+    {
+      "symbol": "2317",
+      "name": "鴻海",
+      "close": 207.5,
+      "change": 1.5,
+      "change_pct": 0.73,
+      "trade_value": 8159.55,
+      "analysis": null,
+      "chips": {}
+    },
+    {
+      "symbol": "4977",
+      "name": "眾達-KY",
+      "close": 241.5,
+      "change": 6.0,
+      "change_pct": 2.55,
+      "trade_value": 7960.93,
+      "analysis": null,
+      "chips": {}
+    },
+    {
+      "symbol": "3008",
+      "name": "大立光",
+      "close": 2710.0,
+      "change": 105.0,
+      "change_pct": 4.03,
+      "trade_value": 7255.18,
+      "analysis": null,
+      "chips": {}
+    },
+    {
+      "symbol": "2368",
+      "name": "金像電",
+      "close": 1210.0,
+      "change": 35.0,
+      "change_pct": 2.98,
+      "trade_value": 7026.29,
+      "analysis": null,
+      "chips": {}
+    },
+    {
+      "symbol": "2382",
+      "name": "廣達",
+      "close": 329.0,
+      "change": 6.0,
+      "change_pct": 1.86,
+      "trade_value": 6516.0,
+      "analysis": null,
+      "chips": {}
+    },
+    {
+      "symbol": "3037",
+      "name": "欣興",
+      "close": 678.0,
+      "change": 35.0,
+      "change_pct": 5.44,
+      "trade_value": 6496.38,
+      "analysis": null,
+      "chips": {}
+    },
+    {
+      "symbol": "3665",
+      "name": "貿聯-KY",
+      "close": 2460.0,
+      "change": 95.0,
+      "change_pct": 4.02,
+      "trade_value": 6408.9,
+      "analysis": null,
+      "chips": {}
+    },
+    {
+      "symbol": "3653",
+      "name": "健策",
+      "close": 5020.0,
+      "change": 455.0,
+      "change_pct": 9.97,
+      "trade_value": 6105.6,
+      "analysis": null,
+      "chips": {}
+    },
+    {
+      "symbol": "3533",
+      "name": "嘉澤",
+      "close": 2625.0,
+      "change": 135.0,
+      "change_pct": 5.42,
+      "trade_value": 5919.5,
+      "analysis": null,
+      "chips": {}
+    },
+    {
+      "symbol": "3481",
+      "name": "群創",
+      "close": 26.15,
+      "change": 0.25,
+      "change_pct": 0.97,
+      "trade_value": 5631.51,
+      "analysis": null,
+      "chips": {}
+    },
+    {
+      "symbol": "6139",
+      "name": "亞翔",
+      "close": 751.0,
+      "change": 28.0,
+      "change_pct": 3.87,
+      "trade_value": 5220.72,
+      "analysis": null,
+      "chips": {}
+    },
+    {
+      "symbol": "2301",
+      "name": "光寶科",
+      "close": 165.0,
+      "change": 3.0,
+      "change_pct": 1.85,
+      "trade_value": 5032.54,
+      "analysis": null,
+      "chips": {}
+    },
+    {
+      "symbol": "1519",
+      "name": "華城",
+      "close": 891.0,
+      "change": 19.0,
+      "change_pct": 2.18,
+      "trade_value": 4540.65,
+      "analysis": null,
+      "chips": {}
+    },
+    {
+      "symbol": "6515",
+      "name": "穎崴",
+      "close": 10795.0,
+      "change": 490.0,
+      "change_pct": 4.75,
+      "trade_value": 4356.08,
+      "analysis": null,
+      "chips": {}
+    }
+  ]
+}

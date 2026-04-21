@@ -1,7 +1,7 @@
 """tw-trader CLI — local-first. No backend required.
 
 Reads/writes YAML under data/account/ via tw_trader.state (paper trading)
-and tw_trader.workspace (journal/lessons/watchlist/research-card).
+and tw_trader.workspace (journal/lessons/watchlist/brief).
 Market data comes from the sibling `market` CLI (market_core).
 """
 
@@ -19,7 +19,7 @@ dotenv.load_dotenv(Path(__file__).resolve().parents[2] / ".env")
 import typer
 import yaml
 
-from tw_trader import state, workspace
+from tw_trader import events as events_log, state, workspace
 from tw_trader.workspace import JournalEntry
 
 app = typer.Typer(help="TW Trader CLI (local-first)")
@@ -39,35 +39,52 @@ def account():
 def buy(
     symbol: str = typer.Argument(...),
     qty: float = typer.Argument(...),
-    price: Optional[float] = typer.Option(None, "--price", "-p"),
+    limit: Optional[float] = typer.Option(None, "--limit", "-l", help="Limit price; omit for MARKET order"),
     stop_loss: Optional[float] = typer.Option(None, "--stop-loss"),
     take_profit: Optional[float] = typer.Option(None, "--take-profit"),
     reason: str = typer.Option("", "--reason", "-r"),
     strategy: str = typer.Option("", "--strategy"),
 ):
-    """Buy shares (paper)."""
-    msg = state.place_buy(
+    """Place a buy order. Without --limit it's a MARKET order (fills immediately unless 漲停)."""
+    order, triggered = state.buy(
         symbol,
         qty,
-        price,
+        limit_price=limit,
         stop_loss=stop_loss,
         take_profit=take_profit,
         reason=reason,
         strategy=strategy,
     )
-    typer.echo(msg)
+    _echo({"order": order.model_dump(mode="json", exclude_none=True), "fills": [t.model_dump(mode="json", exclude_none=True) for t in triggered]})
 
 
 @app.command()
 def sell(
     symbol: str = typer.Argument(...),
     qty: float = typer.Argument(...),
-    price: Optional[float] = typer.Option(None, "--price", "-p"),
+    limit: Optional[float] = typer.Option(None, "--limit", "-l", help="Limit price; omit for MARKET order"),
+    reason: str = typer.Option("", "--reason", "-r"),
+    strategy: str = typer.Option("", "--strategy"),
+):
+    """Place a sell order. Without --limit it's a MARKET order (fills immediately unless 跌停)."""
+    order, triggered = state.sell(
+        symbol,
+        qty,
+        limit_price=limit,
+        reason=reason,
+        strategy=strategy,
+    )
+    _echo({"order": order.model_dump(mode="json", exclude_none=True), "fills": [t.model_dump(mode="json", exclude_none=True) for t in triggered]})
+
+
+@app.command()
+def cancel(
+    order_id: str = typer.Argument(..., help="Order ID to cancel"),
     reason: str = typer.Option("", "--reason", "-r"),
 ):
-    """Sell shares (paper)."""
-    msg = state.place_sell(symbol, qty, price, reason=reason)
-    typer.echo(msg)
+    """Cancel a pending order by ID."""
+    order = state.cancel_order(order_id, reason=reason)
+    _echo(order.model_dump(mode="json", exclude_none=True))
 
 
 @app.command()
@@ -173,19 +190,44 @@ def watchlist_delete(
         raise typer.Exit(1)
 
 
-@app.command()
-def research_card_save(
-    date_str: str = typer.Option(..., "--date", "-d", help="YYYY-MM-DD"),
-    file: Path = typer.Option(..., "--file", help="Path to YAML file containing the research card"),
+brief_app = typer.Typer(help="Market brief (daily overview card).")
+app.add_typer(brief_app, name="brief")
+
+
+@brief_app.command("init")
+def brief_init():
+    """Scaffold a new brief draft at the canonical path."""
+    path = workspace.init_brief()
+    typer.echo(str(path))
+
+
+@brief_app.command("commit")
+def brief_commit(
+    path: Optional[Path] = typer.Argument(None, help="Brief path; defaults to the latest."),
 ):
-    """Save a research card from a YAML file."""
-    try:
-        data = yaml.safe_load(file.read_text(encoding="utf-8"))
-    except Exception as exc:
-        typer.echo(f"Failed to parse {file}: {exc}", err=True)
+    """Validate and finalize a brief (emits brief.commit event)."""
+    target = path or workspace.latest_brief_draft()
+    if target is None:
+        typer.echo("No brief found to commit.", err=True)
         raise typer.Exit(1)
-    path = workspace.save_research_card(date_str, data)
-    typer.echo(f"Saved research card → {path}")
+    try:
+        workspace.commit_brief(target)
+    except Exception as exc:
+        typer.echo(f"Commit failed: {exc}", err=True)
+        raise typer.Exit(1)
+    typer.echo(f"Committed {target}")
+
+
+@brief_app.command("show")
+def brief_show(
+    path: Optional[Path] = typer.Argument(None, help="Brief path; defaults to the latest."),
+):
+    """Show a brief (defaults to latest)."""
+    target = path or workspace.latest_brief_draft()
+    if target is None:
+        typer.echo("No brief found.", err=True)
+        raise typer.Exit(1)
+    _echo(workspace.load_brief(target))
 
 
 @app.command()
@@ -208,8 +250,8 @@ def check_triggers():
 
 @app.command()
 def sweep():
-    """Manually sweep exit orders against current prices."""
-    triggered = state.sweep_exit_orders()
+    """Sweep all pending orders against current quotes + bars."""
+    triggered = state.sweep()
     _echo([t.model_dump(mode="json") for t in triggered])
 
 
@@ -228,6 +270,19 @@ def publish(
         typer.echo(f"publish failed: {exc}", err=True)
         raise typer.Exit(1)
     typer.echo(f"wrote {path}")
+
+
+@app.command()
+def events(
+    limit: int = typer.Option(20, "--limit", "-n", help="Show last N events"),
+    type_filter: Optional[str] = typer.Option(
+        None, "--type", "-t", help="Comma-separated types, e.g. trade.buy,trade.sell"
+    ),
+    since: Optional[str] = typer.Option(None, "--since", help="ISO timestamp lower bound"),
+):
+    """Show recent agent events from the append-only event log."""
+    types = [t.strip() for t in type_filter.split(",")] if type_filter else None
+    _echo(events_log.read_events(limit=limit, types=types, since=since))
 
 
 if __name__ == "__main__":

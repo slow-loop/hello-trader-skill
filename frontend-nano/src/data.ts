@@ -30,7 +30,13 @@ const lessonsRaw = import.meta.glob('/../skills/tw-trader/data/account/lessons.m
   eager: true,
 }) as Record<string, string>
 
-const researchCardsRaw = import.meta.glob('/../skills/tw-trader/data/account/research-cards/*.yaml', {
+const briefsRaw = import.meta.glob('/../skills/tw-trader/data/account/briefs/*.yaml', {
+  query: '?raw',
+  import: 'default',
+  eager: true,
+}) as Record<string, string>
+
+const tradesRaw = import.meta.glob('/../skills/tw-trader/data/account/state/trades.yaml', {
   query: '?raw',
   import: 'default',
   eager: true,
@@ -113,6 +119,19 @@ export const watchlist: WatchlistItem[] = (() => {
 
 export const lessons: string = Object.values(lessonsRaw)[0] ?? ''
 
+export type Trade = {
+  action: 'BUY' | 'SELL' | string
+  symbol: string
+  quantity: number
+  price: number
+  executed_at: string
+  fee: number
+  reason?: string
+  strategy?: string
+  tags?: string[]
+  pnl?: number | null
+}
+
 export type ResearchCardData = {
   date: string
   session?: string
@@ -153,21 +172,43 @@ export type ResearchCardData = {
   deep_research_candidates?: Array<{ symbol: string }>
 }
 
-export const researchCards: Record<string, ResearchCardData> = Object.fromEntries(
-  Object.entries(researchCardsRaw)
+export type BriefEntry = {
+  time: string | null  // "15:14" if filename has HHMM suffix, null otherwise
+  data: ResearchCardData
+}
+
+function timeFromBriefFilename(path: string): string | null {
+  const m = basename(path).match(/\d{4}-\d{2}-\d{2}-(\d{2})(\d{2})\.yaml$/)
+  return m ? `${m[1]}:${m[2]}` : null
+}
+
+export const briefs: Record<string, BriefEntry[]> = (() => {
+  const map: Record<string, BriefEntry[]> = {}
+  Object.entries(briefsRaw)
     .filter(([p]) => !p.includes('/template/'))
-    .map(([p, raw]) => {
+    .sort(([a], [b]) => a.localeCompare(b))
+    .forEach(([p, raw]) => {
       const date = dateFromFilename(p)
+      if (!date) return
       const parsed = yaml.load(raw) as ResearchCardData
-      return [date, parsed]
-    }),
-)
+      const time = timeFromBriefFilename(p)
+      ;(map[date] ??= []).push({ time, data: parsed })
+    })
+  return map
+})()
+
+export const trades: Trade[] = (() => {
+  const first = Object.values(tradesRaw)[0]
+  if (!first) return []
+  return (yaml.load(first) as Trade[]) ?? []
+})()
 
 export const allDates: string[] = Array.from(
   new Set([
     ...Object.keys(journals),
     ...Object.keys(posts),
     ...research.map((r) => r.date),
+    ...Object.keys(briefs),
   ]),
 )
   .filter(Boolean)

@@ -1,12 +1,13 @@
 import { useState } from 'react'
 import { Link } from 'react-router-dom'
-import { allDates, journals, posts, research, researchCards, watchlist, type JournalEntry } from '../data'
+import { allDates, journals, posts, research, briefs, watchlist, type JournalEntry } from '../data'
 import ResearchCard from '../components/ResearchCard'
 
 function typeDot(t: string) {
   if (t === 'trade') return 'bg-green-600'
   if (t === 'study') return 'bg-blue-600'
   if (t === 'reflection') return 'bg-amber-500'
+  if (t === 'note') return 'bg-neutral-300'
   return 'bg-neutral-400'
 }
 
@@ -16,6 +17,36 @@ function List({ items }: { items?: string[] }) {
     <ul className="list-disc pl-5 space-y-1 text-sm text-neutral-800">
       {items.map((x, i) => <li key={i}>{x}</li>)}
     </ul>
+  )
+}
+
+function CollapsibleBlock({ at, dot, label, summary, children }: {
+  at?: string
+  dot?: string
+  label: string
+  summary: string
+  children: React.ReactNode
+}) {
+  const [open, setOpen] = useState(false)
+  return (
+    <div className="bg-white border border-neutral-200 rounded-md overflow-hidden">
+      <button
+        type="button"
+        onClick={() => setOpen((v) => !v)}
+        className="w-full px-4 py-2 flex items-center gap-3 text-sm text-left hover:bg-neutral-50"
+      >
+        <span className="font-mono text-neutral-500 w-12 shrink-0">{at ?? ''}</span>
+        {dot && <span className={`w-2 h-2 rounded-full ${dot} shrink-0`} />}
+        <span className="font-bold w-20 shrink-0">{label}</span>
+        <span className={`text-neutral-700 flex-1 ${open ? '' : 'truncate'}`}>{summary}</span>
+        <span className="text-neutral-400 text-xs">{open ? '−' : '+'}</span>
+      </button>
+      {open && (
+        <div className="border-t border-neutral-200">
+          {children}
+        </div>
+      )}
+    </div>
   )
 }
 
@@ -81,19 +112,32 @@ export default function Home() {
         const entries = journals[date] ?? []
         const post = posts[date]
         const dayResearch = research.filter((r) => r.date === date)
-        const researchCard = researchCards[date]
+        const dayBriefs = briefs[date] ?? []
         return (
           <section key={date} className="space-y-2">
             <div className="sticky top-14 z-[5] bg-neutral-50/90 backdrop-blur py-1">
               <h2 className="font-mono font-black text-lg">{date}</h2>
             </div>
 
-            {researchCard && <ResearchCard data={researchCard} />}
+            {dayBriefs.map(({ time, data: brief }, bi) => (
+              <CollapsibleBlock
+                key={bi}
+                at={time ?? undefined}
+                dot="bg-purple-600"
+                label="Brief"
+                summary={[brief.session, brief.date].filter(Boolean).join(' · ')}
+              >
+                <ResearchCard data={brief} />
+              </CollapsibleBlock>
+            ))}
 
             {dayResearch.length > 0 && (
-              <div className="bg-white border border-neutral-200 rounded-md px-4 py-3 text-sm">
-                <div className="text-xs font-bold uppercase text-neutral-500 mb-1">個股研究</div>
-                <ul className="space-y-1">
+              <CollapsibleBlock
+                dot="bg-blue-400"
+                label="個股研究"
+                summary={dayResearch.map((r) => r.symbolOrTheme).join('、')}
+              >
+                <ul className="px-4 py-3 space-y-1 text-sm">
                   {dayResearch.map((r) => {
                     const wl = watchlist.find((w) => w.symbol === r.symbolOrTheme)
                     return (
@@ -107,7 +151,7 @@ export default function Home() {
                     )
                   })}
                 </ul>
-              </div>
+              </CollapsibleBlock>
             )}
 
             {entries.map((e, i) => (
@@ -115,14 +159,19 @@ export default function Home() {
             ))}
 
             {post && post.posts && post.posts.length > 0 && (
-              <div className="bg-white border border-neutral-200 rounded-md px-4 py-3">
-                <div className="text-xs font-bold uppercase text-neutral-500 mb-2">Post · {post.channel ?? ''}</div>
-                {post.posts.map((p, i) => (
-                  <pre key={i} className="whitespace-pre-wrap font-sans text-sm text-neutral-800 bg-neutral-50 p-3 rounded border border-neutral-200">
-                    {p.text}
-                  </pre>
-                ))}
-              </div>
+              <CollapsibleBlock
+                dot="bg-neutral-400"
+                label="post"
+                summary={post.channel ?? ''}
+              >
+                <div className="px-4 py-3 space-y-2">
+                  {post.posts.map((p, i) => (
+                    <pre key={i} className="whitespace-pre-wrap font-sans text-sm text-neutral-800 bg-neutral-50 p-3 rounded border border-neutral-200">
+                      {p.text}
+                    </pre>
+                  ))}
+                </div>
+              </CollapsibleBlock>
             )}
           </section>
         )

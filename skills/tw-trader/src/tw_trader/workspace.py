@@ -1,6 +1,6 @@
 """Local workspace files for tw-trader.
 
-Handles journal / lessons / research-card YAML I/O plus the watchlist
+Handles journal / lessons / brief YAML I/O plus the watchlist
 path. Watchlist content lives in market_core.watchlist; this module
 only owns the path helpers and the non-market tw-trader artifacts.
 """
@@ -32,6 +32,8 @@ from market_core.watchlist import (
     save_watchlist as _save_watchlist,
     upsert_watchlist_item as _upsert_watchlist_item,
 )
+
+from tw_trader.events import append_event
 
 SKILL_ROOT = Path(__file__).resolve().parents[2]
 ACCOUNT_SUBDIR = "data/account"
@@ -74,12 +76,12 @@ def lessons_path() -> Path:
     return account_dir() / "lessons.md"
 
 
-def research_cards_dir() -> Path:
-    return account_dir() / "research-cards"
+def briefs_dir() -> Path:
+    return account_dir() / "briefs"
 
 
-def research_card_path(date_str: str) -> Path:
-    return research_cards_dir() / f"{date_str}.yaml"
+def brief_template_path() -> Path:
+    return briefs_dir() / "template" / "brief.template.yaml"
 
 
 # --- Watchlist (delegates to market_core.watchlist) -----------------
@@ -99,16 +101,6 @@ def upsert_watchlist_item(item: WatchlistItem) -> WatchlistConfig:
 
 def delete_watchlist_item(symbol: str) -> WatchlistConfig:
     return _delete_watchlist_item(watchlist_path(), symbol)
-
-
-def delete_watchlist_item(symbol: str) -> WatchlistConfig:
-    watchlist = load_watchlist()
-    original_count = len(watchlist.items)
-    watchlist.items = [i for i in watchlist.items if i.symbol != symbol]
-    if len(watchlist.items) == original_count:
-        raise KeyError(symbol)
-    save_watchlist(watchlist)
-    return watchlist
 
 
 def _load_analysis_settings() -> AnalysisSettings:
@@ -163,6 +155,10 @@ def append_journal_entry(date_str: str, entry: JournalEntry) -> JournalDocument:
     document.entries.append(normalized)
     payload = [item.model_dump(mode="json", exclude_none=True) for item in document.entries]
     _write_yaml_atomic(journal_path(date_str), payload)
+    append_event(
+        "journal.add",
+        {"date": date_str, "entry": normalized.model_dump(mode="json", exclude_none=True)},
+    )
     return document
 
 
@@ -191,13 +187,58 @@ def save_lessons(content: str) -> None:
     _write_text_atomic(lessons_path(), content)
 
 
-# --- Research cards ------------------------------------------------
+# --- Briefs --------------------------------------------------------
 
 
-def save_research_card(date_str: str, payload: dict[str, Any]) -> Path:
-    path = research_card_path(date_str)
-    _write_yaml_atomic(path, payload)
+def init_brief(now: datetime | None = None) -> Path:
+    ts = now or datetime.now()
+    filename = ts.strftime("%Y-%m-%d-%H%M") + ".yaml"
+    path = briefs_dir() / filename
+    template_file = brief_template_path()
+    if template_file.exists():
+        content = template_file.read_text(encoding="utf-8")
+        content = content.replace('"YYYY-MM-DD"', f'"{ts.strftime("%Y-%m-%d")}"')
+    else:
+        content = yaml.safe_dump(
+            {"date": ts.strftime("%Y-%m-%d"), "status": "draft"},
+            allow_unicode=True,
+            sort_keys=False,
+        )
+    _write_text_atomic(path, content)
+    append_event("brief.init", {"path": str(path.relative_to(workspace_root()))})
     return path
+
+
+def commit_brief(path: Path) -> dict[str, Any]:
+    if not path.exists():
+        raise FileNotFoundError(path)
+    raw = yaml.safe_load(path.read_text(encoding="utf-8"))
+    if not isinstance(raw, dict):
+        raise ValueError(f"brief must be a yaml mapping: {path}")
+    if "date" not in raw:
+        raise ValueError(f"brief missing required field 'date': {path}")
+    append_event(
+        "brief.commit",
+        {"path": str(path.relative_to(workspace_root())), "date": raw.get("date")},
+    )
+    return raw
+
+
+def latest_brief_draft() -> Path | None:
+    directory = briefs_dir()
+    if not directory.exists():
+        return None
+    candidates = [p for p in directory.glob("*.yaml") if p.is_file()]
+    if not candidates:
+        return None
+    return max(candidates, key=lambda p: p.stat().st_mtime)
+
+
+def load_brief(path: Path) -> dict[str, Any]:
+    raw = yaml.safe_load(path.read_text(encoding="utf-8"))
+    if not isinstance(raw, dict):
+        raise ValueError(f"brief must be a yaml mapping: {path}")
+    return raw
 
 
 # --- Atomic write helpers -----------------------------------------

@@ -4,6 +4,9 @@ from datetime import datetime, timedelta, timezone
 import os
 
 import feedparser
+from dotenv import find_dotenv, load_dotenv
+
+load_dotenv(find_dotenv(usecwd=True), override=True)
 from fugle_marketdata import RestClient
 import pandas as pd
 import yfinance as yf
@@ -261,6 +264,16 @@ def _filter_news_for_symbol(symbol: str, items: list[NewsItem]) -> list[NewsItem
     return filtered
 
 
+FUGLE_TIMEFRAME_MAP = {
+    "1d": "D",
+    "1h": "60",
+    "30m": "30",
+    "15m": "15",
+    "5m": "5",
+    "1m": "1",
+}
+
+
 def _try_fugle_bars(
     symbol: str,
     profile: MarketProfile,
@@ -268,13 +281,16 @@ def _try_fugle_bars(
     timeframe: str = "1d",
     lookback_days: int = 180,
 ) -> list[Bar] | None:
+    tf = FUGLE_TIMEFRAME_MAP.get(timeframe)
+    if tf is None:
+        raise ValueError(f"unsupported Fugle timeframe '{timeframe}'; supported: {sorted(FUGLE_TIMEFRAME_MAP)}")
+    load_dotenv(find_dotenv(usecwd=True), override=True)
     api_key = os.getenv("FUGLE_API_KEY")
     if not api_key:
         return None
     try:
         client = RestClient(api_key=api_key)
         stock_id = symbol.removesuffix(".TW").removesuffix(".TWO")
-        tf = "D" if timeframe == "1d" else "60"
         end = datetime.now(timezone.utc)
         start = end - timedelta(days=lookback_days)
 
@@ -309,6 +325,7 @@ def _try_fugle_bars(
 
 
 def _try_fugle_quote(symbol: str, profile: MarketProfile) -> Quote | None:
+    load_dotenv(find_dotenv(usecwd=True), override=True)
     api_key = os.getenv("FUGLE_API_KEY")
     if not api_key:
         return None
@@ -320,6 +337,8 @@ def _try_fugle_quote(symbol: str, profile: MarketProfile) -> Quote | None:
         price = payload.get("lastPrice") or payload.get("closePrice")
         if price is None:
             return None
+        change_pct = _safe_float(payload.get("changePercent"))
+        is_limit_up, is_limit_down = _tw_limit_flags(profile, change_pct)
         return Quote(
             symbol=symbol,
             market_profile=profile.id,
@@ -331,11 +350,24 @@ def _try_fugle_quote(symbol: str, profile: MarketProfile) -> Quote | None:
             low=_safe_float(payload.get("lowPrice")),
             prev_close=_safe_float(payload.get("previousClose")),
             change=_safe_float(payload.get("change")),
-            change_pct=_safe_float(payload.get("changePercent")),
+            change_pct=change_pct,
             volume=_safe_int(payload.get("tradeVolume")),
+            is_limit_up=is_limit_up,
+            is_limit_down=is_limit_down,
         )
     except Exception:
         return None
+
+
+# TW equity 10% daily limit. Fugle's changePercent already accounts for tick rounding,
+# so a 9.9%+ move is effectively limit-up (true limit-up rounds to ~9.92-10.00%).
+_TW_LIMIT_THRESHOLD = 9.9
+
+
+def _tw_limit_flags(profile: MarketProfile, change_pct: float | None) -> tuple[bool, bool]:
+    if profile.id != "tw_equity" or change_pct is None:
+        return False, False
+    return change_pct >= _TW_LIMIT_THRESHOLD, change_pct <= -_TW_LIMIT_THRESHOLD
 
 
 def _is_tw_equity_symbol(symbol: str) -> bool:

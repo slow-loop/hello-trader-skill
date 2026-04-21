@@ -1,16 +1,18 @@
 from __future__ import annotations
 
+import uuid
 from datetime import datetime, timezone
 from typing import Any, Literal
 
 from pydantic import BaseModel, Field
 
-# Paper-trading state lives here so multiple callers (backend2 legacy, future
-# local skills) can share the same schema and engine.
-
 
 def utc_now_iso() -> str:
     return datetime.now(timezone.utc).replace(microsecond=0).isoformat().replace("+00:00", "Z")
+
+
+def new_order_id() -> str:
+    return uuid.uuid4().hex[:12]
 
 
 class NewsSourceConfig(BaseModel):
@@ -70,6 +72,9 @@ class Quote(BaseModel):
     change: float | None = None
     change_pct: float | None = None
     volume: int | None = None
+    is_limit_up: bool = False
+    is_limit_down: bool = False
+    is_halted: bool = False
 
 
 class Bar(BaseModel):
@@ -112,17 +117,43 @@ class Position(BaseModel):
     opened_at: str = Field(default_factory=utc_now_iso)
 
 
-class ExitOrder(BaseModel):
-    stop_loss: float | None = None
-    take_profit: float | None = None
-    updated_at: str = Field(default_factory=utc_now_iso)
+OrderType = Literal["MARKET", "LIMIT", "STOP_LOSS", "TAKE_PROFIT"]
+OrderStatus = Literal["PENDING", "FILLED", "CANCELLED"]
+
+
+class Order(BaseModel):
+    """Unified order model — entry (MARKET/LIMIT) and exit (STOP_LOSS/TAKE_PROFIT).
+
+    Lifecycle: PENDING → FILLED | CANCELLED. The fill engine evaluates pending
+    orders against quotes (MARKET) or bars since placed_at (LIMIT/STOP/TAKE).
+    """
+
+    id: str = Field(default_factory=new_order_id)
+    symbol: str
+    side: Literal["BUY", "SELL"]
+    type: OrderType
+    quantity: float
+    limit_price: float | None = None
+    trigger_price: float | None = None
+    status: OrderStatus = "PENDING"
+    placed_at: str = Field(default_factory=utc_now_iso)
+    filled_at: str | None = None
+    fill_price: float | None = None
+    cancelled_at: str | None = None
+    cancelled_reason: str | None = None
+    # Entry orders may carry attached exit levels — created as separate orders on fill.
+    attach_stop_loss: float | None = None
+    attach_take_profit: float | None = None
+    reason: str = ""
+    strategy: str = ""
+    tags: list[str] = Field(default_factory=list)
 
 
 class TradingState(BaseModel):
     cash: float
     realized_pnl: float = 0.0
     positions: dict[str, Position] = Field(default_factory=dict)
-    orders: dict[str, ExitOrder] = Field(default_factory=dict)
+    orders: list[Order] = Field(default_factory=list)
     updated_at: str = Field(default_factory=utc_now_iso)
 
 
@@ -137,25 +168,23 @@ class TradeRecord(BaseModel):
     strategy: str = ""
     tags: list[str] = Field(default_factory=list)
     pnl: float | None = None
+    order_id: str | None = None
     market_snapshot: dict[str, Any] | None = None
 
 
 class OrderRequest(BaseModel):
+    """Caller-facing order intent. Becomes one Order via place_order()."""
+
     symbol: str
     side: Literal["BUY", "SELL"]
+    type: Literal["MARKET", "LIMIT"] = "MARKET"
     quantity: float
-    price: float | None = None
+    limit_price: float | None = None
     stop_loss: float | None = None
     take_profit: float | None = None
     reason: str = ""
     strategy: str = ""
     tags: list[str] = Field(default_factory=list)
-
-
-class OrderUpdateRequest(BaseModel):
-    symbol: str
-    stop_loss: float | None = None
-    take_profit: float | None = None
 
 
 class WatchlistItem(BaseModel):
