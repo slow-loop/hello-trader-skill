@@ -44,6 +44,9 @@ cattrade:
     absent_trim_pct: 0.05            # % to trim per tick once streak hits threshold
     # time stop: close if held this long without being in profit (hours)
     time_stop_hours: 24              # 0 = disabled
+    # multi-position mode (testnet forward-testing)
+    multi_position: true             # true = open all qualifying candidates, not just top-1
+    max_positions: 5                 # cap: never hold more than this many at once
 
 scoring:
   weight_square: 0.4

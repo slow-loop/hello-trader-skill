@@ -22,6 +22,10 @@
 - 重大 catalyst 日（法說、財報、重大新聞），若量能未放大（volume_ratio < 1.5x），代表利多已提前 price in，不追。
 - 相對強弱是進場前的必要條件，優先於 MACD / RSI 等技術指標。
 
+## 工具可用性
+
+- 每次 skill 執行前先跑 `uv run market quote 2330` 確認 Fugle API 可用性。若返回 ValueError / failed to fetch，先排查 FUGLE_API_KEY env var（根因：`load_dotenv(override=False)` 不覆蓋空字串，需確保 .env 有效且 market-core 載入 override=True）。API 失效期間不以 watchlist 快照替代 market analysis 作為進場依據。
+
 ## 盤中 vs 盤後研究的角色
 
 - 盤中 9:00 呼叫 screener 只能反映 T-1 盤後數據，若前一交易日已跑過盤後研究，本輪 Phase 1 實質資訊不變，應視為延續，不重複挖掘新名單。

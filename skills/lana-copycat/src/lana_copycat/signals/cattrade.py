@@ -12,6 +12,7 @@ from __future__ import annotations
 import csv
 import io
 import logging
+import re
 from dataclasses import dataclass, field
 from typing import Any
 
@@ -20,6 +21,8 @@ import httpx
 log = logging.getLogger(__name__)
 
 CSV_URL_TMPL = "https://docs.google.com/spreadsheets/d/{sheet_id}/export?format=csv"
+XLSX_URL_TMPL = "https://docs.google.com/spreadsheets/d/{sheet_id}/export?format=xlsx"
+TUI_SHEET = "TUI总览"
 
 SECTIONS: dict[str, str] = {
     "5m 异动榜": "move_5m",
@@ -102,11 +105,45 @@ def _parse(text: str) -> dict[str, list[dict]]:
     return sections
 
 
-def fetch_cattrade_sections(sheet_id: str, timeout_sec: int = 15) -> dict[str, list[dict]]:
-    url = CSV_URL_TMPL.format(sheet_id=sheet_id)
+_SNAPSHOT_TS_RE = re.compile(r"快照时间\(UTC\)[，,]([^，,\r\n]+)")
+
+
+def _extract_snapshot_ts(text: str) -> str | None:
+    """Extract `快照时间(UTC)` from the metadata row. Source of truth for dedup."""
+    m = _SNAPSHOT_TS_RE.search(text)
+    return m.group(1).strip() if m else None
+
+
+def _xlsx_sheet_to_csv(xlsx_bytes: bytes, sheet_name: str) -> str:
+    """Convert one sheet of an XLSX workbook to CSV text (for `_parse`)."""
+    import openpyxl
+    wb = openpyxl.load_workbook(io.BytesIO(xlsx_bytes), data_only=True, read_only=True)
+    ws = wb[sheet_name]
+    buf = io.StringIO()
+    w = csv.writer(buf)
+    for row in ws.iter_rows(values_only=True):
+        w.writerow(["" if c is None else c for c in row])
+    return buf.getvalue()
+
+
+def fetch_cattrade_xlsx(sheet_id: str, timeout_sec: int = 15) -> tuple[bytes, str, str | None]:
+    """Fetch the full workbook (all 4 tabs) as XLSX bytes.
+
+    Returns (xlsx_bytes, tui_csv_text, snapshot_ts). `tui_csv_text` is
+    the TUI总览 sheet converted to CSV so `_parse` can consume it without
+    code changes. snapshot_ts is extracted from the TUI metadata row.
+    """
+    url = XLSX_URL_TMPL.format(sheet_id=sheet_id)
     resp = httpx.get(url, follow_redirects=True, timeout=timeout_sec)
     resp.raise_for_status()
-    return _parse(resp.text)
+    xlsx_bytes = resp.content
+    tui_csv = _xlsx_sheet_to_csv(xlsx_bytes, TUI_SHEET)
+    return xlsx_bytes, tui_csv, _extract_snapshot_ts(tui_csv)
+
+
+def fetch_cattrade_sections(sheet_id: str, timeout_sec: int = 15) -> dict[str, list[dict]]:
+    _, tui_csv, _ = fetch_cattrade_xlsx(sheet_id, timeout_sec=timeout_sec)
+    return _parse(tui_csv)
 
 
 # ── scoring ───────────────────────────────────────────────────────────────────

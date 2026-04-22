@@ -30,12 +30,6 @@ const lessonsRaw = import.meta.glob('/../skills/tw-trader/data/account/lessons.m
   eager: true,
 }) as Record<string, string>
 
-const briefsRaw = import.meta.glob('/../skills/tw-trader/data/account/briefs/*.yaml', {
-  query: '?raw',
-  import: 'default',
-  eager: true,
-}) as Record<string, string>
-
 const tradesRaw = import.meta.glob('/../skills/tw-trader/data/account/state/trades.yaml', {
   query: '?raw',
   import: 'default',
@@ -75,7 +69,11 @@ export type WatchlistItem = {
 export type ResearchDoc = {
   filename: string
   date: string
-  symbolOrTheme: string
+  kind: 'brief' | 'symbol'
+  symbolOrTheme: string  // for brief: "HHMM" string; else symbol/theme
+  time: string | null    // "HH:MM" for brief, null for symbol research
+  session: string | null
+  screenerSource: string | null
   body: string
 }
 
@@ -104,12 +102,57 @@ export const posts: Record<string, PostsFile> = Object.fromEntries(
   }),
 )
 
-export const research: ResearchDoc[] = Object.entries(researchRaw).map(([p, raw]) => {
-  const name = basename(p).replace(/\.md$/, '')
-  const date = dateFromFilename(name)
-  const symbolOrTheme = name.replace(`${date}-tw-`, '')
-  return { filename: name, date, symbolOrTheme, body: raw }
-})
+const FRONTMATTER_RE = /^---\n([\s\S]*?)\n---\n?/
+
+function parseFrontmatter(raw: string): { data: Record<string, unknown>; body: string } {
+  const m = raw.match(FRONTMATTER_RE)
+  if (!m) return { data: {}, body: raw }
+  try {
+    const data = (yaml.load(m[1]) as Record<string, unknown>) ?? {}
+    return { data, body: raw.slice(m[0].length) }
+  } catch {
+    return { data: {}, body: raw }
+  }
+}
+
+function timeFromCreatedAt(value: unknown): string | null {
+  if (typeof value !== 'string') return null
+  const m = value.match(/T(\d{2}):(\d{2})/)
+  return m ? `${m[1]}:${m[2]}` : null
+}
+
+export const research: ResearchDoc[] = Object.entries(researchRaw)
+  .filter(([p]) => !p.includes('/template/'))
+  .map(([p, raw]) => {
+    const name = basename(p).replace(/\.md$/, '')
+    const date = dateFromFilename(name)
+    const rest = name.replace(`${date}-tw-`, '')
+    const briefMatch = rest.match(/^brief-(\d{2})(\d{2})$/)
+    const { data: fm, body } = parseFrontmatter(raw)
+    const createdAtTime = timeFromCreatedAt(fm.created_at)
+    if (briefMatch) {
+      return {
+        filename: name,
+        date,
+        kind: 'brief' as const,
+        symbolOrTheme: `${briefMatch[1]}${briefMatch[2]}`,
+        time: createdAtTime ?? `${briefMatch[1]}:${briefMatch[2]}`,
+        session: (fm.session as string | undefined) ?? null,
+        screenerSource: (fm.screener_source as string | undefined) ?? null,
+        body,
+      }
+    }
+    return {
+      filename: name,
+      date,
+      kind: 'symbol' as const,
+      symbolOrTheme: rest,
+      time: createdAtTime,
+      session: null,
+      screenerSource: null,
+      body,
+    }
+  })
 
 export const watchlist: WatchlistItem[] = (() => {
   const first = Object.values(watchlistRaw)[0]
@@ -132,71 +175,6 @@ export type Trade = {
   pnl?: number | null
 }
 
-export type ResearchCardData = {
-  date: string
-  session?: string
-  screener?: {
-    skipped?: boolean
-    skip_reason?: string | null
-    source?: string                     // pointer to raw CLI output
-    highlights?: Array<{
-      symbol: string; name?: string; reason: string; is_new?: boolean
-    }>
-  }
-  sentiment?: {
-    overall?: string
-    hot_tickers?: Array<{ symbol: string; theme?: string; note?: string }>
-    narratives?: string[]
-    conclusion?: string
-  }
-  macro?: {
-    market_line?: string
-    main_points?: string[]
-    secondary_themes?: string[]
-    fund_flows?: { foreign?: string; investment_trust?: string; dealer?: string }
-  }
-  cross_ref?: {
-    rows?: Array<{
-      symbol: string; name?: string;
-      screener?: string; sentiment?: string; news?: string;
-      verdict?: string; tier?: string;
-    }>
-    tomorrow_watch?: Array<{ symbol: string; tag?: string | null; reason?: string }>
-  }
-  watchlist_changes?: {
-    added?: Array<{ symbol: string; status?: string }>
-    promoted?: Array<{ symbol: string; from?: string; to?: string }>
-    removed?: Array<{ symbol: string; reason?: string }>
-    updated?: Array<{ symbol: string; what_changed?: string }>
-  }
-  deep_research_candidates?: Array<{ symbol: string }>
-}
-
-export type BriefEntry = {
-  time: string | null  // "15:14" if filename has HHMM suffix, null otherwise
-  data: ResearchCardData
-}
-
-function timeFromBriefFilename(path: string): string | null {
-  const m = basename(path).match(/\d{4}-\d{2}-\d{2}-(\d{2})(\d{2})\.yaml$/)
-  return m ? `${m[1]}:${m[2]}` : null
-}
-
-export const briefs: Record<string, BriefEntry[]> = (() => {
-  const map: Record<string, BriefEntry[]> = {}
-  Object.entries(briefsRaw)
-    .filter(([p]) => !p.includes('/template/'))
-    .sort(([a], [b]) => a.localeCompare(b))
-    .forEach(([p, raw]) => {
-      const date = dateFromFilename(p)
-      if (!date) return
-      const parsed = yaml.load(raw) as ResearchCardData
-      const time = timeFromBriefFilename(p)
-      ;(map[date] ??= []).push({ time, data: parsed })
-    })
-  return map
-})()
-
 export const trades: Trade[] = (() => {
   const first = Object.values(tradesRaw)[0]
   if (!first) return []
@@ -208,7 +186,6 @@ export const allDates: string[] = Array.from(
     ...Object.keys(journals),
     ...Object.keys(posts),
     ...research.map((r) => r.date),
-    ...Object.keys(briefs),
   ]),
 )
   .filter(Boolean)

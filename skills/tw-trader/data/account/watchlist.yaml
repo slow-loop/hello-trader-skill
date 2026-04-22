@@ -207,3 +207,59 @@
   invalidation_conditions:
   - price_below_sma_20 and macd_histogram_negative
   updated_at: '2026-04-21'
+- symbol: '6669'
+  thesis: AI GPU 伺服器 ODM 超級週期。緯穎（Wiwynn）是 GB200 NVL72 液冷機架 Microsoft/Meta/Google 首選
+    ODM，毛利率高於傳統 ODM，受益 2026-2028 CSP AI infra 建置潮。4/21 投信爆買 3,042 百萬（全市場第一）確認機構配置開始。
+  status: watch
+  notes: '2026-04-21 新增：screener 上榜 VR=2.07x，今日 +6% 至 4220（open=4030, high=4270），投信
+    3,042 百萬爆買第一名。
+
+    技術面：RSI=69.2（健康），ADX=18（趨勢未確立），MACD=-39（仍負），BB=1.159（外側）。
+
+    外資未在今日前十榜，目前只有投信單方佈局，等待外資跟進確認雙法人共振。
+
+    等 MACD 轉正 + ADX≥20 後回測 4050-4100 守穩進場。停損 3640。
+
+    族群：緯穎 > 廣達（毛利/客戶層級）> 緯創母（稀釋效應）。
+
+    '
+  trigger: MACD 轉正 + ADX≥20 + VR≥1.5x 回測 4050-4100 守穩（A點）；或外資跟進買超確認雙法人共振（B點）
+  invalidation: 跌破 3640 支撐且 MACD 持續負；或 Q1 法說 GB200 訂單低於預期；或 Microsoft Azure 資本支出大幅削減
+  trigger_conditions:
+  - price_above_sma_20
+  - macd_histogram_positive
+  - adx_14 > 20
+  - volume_breakout_1_5x
+  invalidation_conditions:
+  - price_below_sma_20 and macd_histogram_negative
+  - close < 3640
+  updated_at: '2026-04-21'
+- symbol: '3661'
+  thesis: AI ASIC 自研潮下的台灣設計服務龍頭。世芯（Alchip）為 Meta/Microsoft 設計次世代 AI 加速晶片，毛利率 45-50%，MACD
+    今日轉正 + 外資+投信雙買第二，法人共識最強的 IC 設計 AI 標的之一。
+  status: watch
+  notes: '2026-04-21 新增：screener 上榜（4/20 VR=1.89x ADX=20），今日 +9.9% 至 3985（開 3745 收高點，歷史新高），MACD=+2.3
+    剛轉正。
+
+    籌碼：外資 5,591 百萬（第二）+ 投信 2,368 百萬（第二），雙法人爆買日 = 機構配置共識啟動。
+
+    技術面：RSI=73.2（接近超買），ADX=19.9（趨勢剛成形），BB=1.121（外側）。
+
+    今日收盤即歷史新高，無上方賣壓。不追高，等回測 3700-3800 守穩後進場。停損 3500。
+
+    族群：世芯 > 聯發科（ASIC 純度更高）> 聯電（製造廠，不同維度）。
+
+    法說會預計 2026-05 中旬為關鍵驗證點。
+
+    '
+  trigger: 回測 3700-3800 量縮守穩後帶量再攻（A點）；ADX 升破 25 且 MACD histogram 繼續擴張（趨勢強化信號）
+  invalidation: 跌破 3500（結構破壞）且 MACD 翻負；或 ADX 回落<15 趨勢失效；或客戶轉向自建設計能力
+  trigger_conditions:
+  - price_above_sma_20
+  - macd_histogram_positive
+  - adx_14 > 20
+  - volume_breakout_1_5x
+  invalidation_conditions:
+  - price_below_sma_20 and macd_histogram_negative
+  - close < 3500
+  updated_at: '2026-04-21'

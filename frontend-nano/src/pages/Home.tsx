@@ -1,7 +1,7 @@
 import { useState } from 'react'
 import { Link } from 'react-router-dom'
-import { allDates, journals, posts, research, briefs, watchlist, type JournalEntry } from '../data'
-import ResearchCard from '../components/ResearchCard'
+import { marked } from 'marked'
+import { allDates, journals, posts, research, watchlist, type JournalEntry, type ResearchDoc } from '../data'
 
 function typeDot(t: string) {
   if (t === 'trade') return 'bg-green-600'
@@ -47,6 +47,37 @@ function CollapsibleBlock({ at, dot, label, summary, children }: {
         </div>
       )}
     </div>
+  )
+}
+
+function ResearchBlock({ doc }: { doc: ResearchDoc }) {
+  const wl = doc.kind === 'symbol' ? watchlist.find((w) => w.symbol === doc.symbolOrTheme) : undefined
+  const label = doc.kind === 'brief' ? 'Brief' : doc.symbolOrTheme
+  const at = doc.time ?? undefined
+  const dot = doc.kind === 'brief' ? 'bg-purple-600' : 'bg-blue-400'
+  const summary = doc.kind === 'brief'
+    ? [doc.session, doc.screenerSource].filter(Boolean).join(' · ')
+    : [wl?.status, wl?.thesis].filter(Boolean).join(' · ') || doc.filename
+  const html = marked.parse(doc.body) as string
+  return (
+    <CollapsibleBlock at={at} dot={dot} label={label} summary={summary}>
+      <div className="px-4 py-3 space-y-3">
+        <div className="flex items-center gap-3 text-xs text-neutral-500">
+          <Link to={`/research/${doc.filename}`} className="text-blue-700 hover:underline font-mono">
+            {doc.filename}
+          </Link>
+          {doc.kind === 'symbol' && (
+            <Link to={`/ticker/${doc.symbolOrTheme}`} className="text-blue-700 hover:underline">
+              查看 {doc.symbolOrTheme}
+            </Link>
+          )}
+        </div>
+        <article
+          className="prose prose-sm max-w-none prose-headings:font-black prose-h2:text-sm prose-h2:mt-4 prose-h2:border-b prose-h2:border-neutral-200 prose-h2:pb-1 prose-table:text-xs"
+          dangerouslySetInnerHTML={{ __html: html }}
+        />
+      </div>
+    </CollapsibleBlock>
   )
 }
 
@@ -111,48 +142,21 @@ export default function Home() {
       {allDates.map((date) => {
         const entries = journals[date] ?? []
         const post = posts[date]
-        const dayResearch = research.filter((r) => r.date === date)
-        const dayBriefs = briefs[date] ?? []
+        const dayResearch = research
+          .filter((r) => r.date === date)
+          .sort((a, b) => {
+            if (a.kind !== b.kind) return a.kind === 'brief' ? -1 : 1
+            return (a.time ?? a.symbolOrTheme).localeCompare(b.time ?? b.symbolOrTheme)
+          })
         return (
           <section key={date} className="space-y-2">
             <div className="sticky top-14 z-[5] bg-neutral-50/90 backdrop-blur py-1">
               <h2 className="font-mono font-black text-lg">{date}</h2>
             </div>
 
-            {dayBriefs.map(({ time, data: brief }, bi) => (
-              <CollapsibleBlock
-                key={bi}
-                at={time ?? undefined}
-                dot="bg-purple-600"
-                label="Brief"
-                summary={[brief.session, brief.date].filter(Boolean).join(' · ')}
-              >
-                <ResearchCard data={brief} />
-              </CollapsibleBlock>
+            {dayResearch.map((doc) => (
+              <ResearchBlock key={doc.filename} doc={doc} />
             ))}
-
-            {dayResearch.length > 0 && (
-              <CollapsibleBlock
-                dot="bg-blue-400"
-                label="個股研究"
-                summary={dayResearch.map((r) => r.symbolOrTheme).join('、')}
-              >
-                <ul className="px-4 py-3 space-y-1 text-sm">
-                  {dayResearch.map((r) => {
-                    const wl = watchlist.find((w) => w.symbol === r.symbolOrTheme)
-                    return (
-                      <li key={r.filename}>
-                        <Link to={`/research/${r.filename}`} className="font-mono text-blue-700 hover:underline">
-                          {r.symbolOrTheme}
-                        </Link>
-                        {wl && <span className="ml-2 text-neutral-500">· {wl.status}</span>}
-                        {wl?.thesis && <span className="ml-2 text-neutral-600">{wl.thesis}</span>}
-                      </li>
-                    )
-                  })}
-                </ul>
-              </CollapsibleBlock>
-            )}
 
             {entries.map((e, i) => (
               <EntryBlock key={i} date={date} idx={i} e={e} />

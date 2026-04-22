@@ -20,20 +20,23 @@ def test_run_screener_dispatches_tw_momentum(monkeypatch):
         {"Code": "0050", "Name": "ETF", "TradeValue": 5_000_000_000, "Change": 5, "ClosingPrice": 100},
     ]
 
-    monkeypatch.setattr("market_core.screener._fetch_twse_snapshot", lambda: snapshot)
+    monkeypatch.setattr("market_core.screener.get_tw_daily_all", lambda: snapshot)
+    monkeypatch.setattr("market_core.screener.get_tw_daily_all_date", lambda: "2026-04-21")
     monkeypatch.setattr("market_core.screener._enrich_tw_result", lambda *args, **kwargs: None)
 
     response = run_screener(_runtime_config(), get_market_profile("tw_equity"), strategy="momentum", enrich=False)
 
     assert response.strategy == "momentum"
     assert response.market_profile == "tw_equity"
+    assert response.as_of == "2026-04-21"
     assert [item.symbol for item in response.items] == ["2330"]
 
 
 def test_run_screener_enriches_analysis(monkeypatch):
     snapshot = [{"Code": "2330", "Name": "TSMC", "TradeValue": 2_500_000_000, "Change": 20, "ClosingPrice": 1000}]
 
-    monkeypatch.setattr("market_core.screener._fetch_twse_snapshot", lambda: snapshot)
+    monkeypatch.setattr("market_core.screener.get_tw_daily_all", lambda: snapshot)
+    monkeypatch.setattr("market_core.screener.get_tw_daily_all_date", lambda: "2026-04-21")
     monkeypatch.setattr("market_core.screener._try_fetch_tw_chips", lambda symbol: {"foreign_net_days": 3})
     monkeypatch.setattr(
         "market_core.screener.build_analysis",
@@ -48,6 +51,7 @@ def test_run_screener_enriches_analysis(monkeypatch):
 
     response = run_screener(_runtime_config(), get_market_profile("tw_equity"), strategy="momentum", enrich=True)
 
+    assert response.as_of == "2026-04-21"
     item = response.items[0]
     assert item.analysis is not None
     assert item.analysis.metrics["volume_ratio_20"] == 1.8

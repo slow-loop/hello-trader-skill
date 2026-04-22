@@ -1,7 +1,11 @@
 from __future__ import annotations
 
 from datetime import datetime, timedelta, timezone
+import json
+import logging
 import os
+import ssl
+import urllib.request
 
 import feedparser
 from dotenv import find_dotenv, load_dotenv
@@ -11,7 +15,7 @@ from fugle_marketdata import RestClient
 import pandas as pd
 import yfinance as yf
 
-from market_core.models import AnalysisReport, AnalysisSnapshot, Bar, MarketOverview, MarketRuntimeConfig, NewsItem, Quote
+from market_core.models import AnalysisReport, AnalysisSnapshot, Bar, MarketOverview, MarketRuntimeConfig, NewsItem, Quote, utc_now_iso
 from market_core.policies import MarketProfile, get_market_profile, get_market_session, market_data_symbol, normalize_symbol
 from market_core.technical import (
     AnalysisConfig,
@@ -138,10 +142,13 @@ def build_overview(config: MarketRuntimeConfig, profile: MarketProfile | None = 
     benchmark_symbol = config.market.benchmark_symbol or resolved_profile.benchmark_symbol
     benchmark_quote = None
     if benchmark_symbol:
-        try:
-            benchmark_quote = get_quote(benchmark_symbol, resolved_profile)
-        except Exception:
-            benchmark_quote = None
+        if resolved_profile.id == "tw_equity" and benchmark_symbol.upper() in {"^TWII", "TAIEX"}:
+            benchmark_quote = _twse_taiex_quote(resolved_profile)
+        if benchmark_quote is None:
+            try:
+                benchmark_quote = get_quote(benchmark_symbol, resolved_profile)
+            except Exception:
+                benchmark_quote = None
 
     return MarketOverview(
         market_profile=resolved_profile.id,
@@ -368,6 +375,79 @@ def _tw_limit_flags(profile: MarketProfile, change_pct: float | None) -> tuple[b
     if profile.id != "tw_equity" or change_pct is None:
         return False, False
     return change_pct >= _TW_LIMIT_THRESHOLD, change_pct <= -_TW_LIMIT_THRESHOLD
+
+
+_TWSE_FMTQIK_URL = "https://openapi.twse.com.tw/v1/exchangeReport/FMTQIK"
+_logger = logging.getLogger(__name__)
+
+
+def fetch_twse_fmtqik() -> list[dict]:
+    """Fetch TAIEX daily summary (FMTQIK) from TWSE OpenAPI. Sorted latest-last."""
+    try:
+        request = urllib.request.Request(
+            _TWSE_FMTQIK_URL,
+            headers={"User-Agent": "market-core/1.0"},
+        )
+        context = ssl._create_unverified_context()
+        with urllib.request.urlopen(request, context=context, timeout=10) as response:
+            payload = json.loads(response.read().decode("utf-8"))
+    except Exception as exc:
+        _logger.warning("twse fmtqik fetch failed: %s", exc)
+        return []
+
+    if not isinstance(payload, list):
+        return []
+    return sorted(payload, key=lambda row: str(row.get("Date", "")))
+
+
+def latest_tw_trading_date() -> str | None:
+    """Return latest TW trading date as ISO (YYYY-MM-DD) via FMTQIK."""
+    rows = fetch_twse_fmtqik()
+    if not rows:
+        return None
+    return _roc_date_to_iso(str(rows[-1].get("Date", "")))
+
+
+def _roc_date_to_iso(roc: str) -> str | None:
+    text = roc.strip()
+    if len(text) != 7 or not text.isdigit():
+        return None
+    year = int(text[:3]) + 1911
+    return f"{year:04d}-{text[3:5]}-{text[5:7]}"
+
+
+def _twse_taiex_quote(profile: MarketProfile) -> Quote | None:
+    rows = fetch_twse_fmtqik()
+    if not rows:
+        return None
+    latest = rows[-1]
+    try:
+        close = float(str(latest["TAIEX"]).replace(",", ""))
+        change = float(str(latest["Change"]).replace(",", ""))
+    except (KeyError, ValueError, TypeError):
+        return None
+
+    prev_close = close - change
+    change_pct = round(change / prev_close * 100, 4) if prev_close else None
+    iso_date = _roc_date_to_iso(str(latest.get("Date", "")))
+    timestamp = f"{iso_date}T13:30:00+08:00" if iso_date else utc_now_iso()
+    try:
+        trade_value = float(str(latest.get("TradeValue", "0")).replace(",", ""))
+    except ValueError:
+        trade_value = 0.0
+
+    return Quote(
+        symbol="^TWII",
+        market_profile=profile.id,
+        name="TAIEX",
+        price=close,
+        source="twse",
+        timestamp=timestamp,
+        prev_close=prev_close,
+        change=round(change, 4),
+        change_pct=change_pct,
+        volume=int(trade_value) if trade_value else None,
+    )
 
 
 def _is_tw_equity_symbol(symbol: str) -> bool:

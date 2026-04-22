@@ -5,13 +5,14 @@ items. No I/O — caller handles loading/saving via watchlist.store.
 
 from __future__ import annotations
 
-from market_core.market import analyze_symbol, get_quote
+from market_core.market import _twse_taiex_quote, analyze_symbol, get_quote
 from market_core.models import (
     AnalysisReport,
     EvaluatedWatchlistConfig,
     EvaluatedWatchlistItem,
     MarketRuntimeConfig,
     Quote,
+    RelativePerformance,
     WatchlistConditionResult,
     WatchlistConfig,
     WatchlistEvaluation,
@@ -31,6 +32,8 @@ SNAPSHOT_KEYS = (
     "atr_14_pct",
     "stoch_k",
     "macd_histogram",
+    "benchmark_change_pct",
+    "excess_vs_benchmark_pct",
 )
 
 
@@ -40,7 +43,11 @@ def evaluate_watchlist(
     profile: MarketProfile,
 ) -> EvaluatedWatchlistConfig:
     session = get_market_session(profile)
-    items = [evaluate_watchlist_item(item, config, profile, session=session) for item in watchlist.items]
+    benchmark = _resolve_benchmark(config, profile)
+    items = [
+        evaluate_watchlist_item(item, config, profile, session=session, benchmark=benchmark)
+        for item in watchlist.items
+    ]
     return EvaluatedWatchlistConfig(items=items)
 
 
@@ -50,6 +57,7 @@ def evaluate_watchlist_item(
     profile: MarketProfile,
     *,
     session: dict[str, str | bool] | None = None,
+    benchmark: Quote | None = None,
 ) -> EvaluatedWatchlistItem:
     evaluated = EvaluatedWatchlistItem.model_validate(item.model_dump(mode="python"))
     try:
@@ -59,15 +67,25 @@ def evaluate_watchlist_item(
             return evaluated
 
         market_session = session or get_market_session(profile)
+        resolved_benchmark = benchmark if benchmark is not None else _resolve_benchmark(config, profile)
+
         context = dict(snapshot.extra.get("context") or snapshot.metrics)
         live_quote = _get_live_quote(item.symbol, profile, market_session)
         live_price = live_quote.price if live_quote is not None else None
         context["price"] = live_price if live_price is not None else context.get("close")
 
+        relative = _build_relative_performance(context, resolved_benchmark)
+        if relative is not None:
+            if relative.benchmark_change_pct is not None:
+                context["benchmark_change_pct"] = relative.benchmark_change_pct
+            if relative.excess_vs_benchmark_pct is not None:
+                context["excess_vs_benchmark_pct"] = relative.excess_vs_benchmark_pct
+
         evaluation = WatchlistEvaluation(
             trigger_results=_build_trigger_results(item, context),
             invalidation_results=_build_invalidation_results(item, context),
             context_snapshot=_build_snapshot(context),
+            relative_performance=relative,
         )
         evaluation.trigger_met = _resolve_trigger_state(item, evaluation.trigger_results, context)
         evaluation.invalidation_met = _resolve_invalidation_state(item, evaluation.invalidation_results, context)
@@ -76,6 +94,42 @@ def evaluate_watchlist_item(
 
     evaluated.evaluation = evaluation
     return evaluated
+
+
+def _resolve_benchmark(config: MarketRuntimeConfig, profile: MarketProfile) -> Quote | None:
+    symbol = config.market.benchmark_symbol or profile.benchmark_symbol
+    if not symbol:
+        return None
+    if profile.id == "tw_equity" and symbol.upper() in {"^TWII", "TAIEX"}:
+        quote = _twse_taiex_quote(profile)
+        if quote is not None:
+            return quote
+    try:
+        return get_quote(symbol, profile)
+    except Exception:
+        return None
+
+
+def _build_relative_performance(
+    context: dict[str, bool | int | float | str | None],
+    benchmark: Quote | None,
+) -> RelativePerformance | None:
+    if benchmark is None:
+        return None
+    symbol_change = context.get("change_pct")
+    symbol_change_val = float(symbol_change) if isinstance(symbol_change, (int, float)) else None
+    benchmark_change = benchmark.change_pct
+    excess = (
+        round(symbol_change_val - benchmark_change, 4)
+        if symbol_change_val is not None and benchmark_change is not None
+        else None
+    )
+    return RelativePerformance(
+        symbol_change_pct=symbol_change_val,
+        benchmark_symbol=benchmark.symbol,
+        benchmark_change_pct=benchmark_change,
+        excess_vs_benchmark_pct=excess,
+    )
 
 
 def _has_rules(item: WatchlistItem) -> bool:

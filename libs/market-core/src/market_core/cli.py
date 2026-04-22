@@ -1,12 +1,23 @@
 from __future__ import annotations
 
 import json
+import logging
+import sys
 from typing import Any
 
 import typer
 from dotenv import find_dotenv, load_dotenv
 
 load_dotenv(find_dotenv(usecwd=True), override=True)
+
+# Route all logging (including third-party INFO from yfinance/FinMind/etc.) to stderr
+# so JSON output on stdout stays pipe-clean.
+logging.basicConfig(
+    level=logging.WARNING,
+    stream=sys.stderr,
+    format="%(levelname)s %(name)s: %(message)s",
+    force=True,
+)
 
 from market_core.market import analyze_symbol, build_overview, get_news, get_quote
 from market_core.models import MarketConfig, MarketRuntimeConfig

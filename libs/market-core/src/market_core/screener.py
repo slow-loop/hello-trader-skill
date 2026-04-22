@@ -1,22 +1,18 @@
 from __future__ import annotations
 
 from datetime import date, timedelta
-import json
 import logging
 import os
-import ssl
-import urllib.request
 from typing import Any
 
 import pandas as pd
 
-from market_core.market import build_analysis
+from market_core.data.tw.official import get_tw_daily_all, get_tw_daily_all_date
+from market_core.market import build_analysis, latest_tw_trading_date
 from market_core.models import MarketRuntimeConfig, ScreenerResponse, ScreenerResult
 from market_core.policies import MarketProfile, get_market_profile, normalize_symbol
 
 logger = logging.getLogger(__name__)
-
-_TWSE_SNAPSHOT_URL = "https://openapi.twse.com.tw/v1/exchangeReport/STOCK_DAY_ALL"
 _INVESTOR_FIELDS = {
     "Foreign_Investor": "foreign_net",
     "Investment_Trust": "trust_net",
@@ -50,7 +46,7 @@ def run_tw_momentum_screener(
     min_trade_value: float = 1_000_000_000,
     enrich: bool = True,
 ) -> ScreenerResponse:
-    data = _fetch_twse_snapshot()
+    data = get_tw_daily_all()
     items: list[ScreenerResult] = []
     for item in data:
         code = str(item.get("Code", "")).strip()
@@ -87,22 +83,13 @@ def run_tw_momentum_screener(
         for r in items:
             _enrich_tw_result(r, config, profile)
 
-    return ScreenerResponse(strategy="momentum", market_profile=profile.id, items=items)
+    return ScreenerResponse(
+        strategy="momentum",
+        market_profile=profile.id,
+        as_of=get_tw_daily_all_date() or latest_tw_trading_date(),
+        items=items,
+    )
 
-
-def _fetch_twse_snapshot() -> list[dict]:
-    try:
-        request = urllib.request.Request(
-            _TWSE_SNAPSHOT_URL,
-            headers={"User-Agent": "market-core-screener/1.0"},
-        )
-        context = ssl._create_unverified_context()
-        with urllib.request.urlopen(request, context=context, timeout=10) as response:
-            payload = json.loads(response.read().decode("utf-8"))
-        return payload if isinstance(payload, list) else []
-    except Exception as exc:
-        logger.warning("twse snapshot fetch failed: %s", exc)
-        return []
 
 
 def _parse_number(value: object) -> float:

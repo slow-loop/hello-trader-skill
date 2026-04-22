@@ -58,14 +58,29 @@ class BinanceTrader:
                 # python-binance uses different base URL for futures testnet
                 self._client.FUTURES_URL = "https://testnet.binancefuture.com/fapi"
 
+    def _capped_leverage(self, symbol: str, desired: int) -> int:
+        """Return min(desired, symbol's max allowed leverage)."""
+        try:
+            brackets = self._client.futures_leverage_bracket(symbol=symbol)
+            # response is [{"symbol": ..., "brackets": [{"initialLeverage": N, ...}, ...]}]
+            if brackets and isinstance(brackets, list):
+                max_lev = brackets[0]["brackets"][0]["initialLeverage"]
+                capped = min(desired, int(max_lev))
+                if capped != desired:
+                    log.info("Leverage capped %s: %d→%d (symbol max=%d)", symbol, desired, capped, max_lev)
+                return capped
+        except Exception as e:
+            log.warning("Could not fetch leverage bracket for %s: %s — using %d", symbol, e, desired)
+        return desired
+
     def _get_price(self, symbol: str) -> float:
         ticker = self._client.futures_symbol_ticker(symbol=symbol)
         return float(ticker["price"])
 
-    def _calc_stop_price(self, entry: float, quantity: float, side: str) -> float:
+    def _calc_stop_price(self, entry: float, quantity: float, side: str, leverage: int | None = None) -> float:
         """Calculate stop price that limits loss to max_loss_usdt."""
         # loss = quantity * |entry - stop| * leverage (approximately)
-        stop_gap = self.max_loss_usdt / (quantity * self.leverage)
+        stop_gap = self.max_loss_usdt / (quantity * (leverage or self.leverage))
         if side == "BUY":
             return round(entry - stop_gap, 4)
         else:
@@ -109,8 +124,9 @@ class BinanceTrader:
                 dry_run=True,
             )
 
-        # set leverage
-        self._client.futures_change_leverage(symbol=symbol, leverage=self.leverage)
+        # set leverage — cap to symbol's max allowed (varies by coin)
+        effective_leverage = self._capped_leverage(symbol, self.leverage)
+        self._client.futures_change_leverage(symbol=symbol, leverage=effective_leverage)
 
         # get available balance
         account = self._client.futures_account_balance()
@@ -132,7 +148,7 @@ class BinanceTrader:
         log.info("Opened LONG %s qty=%s orderId=%s", symbol, qty, order_id)
 
         # stop-loss (closePosition=True so Binance auto-closes full position)
-        stop_price = self._calc_stop_price(entry_price, qty, "BUY")
+        stop_price = self._calc_stop_price(entry_price, qty, "BUY", leverage=effective_leverage)
         sl_order = self._client.futures_create_order(
             symbol=symbol,
             side="SELL",

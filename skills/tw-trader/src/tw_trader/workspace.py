@@ -1,17 +1,18 @@
 """Local workspace files for tw-trader.
 
-Handles journal / lessons / brief YAML I/O plus the watchlist
-path. Watchlist content lives in market_core.watchlist; this module
-only owns the path helpers and the non-market tw-trader artifacts.
+Handles journal / lessons YAML I/O plus the watchlist path. Watchlist
+content lives in market_core.watchlist; this module only owns the path
+helpers and the non-market tw-trader artifacts. Briefs are plain
+markdown under data/account/research/ (no dedicated helpers).
 """
 
 from __future__ import annotations
 
 import os
+import re
 import tempfile
 from datetime import datetime
 from pathlib import Path
-from typing import Any
 
 import yaml
 from pydantic import BaseModel, Field
@@ -76,14 +77,6 @@ def lessons_path() -> Path:
     return account_dir() / "lessons.md"
 
 
-def briefs_dir() -> Path:
-    return account_dir() / "briefs"
-
-
-def brief_template_path() -> Path:
-    return briefs_dir() / "template" / "brief.template.yaml"
-
-
 # --- Watchlist (delegates to market_core.watchlist) -----------------
 
 
@@ -96,11 +89,18 @@ def save_watchlist(watchlist: WatchlistConfig) -> None:
 
 
 def upsert_watchlist_item(item: WatchlistItem) -> WatchlistConfig:
-    return _upsert_watchlist_item(watchlist_path(), item)
+    result = _upsert_watchlist_item(watchlist_path(), item)
+    append_event(
+        "watchlist.update",
+        {"symbol": item.symbol, "item": item.model_dump(mode="json", exclude_none=True)},
+    )
+    return result
 
 
 def delete_watchlist_item(symbol: str) -> WatchlistConfig:
-    return _delete_watchlist_item(watchlist_path(), symbol)
+    result = _delete_watchlist_item(watchlist_path(), symbol)
+    append_event("watchlist.delete", {"symbol": symbol})
+    return result
 
 
 def _load_analysis_settings() -> AnalysisSettings:
@@ -185,60 +185,86 @@ def load_lessons() -> str:
 
 def save_lessons(content: str) -> None:
     _write_text_atomic(lessons_path(), content)
+    append_event("lessons.set", {"length": len(content)})
 
 
-# --- Briefs --------------------------------------------------------
+# --- Research docs ------------------------------------------------
 
 
-def init_brief(now: datetime | None = None) -> Path:
-    ts = now or datetime.now()
-    filename = ts.strftime("%Y-%m-%d-%H%M") + ".yaml"
-    path = briefs_dir() / filename
-    template_file = brief_template_path()
-    if template_file.exists():
-        content = template_file.read_text(encoding="utf-8")
-        content = content.replace('"YYYY-MM-DD"', f'"{ts.strftime("%Y-%m-%d")}"')
+def research_dir() -> Path:
+    return account_dir() / "research"
+
+
+_FRONTMATTER_RE = re.compile(r"^---\n(.*?)\n---\n?", re.DOTALL)
+_FILENAME_RE = re.compile(r"(\d{4}-\d{2}-\d{2})-tw-(.+)$")
+_BRIEF_HHMM_RE = re.compile(r"brief-(\d{2})(\d{2})$")
+
+
+def add_doc(path: Path) -> dict:
+    """Stamp created_at frontmatter + emit doc.add event.
+
+    Brief files without HHMM suffix are renamed to
+    ``{date}-tw-brief-{HHMM}.md`` using the system clock. created_at is
+    idempotent: if already present in frontmatter it is preserved.
+    """
+    abs_path = Path(path).resolve()
+    if not abs_path.exists():
+        raise FileNotFoundError(abs_path)
+
+    research = research_dir().resolve()
+    if research not in abs_path.parents:
+        raise ValueError(f"doc must live under {research}: {abs_path}")
+
+    now = datetime.now().astimezone()
+    name = abs_path.stem
+    m = _FILENAME_RE.match(name)
+    if not m:
+        raise ValueError(f"filename must match YYYY-MM-DD-tw-<rest>.md: {name}")
+    date_str, rest = m.group(1), m.group(2)
+
+    if rest.startswith("brief"):
+        kind = "brief"
+        if not _BRIEF_HHMM_RE.match(rest):
+            hhmm = now.strftime("%H%M")
+            new_path = abs_path.with_name(f"{date_str}-tw-brief-{hhmm}.md")
+            if new_path.exists():
+                raise FileExistsError(new_path)
+            abs_path.rename(new_path)
+            abs_path = new_path
     else:
-        content = yaml.safe_dump(
-            {"date": ts.strftime("%Y-%m-%d"), "status": "draft"},
-            allow_unicode=True,
-            sort_keys=False,
-        )
-    _write_text_atomic(path, content)
-    append_event("brief.init", {"path": str(path.relative_to(workspace_root()))})
-    return path
+        kind = "symbol"
 
+    raw = abs_path.read_text(encoding="utf-8")
+    fm_match = _FRONTMATTER_RE.match(raw)
+    created_at = now.isoformat(timespec="seconds")
 
-def commit_brief(path: Path) -> dict[str, Any]:
-    if not path.exists():
-        raise FileNotFoundError(path)
-    raw = yaml.safe_load(path.read_text(encoding="utf-8"))
-    if not isinstance(raw, dict):
-        raise ValueError(f"brief must be a yaml mapping: {path}")
-    if "date" not in raw:
-        raise ValueError(f"brief missing required field 'date': {path}")
-    append_event(
-        "brief.commit",
-        {"path": str(path.relative_to(workspace_root())), "date": raw.get("date")},
-    )
-    return raw
+    if fm_match:
+        fm = yaml.safe_load(fm_match.group(1)) or {}
+        if not isinstance(fm, dict):
+            raise ValueError(f"frontmatter must be a mapping: {abs_path}")
+        if "created_at" in fm:
+            created_at = str(fm["created_at"])
+        else:
+            fm["created_at"] = created_at
+            new_fm = yaml.safe_dump(fm, allow_unicode=True, sort_keys=False).rstrip()
+            raw = f"---\n{new_fm}\n---\n" + raw[fm_match.end():]
+            _write_text_atomic(abs_path, raw)
+    else:
+        new_fm = yaml.safe_dump(
+            {"created_at": created_at}, allow_unicode=True, sort_keys=False
+        ).rstrip()
+        raw = f"---\n{new_fm}\n---\n\n" + raw
+        _write_text_atomic(abs_path, raw)
 
-
-def latest_brief_draft() -> Path | None:
-    directory = briefs_dir()
-    if not directory.exists():
-        return None
-    candidates = [p for p in directory.glob("*.yaml") if p.is_file()]
-    if not candidates:
-        return None
-    return max(candidates, key=lambda p: p.stat().st_mtime)
-
-
-def load_brief(path: Path) -> dict[str, Any]:
-    raw = yaml.safe_load(path.read_text(encoding="utf-8"))
-    if not isinstance(raw, dict):
-        raise ValueError(f"brief must be a yaml mapping: {path}")
-    return raw
+    rel_path = str(abs_path.relative_to(workspace_root()))
+    payload = {
+        "path": rel_path,
+        "kind": kind,
+        "date": date_str,
+        "created_at": created_at,
+    }
+    append_event("doc.add", payload)
+    return payload
 
 
 # --- Atomic write helpers -----------------------------------------

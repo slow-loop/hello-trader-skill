@@ -1,5 +1,7 @@
 from __future__ import annotations
 
+import csv
+import io
 import json
 import math
 import re
@@ -13,11 +15,68 @@ from urllib.request import Request, urlopen
 
 TWSE_BASE_URL = "https://openapi.twse.com.tw/v1"
 TPEX_BASE_URL = "https://www.tpex.org.tw/openapi/v1"
+# www.twse.com.tw updates with today's data post-close; openapi.twse.com.tw lags by ~1 day
+_TWSE_DAILY_ALL_URL = "https://www.twse.com.tw/exchangeReport/STOCK_DAY_ALL?response=open_data"
+
+_TWSE_DAILY_ALL_FIELD_MAP = {
+    "日期": "Date",
+    "證券代號": "Code",
+    "證券名稱": "Name",
+    "成交股數": "TradeVolume",
+    "成交金額": "TradeValue",
+    "開盤價": "OpeningPrice",
+    "最高價": "HighestPrice",
+    "最低價": "LowestPrice",
+    "收盤價": "ClosingPrice",
+    "漲跌價差": "Change",
+    "成交筆數": "Transaction",
+}
 REQUEST_TIMEOUT_SECONDS = 20
 DEFAULT_HEADERS = {
     "User-Agent": "hello-note/0.1",
     "Accept": "application/json",
 }
+
+
+@lru_cache(maxsize=1)
+def get_tw_daily_all() -> list[dict[str, Any]]:
+    """Fetch today's full TWSE daily snapshot (all stocks, post-close).
+
+    Uses www.twse.com.tw which updates with the current trading day's data
+    after market close (~14:00–15:00 TST), unlike openapi.twse.com.tw which
+    lags by one trading day.
+
+    Returns rows with English field names matching the OpenAPI JSON schema:
+    Date, Code, Name, TradeVolume, TradeValue, OpeningPrice, HighestPrice,
+    LowestPrice, ClosingPrice, Change, Transaction.
+    """
+    request = Request(_TWSE_DAILY_ALL_URL, headers=DEFAULT_HEADERS)
+    try:
+        payload = _read_url(request)
+    except Exception:
+        return []
+    reader = csv.DictReader(io.StringIO(payload))
+    rows = []
+    for row in reader:
+        normalized = {
+            _TWSE_DAILY_ALL_FIELD_MAP.get(k.strip(), k.strip()): v.strip()
+            for k, v in row.items()
+            if k is not None
+        }
+        rows.append(normalized)
+    return rows
+
+
+def get_tw_daily_all_date() -> str | None:
+    """Return the trading date of the current get_tw_daily_all() snapshot as ISO YYYY-MM-DD."""
+    rows = get_tw_daily_all()
+    if not rows:
+        return None
+    roc = rows[0].get("Date", "").strip()
+    if len(roc) == 7 and roc.isdigit():
+        year = int(roc[:3]) + 1911
+        return f"{year:04d}-{roc[3:5]}-{roc[5:7]}"
+    return None
 
 
 def build_tw_company_context(symbol: str, latest_price: float | None = None) -> dict[str, Any]:

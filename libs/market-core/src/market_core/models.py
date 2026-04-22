@@ -211,12 +211,20 @@ class WatchlistConditionResult(BaseModel):
     error: str | None = None
 
 
+class RelativePerformance(BaseModel):
+    symbol_change_pct: float | None = None
+    benchmark_symbol: str | None = None
+    benchmark_change_pct: float | None = None
+    excess_vs_benchmark_pct: float | None = None
+
+
 class WatchlistEvaluation(BaseModel):
     trigger_met: bool = False
     invalidation_met: bool = False
     trigger_results: list[WatchlistConditionResult] = Field(default_factory=list)
     invalidation_results: list[WatchlistConditionResult] = Field(default_factory=list)
     context_snapshot: dict[str, Any] = Field(default_factory=dict)
+    relative_performance: RelativePerformance | None = None
     evaluated_at: str = Field(default_factory=utc_now_iso)
     error: str | None = None
 
@@ -245,6 +253,7 @@ class ScreenerResponse(BaseModel):
     strategy: str
     market_profile: str
     generated_at: str = Field(default_factory=utc_now_iso)
+    as_of: str | None = None
     items: list[ScreenerResult] = Field(default_factory=list)
 
 

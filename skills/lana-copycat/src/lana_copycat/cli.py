@@ -218,6 +218,20 @@ def _fetch_and_pick(sheet_id: str, merged_cfg: dict, timeout: int, include_symbo
     return pick_cattrade(sections, merged_cfg, include_symbols=include_symbols)
 
 
+def _fetch_xlsx_and_pick(
+    sheet_id: str, merged_cfg: dict, timeout: int, include_symbols: set[str] | None = None,
+):
+    """Fetch full XLSX workbook + run the picker off its TUI sheet.
+
+    Returns (candidates, xlsx_bytes, snapshot_ts).
+    """
+    from .signals.cattrade import fetch_cattrade_xlsx, _parse, pick_cattrade
+    xlsx_bytes, tui_csv, snapshot_ts = fetch_cattrade_xlsx(sheet_id, timeout_sec=timeout)
+    sections = _parse(tui_csv)
+    cands = pick_cattrade(sections, merged_cfg, include_symbols=include_symbols)
+    return cands, xlsx_bytes, snapshot_ts
+
+
 @cattrade_app.command("scan")
 def cattrade_scan(
     top_n: int = typer.Option(10, help="Top candidates to return"),
@@ -323,6 +337,8 @@ def _cattrade_run_once(cfg: dict, dry_run: bool) -> dict:
     absent_streak_threshold = int(run_cfg.get("absent_streak_threshold", 3))
     absent_trim_pct = float(run_cfg.get("absent_trim_pct", 0.05))
     time_stop_hours = float(run_cfg.get("time_stop_hours", 0))
+    multi_position = bool(run_cfg.get("multi_position", False))
+    max_positions = int(run_cfg.get("max_positions", 5))
 
     api_key = os.environ.get("BINANCE_API_KEY", "")
     api_secret = os.environ.get("BINANCE_API_SECRET", "")
@@ -345,11 +361,27 @@ def _cattrade_run_once(cfg: dict, dry_run: bool) -> dict:
     # Include currently-held symbols so "weak signal" != "signal disappeared"
     held_bases = {p["symbol"].removesuffix("USDT") for p in open_pos}
 
+    from . import cattrade_snapshot
     try:
-        cands = _fetch_and_pick(sheet_id, merged, cattrade_cfg.get("fetch_timeout_sec", 15),
-                                include_symbols=held_bases)
+        cands, xlsx_bytes, snapshot_ts = _fetch_xlsx_and_pick(
+            sheet_id, merged, cattrade_cfg.get("fetch_timeout_sec", 15),
+            include_symbols=held_bases,
+        )
     except Exception as e:
         return {"error": f"cattrade fetch failed: {e}", "decisions": []}
+
+    # Dedup: if the gsheet snapshot hasn't refreshed since last tick, skip.
+    # All decisions (open/trim/close) are deterministic functions of the sheet,
+    # so re-running on identical data only wastes Binance API calls.
+    if snapshot_ts and cattrade_snapshot.exists(snapshot_ts):
+        return {
+            "snapshot_ts": snapshot_ts,
+            "decisions": [{"action": "skip_stale", "reason": "gsheet unchanged",
+                           "snapshot_ts": snapshot_ts}],
+        }
+    if snapshot_ts:
+        cattrade_snapshot.save(snapshot_ts, xlsx_bytes)
+
     cand_map = {c.symbol: c for c in cands}
 
     # Sheet summary for logging
@@ -371,177 +403,196 @@ def _cattrade_run_once(cfg: dict, dry_run: bool) -> dict:
         if sym not in held_syms:
             state_mod.drop(state, sym)
 
-    if not open_pos:
-        # Branch A — no position, consider entry
-        top = strong_cands[0] if strong_cands else None
-        if not top or top.score < min_entry_score:
-            decisions.append({"action": "skip_entry", "reason": f"no candidate >= {min_entry_score}",
-                              "top": top.symbol if top else None,
-                              "top_score": top.score if top else None})
-        else:
-            d: dict = {"action": "open", "symbol": top.symbol, "score": top.score,
-                       "patterns": top.patterns}
-            decisions.append(d)
-            if not dry_run:
-                from .trader import BinanceTrader
-                trader_cfg = cfg.get("trader", {})
-                trader = BinanceTrader(
-                    api_key=api_key, api_secret=api_secret, testnet=testnet,
-                    max_loss_usdt=trader_cfg.get("max_loss_usdt", 200.0),
-                    leverage=trader_cfg.get("leverage", 10),
-                )
-                symbol_usdt = f"{top.symbol}USDT"
-                result = trader.open_long(symbol_usdt, position_size_pct=trader_cfg.get("position_size_pct", 0.05))
-                d["order_id"] = result.order_id
-                d["entry_price"] = result.entry_price
-                d["qty"] = result.quantity
-                struct = top.raw.get("structure", {})
-                journal.write_open(
-                    symbol=symbol_usdt,
-                    qty=result.quantity,
-                    entry_price=result.entry_price,
-                    cattrade_score=top.score,
-                    cattrade_strength=float(struct.get("结构强度", 0) or 0),
-                    cattrade_concentration=float(struct.get("大户集中度", 0) or 0),
-                    cattrade_patterns=top.patterns,
-                    cattrade_oi_usdt=top.oi_usdt,
-                )
+    # ── Branch A — consider new entries ──────────────────────────────────────
+    # Single mode: only enter when flat (original Lana rule).
+    # Multi mode:  enter any qualifying candidate not already held, up to max_positions.
+    trader_cfg = cfg.get("trader", {})
+    base_size_pct = trader_cfg.get("position_size_pct", 0.05)
+
+    slots_free = max_positions - len(open_pos)
+    entry_eligible = [
+        c for c in strong_cands
+        if c.score >= min_entry_score and f"{c.symbol}USDT" not in held_syms
+    ]
+
+    if multi_position:
+        to_open = entry_eligible[:max(slots_free, 0)]
+        # Scale size: divide by max_positions so total exposure stays constant
+        scaled_size_pct = base_size_pct / max_positions
     else:
-        # Branch B — reconcile each position
-        for pos in open_pos:
-            symbol_usdt = pos["symbol"]
-            base = symbol_usdt.removesuffix("USDT")
-            qty = abs(float(pos["positionAmt"]))
-            mark = float(pos.get("markPrice") or 0)
-            pnl = float(pos.get("unRealizedProfit") or 0)
+        # Original behaviour: only open if fully flat, and only top-1
+        to_open = entry_eligible[:1] if not open_pos else []
+        scaled_size_pct = base_size_pct
 
-            entry = journal.last_open(symbol_usdt)
-            if not entry:
-                decisions.append({"action": "skip_unmanaged", "symbol": symbol_usdt,
-                                  "reason": "no journal entry — not auto-managed"})
-                continue
+    if not to_open and not open_pos:
+        top = strong_cands[0] if strong_cands else None
+        decisions.append({"action": "skip_entry", "reason": f"no candidate >= {min_entry_score}",
+                          "top": top.symbol if top else None,
+                          "top_score": top.score if top else None})
 
-            current = cand_map.get(base)
-            entry_score = entry["cattrade"]["score"]
-            pos_ctx = {"qty": qty, "mark": mark, "pnl": round(pnl, 2), "entry_score": entry_score}
+    for cand in to_open:
+        d: dict = {"action": "open", "symbol": cand.symbol, "score": cand.score,
+                   "patterns": cand.patterns, "size_pct": round(scaled_size_pct, 4)}
+        decisions.append(d)
+        if not dry_run:
+            from .trader import BinanceTrader
+            trader = BinanceTrader(
+                api_key=api_key, api_secret=api_secret, testnet=testnet,
+                max_loss_usdt=trader_cfg.get("max_loss_usdt", 200.0),
+                leverage=trader_cfg.get("leverage", 10),
+            )
+            symbol_usdt = f"{cand.symbol}USDT"
+            result = trader.open_long(symbol_usdt, position_size_pct=scaled_size_pct)
+            d["order_id"] = result.order_id
+            d["entry_price"] = result.entry_price
+            d["qty"] = result.quantity
+            struct = cand.raw.get("structure", {})
+            journal.write_open(
+                symbol=symbol_usdt,
+                qty=result.quantity,
+                entry_price=result.entry_price,
+                cattrade_score=cand.score,
+                cattrade_strength=float(struct.get("结构强度", 0) or 0),
+                cattrade_concentration=float(struct.get("大户集中度", 0) or 0),
+                cattrade_patterns=cand.patterns,
+                cattrade_oi_usdt=cand.oi_usdt,
+            )
 
-            # ── L1: time stop — held too long without profit
-            if time_stop_hours > 0 and pnl <= 0:
-                try:
-                    entry_dt = datetime.fromisoformat(entry.get("ts", ""))
-                    age_h = (datetime.now(timezone.utc) - entry_dt).total_seconds() / 3600
-                except (ValueError, TypeError):
-                    age_h = 0.0
-                if age_h >= time_stop_hours:
-                    d = {"action": "close_full", "symbol": symbol_usdt,
-                         "reason": f"time stop ({age_h:.1f}h, pnl<=0)",
-                         "current_score": current.score if current else None,
-                         **pos_ctx}
-                    decisions.append(d)
-                    state_mod.drop(state, symbol_usdt)
-                    if not dry_run:
-                        order = _close_full(client, symbol_usdt, qty)
-                        d["order_id"] = str(order.get("orderId", ""))
-                        journal.write_close(symbol_usdt, qty, mark, d["reason"])
-                    continue
+    # ── Branch B — reconcile each open position ───────────────────────────────
+    for pos in open_pos:
+        symbol_usdt = pos["symbol"]
+        base = symbol_usdt.removesuffix("USDT")
+        qty = abs(float(pos["positionAmt"]))
+        mark = float(pos.get("markPrice") or 0)
+        pnl = float(pos.get("unRealizedProfit") or 0)
 
-            # ── L2: explicit thesis reversal (Pattern D / Pattern E on THIS symbol)
-            if current and "D" in current.patterns:
+        entry = journal.last_open(symbol_usdt)
+        if not entry:
+            decisions.append({"action": "skip_unmanaged", "symbol": symbol_usdt,
+                              "reason": "no journal entry — not auto-managed"})
+            continue
+
+        current = cand_map.get(base)
+        entry_score = entry["cattrade"]["score"]
+        pos_ctx = {"qty": qty, "mark": mark, "pnl": round(pnl, 2), "entry_score": entry_score}
+
+        # ── L1: time stop — held too long without profit
+        if time_stop_hours > 0 and pnl <= 0:
+            try:
+                entry_dt = datetime.fromisoformat(entry.get("ts", ""))
+                age_h = (datetime.now(timezone.utc) - entry_dt).total_seconds() / 3600
+            except (ValueError, TypeError):
+                age_h = 0.0
+            if age_h >= time_stop_hours:
                 d = {"action": "close_full", "symbol": symbol_usdt,
-                     "reason": "Pattern D (大户做空) appeared",
-                     "current_score": current.score, "pattern": "D", **pos_ctx}
+                     "reason": f"time stop ({age_h:.1f}h, pnl<=0)",
+                     "current_score": current.score if current else None,
+                     **pos_ctx}
                 decisions.append(d)
                 state_mod.drop(state, symbol_usdt)
                 if not dry_run:
                     order = _close_full(client, symbol_usdt, qty)
                     d["order_id"] = str(order.get("orderId", ""))
-                    journal.write_close(symbol_usdt, qty, mark, "Pattern D appeared")
-                continue
-            if current and "E" in current.patterns:
-                d = {"action": "close_full", "symbol": symbol_usdt,
-                     "reason": "Pattern E (pumped) appeared",
-                     "current_score": current.score, "pattern": "E", **pos_ctx}
-                decisions.append(d)
-                state_mod.drop(state, symbol_usdt)
-                if not dry_run:
-                    order = _close_full(client, symbol_usdt, qty)
-                    d["order_id"] = str(order.get("orderId", ""))
-                    journal.write_close(symbol_usdt, qty, mark, "Pattern E appeared")
+                    journal.write_close(symbol_usdt, qty, mark, d["reason"])
                 continue
 
-            # ── L4: absent from sheet — debounced trim, never full close
-            # Ranking churn in 5m/15m sections is noisy; one-tick absence is
-            # almost always "someone else bubbled up", not thesis reversal.
-            if current is None:
-                streak = state_mod.bump_absent(state, symbol_usdt)
-                conv_ctx = {**pos_ctx, "current_score": None, "conviction": 0.0,
-                            "absent_streak": streak,
-                            "absent_threshold": absent_streak_threshold}
-                if streak < absent_streak_threshold:
-                    decisions.append({"action": "hold", "symbol": symbol_usdt,
-                                      "reason": f"absent {streak}/{absent_streak_threshold}",
-                                      **conv_ctx})
-                    continue
-                close_qty = _round_qty(client, symbol_usdt, qty * absent_trim_pct)
-                if close_qty <= 0:
-                    decisions.append({"action": "hold", "symbol": symbol_usdt,
-                                      "reason": f"absent {streak}, trim rounded to 0",
-                                      **conv_ctx})
-                    continue
-                d = {"action": "partial_close", "symbol": symbol_usdt,
-                     "close_qty": close_qty, "pct": absent_trim_pct,
-                     "reason": f"absent streak {streak}", **conv_ctx}
-                decisions.append(d)
-                if not dry_run:
-                    order = _close_qty(client, symbol_usdt, close_qty)
-                    d["order_id"] = str(order.get("orderId", ""))
-                    journal.write_partial_close(
-                        symbol=symbol_usdt, qty=close_qty, price=mark,
-                        conviction=0.0, reason=f"absent streak {streak}",
-                    )
-                continue
+        # ── L2: explicit thesis reversal (Pattern D / Pattern E on THIS symbol)
+        if current and "D" in current.patterns:
+            d = {"action": "close_full", "symbol": symbol_usdt,
+                 "reason": "Pattern D (大户做空) appeared",
+                 "current_score": current.score, "pattern": "D", **pos_ctx}
+            decisions.append(d)
+            state_mod.drop(state, symbol_usdt)
+            if not dry_run:
+                order = _close_full(client, symbol_usdt, qty)
+                d["order_id"] = str(order.get("orderId", ""))
+                journal.write_close(symbol_usdt, qty, mark, "Pattern D appeared")
+            continue
+        if current and "E" in current.patterns:
+            d = {"action": "close_full", "symbol": symbol_usdt,
+                 "reason": "Pattern E (pumped) appeared",
+                 "current_score": current.score, "pattern": "E", **pos_ctx}
+            decisions.append(d)
+            state_mod.drop(state, symbol_usdt)
+            if not dry_run:
+                order = _close_full(client, symbol_usdt, qty)
+                d["order_id"] = str(order.get("orderId", ""))
+                journal.write_close(symbol_usdt, qty, mark, "Pattern E appeared")
+            continue
 
-            # Signal present again — reset the absent counter
-            state_mod.reset_absent(state, symbol_usdt)
-
-            # ── L3: conviction-based reconciliation (existing behavior)
-            conviction = current.score / entry_score if entry_score > 0 else 1.0
-            conv_ctx = {**pos_ctx, "current_score": current.score,
-                        "conviction": round(conviction, 3)}
-            if conviction >= min_conviction_healthy:
-                decisions.append({"action": "hold", "symbol": symbol_usdt, **conv_ctx})
-                continue
-
-            target_qty = entry["qty"] * conviction
-            delta = qty - target_qty
-            if delta <= 0:
+        # ── L4: absent from sheet — debounced trim, never full close
+        # Ranking churn in 5m/15m sections is noisy; one-tick absence is
+        # almost always "someone else bubbled up", not thesis reversal.
+        if current is None:
+            streak = state_mod.bump_absent(state, symbol_usdt)
+            conv_ctx = {**pos_ctx, "current_score": None, "conviction": 0.0,
+                        "absent_streak": streak,
+                        "absent_threshold": absent_streak_threshold}
+            if streak < absent_streak_threshold:
                 decisions.append({"action": "hold", "symbol": symbol_usdt,
-                                  "reason": "already under target", **conv_ctx})
-                continue
-            n_pct = min(delta / qty, max_close_pct)
-            if n_pct < min_close_pct:
-                decisions.append({"action": "hold", "symbol": symbol_usdt,
-                                  "reason": f"delta {n_pct:.1%} below min {min_close_pct:.1%}",
+                                  "reason": f"absent {streak}/{absent_streak_threshold}",
                                   **conv_ctx})
                 continue
-
-            close_qty = _round_qty(client, symbol_usdt, qty * n_pct)
+            close_qty = _round_qty(client, symbol_usdt, qty * absent_trim_pct)
             if close_qty <= 0:
                 decisions.append({"action": "hold", "symbol": symbol_usdt,
-                                  "reason": "close qty rounded to 0", **conv_ctx})
+                                  "reason": f"absent {streak}, trim rounded to 0",
+                                  **conv_ctx})
                 continue
-
             d = {"action": "partial_close", "symbol": symbol_usdt,
-                 "close_qty": close_qty, "pct": round(n_pct, 3), **conv_ctx}
+                 "close_qty": close_qty, "pct": absent_trim_pct,
+                 "reason": f"absent streak {streak}", **conv_ctx}
             decisions.append(d)
             if not dry_run:
                 order = _close_qty(client, symbol_usdt, close_qty)
                 d["order_id"] = str(order.get("orderId", ""))
                 journal.write_partial_close(
                     symbol=symbol_usdt, qty=close_qty, price=mark,
-                    conviction=conviction,
-                    reason=f"score {entry_score}→{current.score} (conv={conviction:.2f})",
+                    conviction=0.0, reason=f"absent streak {streak}",
                 )
+            continue
+
+        # Signal present again — reset the absent counter
+        state_mod.reset_absent(state, symbol_usdt)
+
+        # ── L3: conviction-based reconciliation (existing behavior)
+        conviction = current.score / entry_score if entry_score > 0 else 1.0
+        conv_ctx = {**pos_ctx, "current_score": current.score,
+                    "conviction": round(conviction, 3)}
+        if conviction >= min_conviction_healthy:
+            decisions.append({"action": "hold", "symbol": symbol_usdt, **conv_ctx})
+            continue
+
+        target_qty = entry["qty"] * conviction
+        delta = qty - target_qty
+        if delta <= 0:
+            decisions.append({"action": "hold", "symbol": symbol_usdt,
+                              "reason": "already under target", **conv_ctx})
+            continue
+        n_pct = min(delta / qty, max_close_pct)
+        if n_pct < min_close_pct:
+            decisions.append({"action": "hold", "symbol": symbol_usdt,
+                              "reason": f"delta {n_pct:.1%} below min {min_close_pct:.1%}",
+                              **conv_ctx})
+            continue
+
+        close_qty = _round_qty(client, symbol_usdt, qty * n_pct)
+        if close_qty <= 0:
+            decisions.append({"action": "hold", "symbol": symbol_usdt,
+                              "reason": "close qty rounded to 0", **conv_ctx})
+            continue
+
+        d = {"action": "partial_close", "symbol": symbol_usdt,
+             "close_qty": close_qty, "pct": round(n_pct, 3), **conv_ctx}
+        decisions.append(d)
+        if not dry_run:
+            order = _close_qty(client, symbol_usdt, close_qty)
+            d["order_id"] = str(order.get("orderId", ""))
+            journal.write_partial_close(
+                symbol=symbol_usdt, qty=close_qty, price=mark,
+                conviction=conviction,
+                reason=f"score {entry_score}→{current.score} (conv={conviction:.2f})",
+            )
 
     state_mod.save(state)
 
@@ -588,6 +639,10 @@ def _print_run_result(out: dict, json_out: bool) -> None:
     for d in decisions:
         action = d.get("action")
         sym = d.get("symbol", "")
+
+        if action == "skip_stale":
+            console.print(f"  [dim]STALE  gsheet unchanged ({d.get('snapshot_ts')})[/]")
+            continue
 
         if action == "skip_entry":
             top = d.get("top")

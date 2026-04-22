@@ -1,13 +1,16 @@
 """tw-trader CLI — local-first. No backend required.
 
 Reads/writes YAML under data/account/ via tw_trader.state (paper trading)
-and tw_trader.workspace (journal/lessons/watchlist/brief).
+and tw_trader.workspace (journal/lessons/watchlist). Briefs are plain
+markdown under data/account/research/ — agents write them directly.
 Market data comes from the sibling `market` CLI (market_core).
 """
 
 from __future__ import annotations
 
 import json
+import logging
+import sys
 from datetime import date
 from pathlib import Path
 from typing import Optional
@@ -15,6 +18,13 @@ from typing import Optional
 import dotenv
 
 dotenv.load_dotenv(Path(__file__).resolve().parents[2] / ".env")
+
+logging.basicConfig(
+    level=logging.WARNING,
+    stream=sys.stderr,
+    format="%(levelname)s %(name)s: %(message)s",
+    force=True,
+)
 
 import typer
 import yaml
@@ -190,44 +200,17 @@ def watchlist_delete(
         raise typer.Exit(1)
 
 
-brief_app = typer.Typer(help="Market brief (daily overview card).")
-app.add_typer(brief_app, name="brief")
-
-
-@brief_app.command("init")
-def brief_init():
-    """Scaffold a new brief draft at the canonical path."""
-    path = workspace.init_brief()
-    typer.echo(str(path))
-
-
-@brief_app.command("commit")
-def brief_commit(
-    path: Optional[Path] = typer.Argument(None, help="Brief path; defaults to the latest."),
+@app.command()
+def doc_add(
+    path: Path = typer.Argument(..., help="Research markdown under data/account/research/"),
 ):
-    """Validate and finalize a brief (emits brief.commit event)."""
-    target = path or workspace.latest_brief_draft()
-    if target is None:
-        typer.echo("No brief found to commit.", err=True)
-        raise typer.Exit(1)
+    """Stamp created_at into frontmatter and publish to the timeline."""
     try:
-        workspace.commit_brief(target)
-    except Exception as exc:
-        typer.echo(f"Commit failed: {exc}", err=True)
-        raise typer.Exit(1)
-    typer.echo(f"Committed {target}")
-
-
-@brief_app.command("show")
-def brief_show(
-    path: Optional[Path] = typer.Argument(None, help="Brief path; defaults to the latest."),
-):
-    """Show a brief (defaults to latest)."""
-    target = path or workspace.latest_brief_draft()
-    if target is None:
-        typer.echo("No brief found.", err=True)
-        raise typer.Exit(1)
-    _echo(workspace.load_brief(target))
+        payload = workspace.add_doc(path)
+    except (FileNotFoundError, ValueError, FileExistsError) as exc:
+        typer.echo(f"doc-add failed: {exc}", err=True)
+        raise typer.Exit(1) from exc
+    _echo(payload)
 
 
 @app.command()

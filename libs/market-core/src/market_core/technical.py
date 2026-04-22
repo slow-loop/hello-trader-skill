@@ -83,6 +83,8 @@ def default_analysis_config() -> AnalysisConfig:
             "ema_50",
             "bb_position_ratio",
             "atr_14_pct",
+            "stoch_k",
+            "stoch_d",
             "nearest_support",
             "nearest_resistance",
         ],

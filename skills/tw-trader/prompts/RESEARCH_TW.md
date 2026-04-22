@@ -15,9 +15,9 @@
 - `data/config/technical_config.yaml`: 全域技術分析設定
 - `data/config/sources.tw.yaml`: 外部 `web-reader` 新聞來源設定
 - `data/account/research/{YYYY-MM-DD}-tw-{symbol_or_theme}.md` 投資標的或主題研究
+- `data/account/research/{YYYY-MM-DD}-tw-brief-{HHMM}.md` 當日市場簡報（Phase 1-5 敘述性摘要，前端時間軸顯示；HHMM 由 `tw doc-add` 自動補上）
 - `data/account/research/template/template.md`: 個股交易研究範本
-- `data/account/briefs/{YYYY-MM-DD}.yaml`: 當日市場簡報（Phase 1-4 結構化摘要，供前端渲染）
-- `data/account/briefs/template/brief.template.yaml`: 市場簡報輸出格式範本
+- `data/account/research/template/brief.template.md`: 市場簡報範本
 - `data/account/screener/{YYYY-MM-DD}.json`: screener 原始輸出（由 Phase 1 redirect 寫入）
 
 ## CLI
@@ -58,13 +58,29 @@ uv run web-reader data/config/sources.tw.yaml --tags=research
 uv run python -m tw_trader.cli watchlist-update --file tmp/update_item.yaml
 # 新增 Journal (透過暫存檔)
 uv run python -m tw_trader.cli journal-add --file tmp/journal_entry.yaml
-# 初始化市場簡報（建立今日草稿檔）
-uv run python -m tw_trader.cli brief init
-# 確認簡報（驗證格式並寫入事件）
-uv run python -m tw_trader.cli brief commit
-# 查看最新簡報
-uv run python -m tw_trader.cli brief show
+# 發佈研究文件到時間軸（補 created_at + brief 自動補 HHMM + 寫事件）
+uv run python -m tw_trader.cli doc-add data/account/research/{filename}.md
 ```
+
+市場簡報（brief）與個股研究是 markdown，agent 直接 Write，寫完一律用 `tw doc-add` 發佈：
+- Brief 草稿檔名：`data/account/research/{YYYY-MM-DD}-tw-brief-draft.md`（或任何不含 HHMM 的名字），`doc-add` 會按系統時間 rename 成 `brief-{HHMM}`
+- 個股 / 主題：`data/account/research/{YYYY-MM-DD}-tw-{symbol_or_theme}.md`，檔名不變，`doc-add` 只補 frontmatter `created_at`
+- Brief frontmatter 三欄：`date`、`session`、`screener_source`（`created_at` 由 `doc-add` 自動補，不要手填）
+- 生命週期：一份文件 `doc-add` 後就算定稿，不回頭改。當天情勢變了（盤中 → 盤後、新聞突發）就另寫一份新 draft 再 `doc-add`
+- `screener_source` 必須指到 `data/account/screener/{date}.json`；若 Phase 1 跳過（非盤後）則留空字串並於內文敘述原因
+
+## 資料時間軸對照表
+
+| 指令 | 資料來源 | 時間點 | 備註 |
+|---|---|---|---|
+| `market screener` | TWSE STOCK_DAY_ALL | 最近收盤日（可能 T-1 至今日約 15:00 前） | 上榜結果的 `as_of` 欄位為 FMTQIK 最新交易日；盤中跑到的很可能是 T-1 快照 |
+| `market overview` | TWSE FMTQIK（TAIEX） | 最近收盤日 | 盤中不會出現今日即時指數；若要今日即時需 Fugle 個股分析自行合成 |
+| `market quote {symbol}` | Fugle intraday | 即時（含盤中 tick） | 盤前/盤後會回報最近收盤價 |
+| `market analysis {symbol}` | Fugle historical candles + intraday quote | 最近收盤日技術指標 + 即時 quote | 盤中的 metrics 仍以日線為準 |
+| `watchlist` | 同 `analysis`，加 TWSE FMTQIK 做 benchmark | 同上 | `relative_performance` 顯示個股相對 TAIEX 的當日漲跌差 |
+| `web-reader sentiment/news` | PTT / RSS 新聞 | 近乎即時 | PTT 盤中閒聊長串注意時間戳 |
+
+盤中跑 screener 不代表錯誤，但要意識到上榜名單反映的是前一個交易日；若當天市場風格已變，優先相信 `market quote` / `market overview` 的即時資訊。
 
 ## 規則
 
@@ -75,7 +91,7 @@ uv run python -m tw_trader.cli brief show
 - 不要只貼資料，要做明確判斷
 - **新增 watchlist 時，同步建立研究文件**（送交個股交易研究子流程），不要事後幾天才補
 - **研究文件強制更新觸發條件**：個股現價相對前次研究的基準價格移動 >10%，或 thesis 的成立/失效條件對應的關鍵技術指標（支撐/壓力/籌碼）已不適用，則強制重跑個股交易研究
-- **嚴禁直接讀寫結構化 YAML 檔案**：對於 `watchlist.yaml` 與 `journals/*.yaml`，嚴禁使用 `write_to_file` 直接修改或覆寫。必須先將內容寫入 `tmp/` 下的 YAML 暫存檔，再透過對應的 `cli` 指令更新。`briefs/*.yaml` 例外：由 `brief init` 建立草稿後，agent 直接編輯，完成後執行 `brief commit` 驗證。
+- **嚴禁直接讀寫結構化 YAML 檔案**：對於 `watchlist.yaml` 與 `journals/*.yaml`，嚴禁使用 `write_to_file` 直接修改或覆寫。必須先將內容寫入 `tmp/` 下的 YAML 暫存檔，再透過對應的 `cli` 指令更新。Brief 與個股研究是 markdown 檔，agent 直接 Write 即可，寫完 re-read 確認可解析。
 
 ## 主流程
 
@@ -86,7 +102,7 @@ uv run python -m tw_trader.cli brief show
 ### Phase 0：準備
 
 1. 讀 `data/account/lessons.md`、`data/account/watchlist.yaml`、最近 journal、查看目前持倉 `cli account`
-   - 同時讀 `data/account/briefs/template/brief.template.yaml` 作為 Phase 5 結構化輸出的格式參考
+   - 同時讀 `data/account/research/template/brief.template.md` 作為 Phase 5 簡報的結構參考
 2. 跑 `cli watchlist` 取得 watchlist 的 raw + analysis + evaluation
    - `watchlist` 是唯一完整來源；不要再期待獨立的 trigger 檔案或獨立資料來源
    - `check-triggers` 只是 `watchlist.evaluation` 的摘要 view，適合快速看 trigger/invalidation 狀態
@@ -150,9 +166,10 @@ Screener 現在自動附帶技術指標（RSI, ADX, 量比）與籌碼資訊（�
    - 持有中的股票出現重大催化或重大風險
 3. 對需要個股交易研究的股票，每一個標的指派一個 sub-agent 執行 `### 子流程：個股交易研究`
 4. **寫市場簡報（Brief）**：
-   - 執行 `uv run python -m tw_trader.cli brief init` 建立草稿（路徑會印出）。
-   - 直接編輯該草稿檔，依 `briefs/template/brief.template.yaml` 結構填入 Phase 1-4 摘要。
-   - 執行 `uv run python -m tw_trader.cli brief commit` 驗證並記錄事件。
+   - 先 Write 到 `data/account/research/{YYYY-MM-DD}-tw-brief-draft.md`，結構參考 `data/account/research/template/brief.template.md`，frontmatter 必填 `date` / `session` / `screener_source`（`created_at` 不要手填）。
+   - 執行 `uv run python -m tw_trader.cli doc-add data/account/research/{YYYY-MM-DD}-tw-brief-draft.md`，CLI 會 rename 成 `brief-{HHMM}` 並補 `created_at`。
+   - 同日若多次更新（如盤中 → 盤後），各自寫新 draft 再 `doc-add`，前端以 latest 為最終版，舊版保留不動。
+   - `doc-add` 後 re-read 一次確認 YAML frontmatter 可解析。
 5. **更新 Journal**：
    - 生成當日的 `JournalEntry` 內容。
    - 先寫入 `tmp/journal_entry_{date}.yaml`。
@@ -173,6 +190,7 @@ Screener 現在自動附帶技術指標（RSI, ADX, 量比）與籌碼資訊（�
 4. 建立研究檔：
    - 單一股票：`data/account/research/{YYYY-MM-DD}-tw-{symbol}.md`
    - 主題研究：`data/account/research/{YYYY-MM-DD}-tw-{theme}.md`
+5. 發佈：`uv run python -m tw_trader.cli doc-add data/account/research/{YYYY-MM-DD}-tw-{symbol_or_theme}.md`，CLI 會補 `created_at` 並寫 `doc.add` 事件。
 
 ## 下一步
 
