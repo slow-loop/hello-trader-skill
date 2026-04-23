@@ -15,24 +15,28 @@
   - close < nearest_support * 0.98
   updated_at: '2026-04-16'
 - symbol: '3189'
-  thesis: AI 資料中心擴建推動 ABF 載板需求，景碩受惠高階 ABF 基板成長。連四日大漲（4/18-4/21，其中4/19-4/21三連漲停）確認主升浪，ADX
-    33 趨勢強，是 ABF 族群（南電、臻鼎）的領頭羊。欣興被關（禁置改撮合）當日資金直接外溢至景碩，外資投信共同加持。
+  thesis: AI 資料中心擴建推動 ABF 載板需求，景碩受惠高階 ABF 基板成長。連四日強漲（4/18-4/22，其中 4/19-4/21 三連漲停），ADX
+    34.9 趨勢極強，是 ABF 族群（南電、臻鼎）的領頭羊。欣興被關催化劑使法人資金持續外溢至景碩、南電。
   status: hold
   notes: '2026-04-21 12:52 建倉：200 股 @ 473.5，停損 440，目標 525，R:R 1.53。
 
-    技術面 (post-close)：RSI 74.92（趨勢健康），ADX 33.1（趨勢強），vol_ratio 1.90x（量確認），is_limit_up=true，連三漲停。
+    2026-04-22 盤後更新：收 491.5 (+3.80%)，盤中 high 509（接近 target 525 剩 3.7%），unrealized
+    PnL +3,600 (+3.80%)。
 
-    今日 open=453, high=473.5（漲停），low=446，TWII +1.75% 強市下相對強弱最佳。
+    技術面：RSI 76.8、ADX 34.9（趨勢極強）、MACD hist 26.3 擴張、VR 2.38x 持續爆量、Stoch 97 極超買、BB 上軌外。
 
-    催化劑升級：欣興被關禁置，法人資金轉移景碩+南電，一小時吸金300億元，上萬張買單排隊。
+    今日 K 棒：open 496, high 509, low 478.5, close 491.5，上影線 13.0 大於實體 -4.5（高點有獲利了結賣壓但仍收紅
+    +3.8%）。大盤 +0.73% 而 3189 +3.80% 相對強勢 excess +3.07%。
 
-    外資+投信今日雙買（投信690張）。
+    加碼評估（已在 4/22 盤中 Trading run 否決）：@503 加碼 100 股至 300 股 → R:R 0.41 不達標；改為回測 460-480
+    量縮守穩為加碼甜蜜點。
 
-    停損設在 440（今日低 446 下方，1 ATR 緩衝）。
+    明日：守 480+ 續強持有；若衝 525 target 觸發自動止盈；若 VR 再放大且 RSI 過 80 需警戒；若跌破 478.5（今日低）且量縮，考慮部分減碼。
 
     '
-  trigger: 守 440 以上繼續持有；若明日開高守 460+ 且量比 ≥1.5x，可考慮加碼至 300 股（停損升至 450）；若回測 440-455 量縮守穩亦為加碼點。
-  invalidation: 收盤跌破 440（停損觸發）；或 ADX < 25 且 MACD 翻負（趨勢失效）；或 ABF 族群（南電、臻鼎）同步轉弱連兩日。
+  trigger: 守 480 以上繼續持有；若回測 460-480 量縮守穩可加碼至 300 股（停損升至 460）；若直攻 525 target 執行止盈；若衝
+    540+ 考慮停損移至 490 鎖利
+  invalidation: 收盤跌破 440（停損觸發）；或 ADX < 25 且 MACD 翻負（趨勢失效）；或 ABF 族群（南電、臻鼎）同步轉弱連兩日
   trigger_conditions:
   - price_above_sma_20
   - macd_histogram_positive
@@ -40,7 +44,7 @@
   invalidation_conditions:
   - price_below_sma_20 and macd_histogram_negative
   - close < 440
-  updated_at: '2026-04-21'
+  updated_at: '2026-04-22'
 - symbol: '3711'
   thesis: 台積電 CoWoS 等先進封裝需求強勁，日月光作為全球最大封測廠直接受益；今日法說日量能突破（1.57x）+5.31%，外資連買。
   status: watch
@@ -56,59 +60,28 @@
   invalidation_conditions:
   - price_below_sma_20 and macd_histogram_negative
   updated_at: '2026-04-16'
-- symbol: 4979.TWO
-  thesis: AI 資料中心 800G / 1.6T 光連接升級延續，華星光受惠 DFB / CPO 與美系資料中心需求，仍是台股 CPO 純度最高的觀察股之一。
-  status: watch
-  notes: '2026-04-20 強制更新研究：現價 708，較上次研究基準 644 上漲 9.94%；RSI 83.7、ADX 36.0 極度超買。
-
-    2026-04-21 盤後嚴重警示升級：TWII +1.75% 強勢日，華星光收 655 (-7.49%)，相對弱勢 -9.24%（歷史最差）。
-
-    今日 open=708, high=708, low=651，量比 0.48x（量縮下跌=持續默默出貨）。
-
-    ADX=37.43（強趨勢，但方向為向下），RSI 73 but falling（bearish divergence）。
-
-    距 invalidation 硬門檻 640 = 2.3%。若明日繼續強市下跌，invalidation 幾乎確定觸發。
-
-    PTT 12:05 明確點名「波若威、華星光準備跌停」= 散戶端出貨信號已驗證。
-
-    操作：本週留意收盤位置；若收盤 < 640 → 立即移除 watchlist。
-
-    '
-  trigger: 回測 650-680 守穩後再轉強，或高檔平台整理後帶量突破前高（708 元）。（門檻偏高，需大幅改善）
-  invalidation: 收盤跌破 640 元，或跌破 SMA20 且 MACD 翻負，代表強勢結構失效。
-  trigger_conditions:
-  - price_above_sma_20
-  - macd_histogram_positive
-  - adx_14 > 25
-  - rsi_14 < 78
-  invalidation_conditions:
-  - price_below_sma_20 and macd_histogram_negative
-  - close < 640
-  updated_at: '2026-04-21'
 - symbol: '2303'
   thesis: 聯電進入「成熟製程定價能力修復 + 評價重估」週期：4/17 正式通知客戶下半年調漲代工價（Morgan Stanley 估 5-10%），矽光子（imec
-    iSiPP300，2026-27 試產）提供長線成長敘事，蘋果訂單佔比上升，22nm 良率 >90% 為護城河。外資近期單週買超逾 8.5 萬張，4/21
-    投信買超 9,464 張（上市投信今日第一名），籌碼面強力加持。關鍵驗證點：4/22 Q1 財報（NYSE 盤前）+ 4/29 法說會管理層確認 H2 定價。
+    iSiPP300，2026-27 試產）提供長線成長敘事，蘋果訂單佔比上升，22nm 良率 >90% 為護城河。外資單週買超逾 8.5 萬張，4/21 投信買超
+    9,464 張（全上市第一）。4/22 Q1 財報（NYSE 盤前）市場消化正向（盤中最高 78.8、收 78.6 +3.15%），VR 1.51x 剛達突破量。下一關鍵驗證：4/29
+    法說會管理層確認 H2 定價。
   status: watch
-  notes: '2026-04-21 研究補做（4/20 已加入 watchlist）。
+  notes: '2026-04-22 盤後更新：Q1 財報已公布且市場反應正向。收 78.6 (+3.15%)，VR 1.51x 剛達突破條件，RSI 75.6、ADX
+    22.9（升破 20 趨勢確立）、MACD hist 1.73 擴張，evaluation trigger_met=true。
 
-    技術面：收 76.2 (-0.91%)，open=78 開高走低，high=78.5，low=74，收帶上影線（高點有賣壓）。
+    今日 K 棒：open 76.5, high 78.8, low 75.2，上影線 1.2 小於實體 2.1（健康紅 K）。大盤 +0.73% 而 2303
+    +3.15% 相對強勢 excess +2.40%。
 
-    RSI 73.5 超買，ADX 21.05（趨勢仍未確立），vol_ratio 2.18x（大量但下跌=換手非突破）。
+    進場點調整：原 A 點「回測 73-76 守穩」已被今日跳漲錯過；改為 (A'''') 回測 75-78 量縮守穩後帶量再攻 volume_ratio ≥
+    1.5x 且 ADX > 22（停損 72，目標 88-92）；(B) 4/29 法說管理層確認 H2 漲價 + 突破 80 帶量（停損 74 目標 92-95）。
 
-    投信籌碼爆強：今日投信買超 9,464 張（全上市第一），外資前期累計大買 8.5 萬張。
-
-    4/22 財報（NYSE 盤前）= 明日台股開盤前即知結果。
-
-    若財報正向（EPS ≥預期，Q2毛利指引 ≥30%），等回測 73-76 守穩 = A 點進場。
-
-    停損設 70 元（跳空缺口 + EMA20 失守）。
+    R:R 約 1:1.5-1.8，倉位上限 15%（ATR 4.65% 波動偏大）。
 
     '
-  trigger: (A) 財報進場點：4/22 財報正向後回測 73-76 元量縮守穩，ADX 升破 20；(B) 法說進場點：4/29 法說管理層確認 H2
-    漲價 + 股價守 73 元以上。觸發條件：量縮回測守穩後帶量再攻，volume_ratio ≥ 1.5x，或突破 82 元新高放量。
-  invalidation: 跌破 68-70 元（跳空缺口填補 + EMA20 失守）且 MACD 翻負；或 4/29 法說管理層未確認 H2 定價調升；或外資連續
-    3 週賣超；或中國廠商大幅降價觸發族群估值下修。
+  trigger: (A'') 回測 75-78 量縮守穩後帶量再攻 volume_ratio ≥ 1.5x 且 ADX > 22；(B) 4/29 法說管理層確認
+    H2 漲價且突破 80 帶量
+  invalidation: 跌破 72 元（EMA20 失守 + 1ATR 緩衝）且 MACD 翻負；或 4/29 法說管理層未確認 H2 定價調升；或外資連續
+    3 週賣超；或中國廠商大幅降價觸發族群估值下修
   trigger_conditions:
   - price_above_sma_20
   - macd_histogram_positive
@@ -116,7 +89,8 @@
   - volume_breakout_1_5x
   invalidation_conditions:
   - price_below_ema_20 and macd_histogram_negative
-  updated_at: '2026-04-21'
+  - close < 72
+  updated_at: '2026-04-22'
 - symbol: '4958'
   thesis: 臻鼎-KY 是台灣最大 PCB 廠之一，AI 資料中心建置驅動高階 PCB 需求，且為 ABF 族群中盈餘彈性最大的標的之一。
   status: watch
@@ -263,3 +237,92 @@
   - price_below_sma_20 and macd_histogram_negative
   - close < 3500
   updated_at: '2026-04-21'
+- symbol: '2317'
+  thesis: Apple 新 CEO Ternus（硬體背景）+ 晶片主管 Srouji 升首席工程師黃金搭檔上任，疊加 NVIDIA GB300 量產期雙題材共振。鴻海今日（4/22）爆量
+    VR 2.51x、+4.74% 突破 SMA50，市值重返 3 兆元，ADX 15.4 趨勢剛啟動、RSI 64.4 未過熱，ODM 族群（廣達/緯穎/緯創）中技術位階最佳。
+  status: watch
+  notes: '2026-04-22 新增：sub-agent 個股研究完成，research/2026-04-22-tw-2317.md。
+
+    技術面：收 221 +4.74%，VR 2.51x（成交值市場第二 30,632 億），RSI 64.4 健康，ADX 15.4（趨勢剛啟動），MACD Line
+    剛翻正、Hist 收斂，站上 SMA20 (201.4) 與 SMA50 (212.2)。BB 已超上軌短線偏熱不追。
+
+    催化劑：Apple CEO 交班 Ternus（獨享）+ NVIDIA GB300 量產 ODM。
+
+    族群比較：鴻海 > 廣達（ADX 27 強但今日縮量）> 緯穎（RSI 72 超買 MACD 背離）> 緯創（未突破）> 鴻準（MACD 未翻正）。
+
+    進場規劃：(A) 回測 212-215 近 SMA50 量縮承接（停損 211.9，R:R ~10:1 至 T1 235）；(B) 突破 223.5 前高並帶量突破進場。
+
+    風險：荷莫茲海峽緊張、川普關稅違憲退稅、BB 上軌外短線偏熱。
+
+    '
+  trigger: 回測 212-215 近 SMA50 量縮承接後帶量再攻 volume_ratio ≥ 1.5x；或突破 223.5 前高並放量
+  invalidation: 收盤跌破 212（SMA50）伴隨放量；或隔日收長黑實體吞噬；或 MACD 翻負且 ADX < 15
+  trigger_conditions:
+  - price_above_sma_50
+  - macd_histogram_positive
+  - volume_breakout_1_5x
+  invalidation_conditions:
+  - price_below_sma_50 and macd_histogram_negative
+  - close < 212
+  updated_at: '2026-04-22'
+- symbol: '2337'
+  thesis: ''
+  status: watch
+  notes: '2026-04-22 新增：sub-agent 個股研究完成，research/2026-04-22-tw-2337.md。
+
+    技術面：收 134.5 +1.51%，VR 1.64x，RSI 52（中性健康），ADX 27.8（趨勢成形中），留 4 元上影線（138.5 有賣壓）。
+
+    籌碼警示：今日法人連 5 賣（近 5 日 -84k 張），股價逆勢漲但籌碼背離，大摩報告尚未反映於法人動作。
+
+    4/23 外資動向驗證結果（4/22 收盤）：外資期貨大賣（-1260口），但個股法人動向需明日公布才確認。relative_performance 今日
+    excess -0.24%，微幅相對弱。大摩 Catalyst 有，但籌碼面尚未配合——等 4/23 外資買超確認再評估進場。
+
+    催化劑：(1) 大摩 4/22 報告欽點；(2) 1/27 法說會旺宏已確認「三星停產 MLC eMMC」為既定事實；(3) SK海力士擴先進封裝、SOCAMM2
+    為 NVIDIA Vera Rubin 設計 = 記憶體升級週期同步確認。
+
+    族群比較：2337 > 2408/2344（大摩 DDR4 示警）> 4967 十銓 / 8028 昇陽（BB 上軌外追高風險）> 6770 力積電（題材稀釋）。
+
+    進場規劃：(A) 突破 140 收盤 + 量能 >1.5x 日均；(B) 回測 125-128 量縮守穩；(C) 深回 118-120 重倉。今日 134.5
+    不追價。
+
+    '
+  trigger: ''
+  invalidation: ''
+  trigger_conditions: []
+  invalidation_conditions: []
+  updated_at: '2026-04-22'
+- symbol: '6531'
+  thesis: '大摩 4/22 盤前報告調升目標至 777 元，EMIB-T 矽電容為蘋果高階封裝核心，EPS 3年跳升 16→26→37。
+
+    今日漲停 792（+10%），已超過大摩原目標 777，表示市場認為大摩目標保守，或 Catalyst 已完全發酵。
+
+    族群地位：矽電容台灣唯二（愛普* + 頎邦），技術壁壘高，AI 高速傳輸封裝受益。
+
+    進場邏輯（Catalyst/Pullback mode）：漲停後第一次回測守穩才進場，不追漲停板。
+
+    '
+  status: watch
+  notes: '2026-04-22 新增：大摩 4/22 Catalyst 執行確認（漲停 792 +10%）。
+
+    技術面：漲停 792，前收盤 720，ATR 估 ~30-35 元（高波動標的）。
+
+    Catalyst 已執行，大摩目標已超越，後續 thesis 需關注 Q2/Q3 EMIB-T 出貨量 + 蘋果新機訂單。
+
+    進場規劃：A 點 = 漲停後回測 720-750（前收盤區域）量縮守穩；stop 設 680（-5.6%，約 -1 ATR）；target reassess
+    at 880（前高或 +15-20%）。
+
+    下一個驗證點：(1) 4/23 是否開高後量縮回測；(2) 4 月營收是否反映 EMIB-T 出貨加速；(3) 後續蘋果供應鏈族群強度。
+
+    風險：漲停後次日跳空下跌（獲利了結）；大摩目標已超越 = 題材短期透支。
+
+    '
+  trigger: 回測 720-750 量縮守穩，或次日開盤量縮（<0.8x 20日均量）守 750 以上
+  invalidation: 跌破 680（前收盤 -5.6%）；或蘋果封裝訂單消息反轉
+  trigger_conditions:
+  - price_above_sma_20
+  - macd_histogram_positive
+  - volume_breakout_1_5x
+  invalidation_conditions:
+  - close < 680
+  - price_below_sma_50 and macd_histogram_negative
+  updated_at: '2026-04-22'

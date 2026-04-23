@@ -1,0 +1,187 @@
+- at: 00:42
+  type: study
+  round: 1
+  actions:
+  - Phase 0 Research run COMPLETE（盤前 pre-open 00:42 台灣時間）
+  - '補建研究文件: 6531 愛普*（2026-04-22-tw-6531.md，修補 4/22 16:38 遺漏）'
+  - '發佈盤前簡報: data/account/research/2026-04-23-tw-brief-0042.md'
+  notes:
+  - 'Session: 盤前（00:42 台灣時間，4/23 開盤前）；Regime: dist_to_sma20_pct +8.93%，ADX 26.17，判定允許新進場'
+  - 台指期夜盤 38,206 (+0.42%)，4/22 收盤 37,878（+0.73%）創歷史新高，多頭格局未改
+  - 'Phase 0 預檢: 無 >10% 強制更新，無 invalidation_met。trigger_met=true：3189（hold）、2303、2454'
+  - 警示：乖離率 +8.93% 偏高，法人期貨日盤空單增加（外 -1,260, 投 -1,153），PTT 末升段氛圍升溫
+  - 4/23 關鍵日程：(1) 6531 愛普* 次日型態守穩 720-750；(2) 2337 旺宏外資籌碼公布；(3) 3189 守 480+；(4) 2303
+    是否回測 75-78；(5) 2317 是否突破 223.5
+  - 隔夜新聞：三星停產 DDR4（旺宏受益）；力積電法說終結連10季虧損；台指期夜盤正向；無新宏觀重大利空
+  - 6531 研究補建：漲停後 A 點 720-750 等次日回測守穩；stop 680；target 850 reassess
+- at: 00:46
+  type: trade
+  round: 1
+  actions:
+  - HOLD 3189.TW — 浮盈 0.54R（<1R），stop 440 不上移，target 525 未達
+  - NO NEW TRADE — 盤前無法確認 Pre-Trade Confirmation 條件（TWII 今日方向待開盤）
+  - '盤中監控清單設立: 6531 愛普*（A 點 720-750）、2337 旺宏（外資公布後）'
+  notes:
+  - Trading run COMPLETE（盤前 00:46 台灣時間）
+  - '帳戶狀態: cash 905,165、market_value 98,300（3189 200股@491.5 T-1收）、exposure 9.8%、unrealized
+    PnL +3,600 (+3.80%)'
+  - 'Regime: 允許新進場（dist_to_sma20_pct +8.93%，ADX 26.17）；台指期夜盤 +0.42%'
+  - '3189 景碩 HOLD: 浮盈 +3,600 (+3.80%)，折算 0.54R，未達 1R，依規則 stop 不上移（維持 440）。Target 525
+    未達。PENDING 訂單已設（stop 440, target 525），不需要新動作。'
+  - '2303 聯電 SKIP: trigger_met=true 但 T-1 收 78.6 > A'' 點上緣 78，A 點未達，今日觀察是否回測 75-78
+    量縮守穩'
+  - '2454 聯發科 SKIP: trigger_met=true 但 T-1 漲停 2295，遠超 A 點 2000-2050，等重大回測'
+  - '6531 愛普* 盤中監控: 開盤若測 720-750 量縮守穩（ADX>25，外資非持續賣超）→ 進場候選；Sizing 計算：帳戶 1% / (730-680)
+    = 200.7股 → 200股；單筆 200×730=146,000 < 帳戶 30% ✓。若直接跌破 720 → 觀察不進'
+  - '2337 旺宏 盤中監控: 等外資籌碼公布（預計盤後），若外資轉買且收盤站上 135（SMA20 附近）→ thesis 驗證；若外資繼續賣超→降優先'
+  - '盤中風控門檻: TWII 跌破 37,500（-1%）→ regime 降級，停止新進場評估，只做持倉管理'
+  - skip 不是失敗，盤前 Pre-Trade Confirmation 無法完成屬正常，等開盤確認
+- at: '10:02'
+  type: study
+  round: 1
+  actions:
+  - Phase 0 Research run COMPLETE（盤中 10:02 台灣時間）
+  - 盤中分支：只跑 Phase 0（regime + 預檢），不跑 Phase 1-5
+  notes:
+  - 'Session: 盤中（10:02 台灣時間，開盤約 1 小時）；與 00:42 盤前 run 同一交易日延續，無明顯惡化'
+  - 'Regime: TWII T-1 close 37,878.47 (+0.73%)，dist_to_sma20_pct +8.91%，ADX 14 = 28.42（較昨日
+    26.17 略升），判定 **允許新進場**。TWSE FMTQIK 盤中仍為 T-1 快照，無即時 TWII 盤中價；以 3189 excess +3.07%
+    反推大盤 T-1 基準未更新。'
+  - Regime 警示延續：乖離率 +8.91% 偏高、法人期貨日盤空單增加、PTT 末升段氛圍；策略仍以 Pullback 優先、不追漲停。
+  - Phase 0 預檢：watchlist 12 檔（含 2337、6531 thesis/trigger 欄缺補，但已有 notes）。無標的現價相對 thesis
+    基準 >10% 觸發強制重跑；無 invalidation_met。trigger_met=true：3189（hold）。
+  - 持倉 3189 景碩：現 491.5-492（T-1 收盤同價，盤中微幅），+3.80%，unrealized PnL +3,700（+3.91%），stop
+    440 未觸、target 525 未達。相對 TWII excess +3.07% 領先。
+  - 盤前 00:46 Trading 已設置 pending（stop 440 / target 525），check-triggers 確認 invalidation_met=false，持倉
+    thesis 健檢 PASS。
+  - 6531 愛普* 盤中監控：T-1 漲停 792，盤中 price 768（-3.03% 回測中），仍高於 A 點上緣 750；VR 0.62x 量縮但 trigger_met=false。等回測進入
+    720-750 量縮守穩才是 A 點。
+  - 2337 旺宏：等外資籌碼 4/23 公布（盤後），盤中無新訊號。
+  - 2303/2454：等 A 點回測條件，盤中 check-triggers 未取得即時 snapshot（Fugle 對非 2330 等標的回 ValueError），盤中不追入。
+  - 工具狀態：Fugle 對 2330 正常、對 3189/6531 失效；check-triggers 與 account 的內嵌 snapshot 可用（走另一資料路徑）。盤中無法跑
+    market analysis/quote 非 2330 標的，不影響今日決策（所有候選均不符進場條件）。盤後若仍異常，需排查。
+  - 交棒 Trading：持倉管理 + pending 檢視；無 Phase 1-5，不新增 watchlist，不在 pending 清單外的新進場。
+- at: '10:05'
+  type: trade
+  round: 1
+  actions:
+  - HOLD 3189.TW — 浮盈 +3,700（+3.91%）< 1R，stop 440 不上移；target 525 未達；pending 單維持
+  - NO NEW TRADE — 盤中禁做未在 pending 清單的新進場；所有候選不符 A 點進場條件
+  notes:
+  - Trading run COMPLETE（盤中 10:05 台灣時間）
+  - '帳戶狀態: cash 905,165、positions 3189×200@473.5（current 492）、market_value 98,400、exposure
+    9.80%、unrealized PnL +3,700（+3.91%）'
+  - 'Regime: 允許新進場（dist_to_sma20_pct +8.91%，ADX 28.42，承接 00:42 判斷未變）；警示維持：乖離率偏高、期貨空單增加、末升段氛圍。'
+  - 'check-triggers: trigger_met=true 僅 3189（hold）；invalidation_met=0。其餘標的 Fugle 失效導致
+    snapshot 缺漏，evaluation 回 false。'
+  - '3189 景碩 HOLD: 現 491.5/492（盤中幾無波動，T-1 收盤同價），stop 440（-10.5%）未觸，target 525（+6.7%）未達。初始風險
+    33.5，1R = 6,700 元；目前浮盈 +3,700 = 0.55R < 1R，依規則 stop 不上移。Thesis 完整（ABF 連四日強漲、ADX
+    34.9、MACD hist 擴張）。Pending 單（stop 440 / target 525）已在帳戶就位，不需要新動作。若盤中衝 525 → 系統自動觸發止盈；若跌破
+    478.5（4/22 低）且量縮 → 盤後評估減碼。'
+  - '6531 愛普* SKIP: 盤中 price 768（T-1 漲停收 792 回測中 -3.03%），仍高於 A 點上緣 750，VR 0.62x 量縮但尚未到「守穩」信號；trigger_met=false。skip_reason:
+    A 點未達（進場條件本身未達）。盤前計畫中若盤中測 720-750 量縮守穩才進場，目前未進入區間。'
+  - '2337 旺宏 SKIP: 盤中等外資籌碼 4/23 公布（盤後資料），現在無新訊號；trigger_met=false。skip_reason: 進場條件未達（需突破
+    140 或回測 125-128 守穩）。'
+  - '2303 聯電 / 2454 聯發科 SKIP: A 點進場條件皆為「回測守穩」信號，昨收位置高於 A 點；盤中 Fugle 失效無法即時確認。skip_reason:
+    A 點未達 + 工具限制。'
+  - '2317 鴻海 SKIP: 需突破 223.5 或回測 212-215，當前無觸發。skip_reason: 進場條件未達。'
+  - Pre-Trade Confirmation 未對任何新標的執行（所有候選進場條件本身未達，不需要進到 confirmation step）。
+  - '盤中風控門檻: TWII 若跌破 37,500（-1%）→ regime 降級為只做持倉管理；目前 TWSE 無即時盤中價，以個股相對強度與 PTT 情緒輔助判斷大盤方向。'
+  - Skip 不是失敗：符合 skip 條件不做即是紀律。
+  - '盤後待辦: (A) 跑完整 screener 捕捉記憶體/蘋果供應鏈動向；(B) 補清 4979.TWO 殘餘 watchlist（若還有）；(C) 確認
+    6531 收盤位置（是否進入 720-750 區間）；(D) 若 Fugle 非 2330 標的仍失效，排查 API key/rate limit。'
+- at: '12:48'
+  type: study
+  round: 1
+  actions:
+  - Phase 0 Research run COMPLETE（盤中末段 12:48）
+  - 盤中分支：Phase 0 only（收盤前 42 分鐘，不跑 Phase 1-5）
+  notes:
+  - 'Session: 盤中末段（12:48），距收盤 42 分鐘'
+  - 'Regime【新版 Fugle IX0001 live】: TWII 37,823（−0.14%），open 37,971 → high 38,921 →
+    low 37,164（振幅 4.64%），dist_to_sma20_pct +8.75%，ADX 28.42。判定：允許新進場。今日盤中大幅震盪後反彈穩住，乖離率偏高警示延續。'
+  - 工具驗證：market overview 改走 Fugle IX0001，benchmark_quote.source=fugle，timestamp 即時（12:48
+    UTC+8），dist_to_sma20_pct 用 live price 計算 — 與前一版（FMTQIK T-1）相比，regime 即時反映。
+  - 持倉健檢 3189：現 484，stop 440，距 stop 44 元 = 1.52 × ATR(29) → PASS（>1 ATR）。浮盈 +1,900（+2.01%）。高
+    38,921 早盤衝破後盤整，ADX 34.9 趨勢延續，thesis 完整。
+  - 預檢亮點：(1) 6531 今日開 852 → high 871 → low 713（A 點曾觸及！）→ 現 804 漲停。A 點 720-750 盤中實現後再漲停，已錯過；(2)
+    2454 +9.8% 接近漲停，超買繼續；(3) 2303 今日現 73.6，低於 A 點 75-78，需等止跌確認；(4) 3450 −4.34% 相對弱，可能下修至
+    SMA20。
+  - 2337 price=None：Fugle 對 2337.TW 無即時報價（可能未在訂閱股票池內），evaluation 無法進行。盤後排查。
+  - 盤後高優先：(1) 跑完整 screener；(2) 確認 6531 收盤後 next A 點（今日漲停後明日型態）；(3) 2303 收盤位置 vs 73/75
+    關鍵支撐；(4) 排查 2337 Fugle 失效原因。
+- at: '12:52'
+  type: trade
+  round: 1
+  actions:
+  - HOLD 3189.TW — stop 440 未觸，target 525 未達，thesis 完整
+  - NO NEW TRADE — 所有候選進場條件未達或漲停板不可追
+  notes:
+  - Trading run COMPLETE（盤中 12:52）
+  - '帳戶狀態: cash 905,165、positions 3189×200@473.5（現 484）、market_value 96,800、exposure
+    9.64%、unrealized PnL +2,100（+2.22%）'
+  - 'Regime: 允許新進場（dist_to_sma20_pct +8.75%）'
+  - '3189 HOLD: 現 484，stop 440（−9.1%）未觸，target 525（+8.5%）未達，浮盈 0.63R（距 1R 尚遠），stop
+    不上移。thesis 完整。'
+  - '2454 SKIP: 現 2225 +9.8%，接近漲停，RSI 過熱，A 點 2000-2050 遠未到。skip_reason: 進場條件未達（漲停板不追）'
+  - '2303 SKIP: 現 73.6，低於 A 點下緣 75；trigger_met=true 但 A 點進場條件（75-78 守穩帶量）未達。skip_reason:
+    進場條件未達'
+  - '6531 SKIP: 漲停 804，A 點 720-750 盤中曾觸（low 713）但無法即時確認量縮守穩，現已漲停不追。skip_reason: 漲停板不可執行'
+  - '2317 SKIP: trigger_met=false（volume_breakout_1_5x 未達），現 223.5 在 watchlist trigger
+    突破點邊緣但量能未確認。skip_reason: 進場條件未達'
+  - Skip 不是失敗，符合條件不做才是紀律。
+- at: '13:50'
+  type: study
+  round: 1
+  actions:
+  - Phase 0-5 Research run COMPLETE（盤後 13:50）
+  - 發佈盤後簡報 data/account/research/2026-04-23-tw-brief-1350.md
+  - Phase 1 momentum screener = 0 candidates（寫入 data/account/screener/2026-04-23.json）
+  notes:
+  - 'Session: 盤後（13:50，收盤後 20 分鐘）'
+  - 'Regime: TWII 收 37,714.15 (−0.43%)，open 37,971 → high 38,921（歷史新高）→ low 37,164，振幅
+    4.64%，成交約 1.5 兆。dist_to_sma20_pct +8.43%、ADX 28.42。判定：允許新進場，但爆量長上影 + 頂部情緒 = 強烈警示，策略由「積極追強」改為「只做最強結構」。'
+  - 'Phase 1 screener: 0 candidates。動能族群今日集體失速（2454 −3.49%、3189 −2.54%、3450 −8.25%、2337
+    −6.32%、6531 −0.88%），momentum strategy 過濾條件全落空 = 與 regime 警示一致。'
+  - 'Phase 2 PTT: 「長期投資高點該賣嗎」「記憶體全部下跌」均為「爆」文 = 頂部情緒浮現 + 記憶體族群集體熄火。無新獨立候選。'
+  - 'Phase 3 News/Macro: Google 第八代 TPU（聯發科合作但題材短線被大盤洗）；三星停產 DDR4 獲利了結；中東升溫（布蘭特近 $100、二線塑化漲停）；高盛示警美股「表強裡虛」。'
+  - Phase 0 預檢結果：3189 trigger_met=true（hold 繼續）、2303 trigger_met=true（但收 73.6 逼近 invalidation
+    72）。無一檔 invalidation_met=true — 但 daily bar T-1 可能尚未 refresh，3450 close 333.5
+    已跌破 350 閾值待明日確認。
+  - 2337 thesis/trigger/invalidation 欄位仍空 — 今日 −6.32% 至 126，記憶體族群殺盤，thesis 需重估，延到下輪盤前補齊。
+  - 明日關鍵驗證：(1) 3450 invalidation 正式確認；(2) 2303 是否跌破 72；(3) 3189 守 478.5 + 440 stop；(4)
+    TWII 若跌破 37,500 → regime 降級。
+- at: '13:52'
+  type: trade
+  round: 1
+  actions:
+  - HOLD 3189.TW — 浮盈 +1,100 (+1.16%) = 0.16R < 1R，stop 440 不上移；target 525 未達；pending
+    單 (stop 440 / target 525) 已在帳戶就位
+  - NO NEW TRADE — 大盤爆量長黑，momentum 動能熄火，所有 watchlist 候選進場條件未達
+  - 'Watchlist flag（下輪盤前處理）: 3450 close 333.5 跌破 invalidation 350；2337 thesis 欄位需補齊'
+  notes:
+  - Trading run COMPLETE（盤後 13:52）
+  - '帳戶狀態: cash 905,165、positions 3189×200@473.5（current 479）、market_value 95,800、exposure
+    9.57%、unrealized PnL +1,100 (+1.16%)、account_value 1,000,965'
+  - 'Regime: 允許新進場（dist_to_sma20_pct +8.43%、ADX 28.42），但爆量長上影 + 頂部情緒 → 策略從「積極追強」降為「只做最強結構」。'
+  - '3189 景碩 HOLD: 現 479（4/22 收 491.5，今日 −2.54% 回測中），stop 440（-8.14% 距停損）、target 525（+9.6%
+    距目標），浮盈 +1,100 (+1.16%) = 0.16R < 1R，依規則 stop 不上移。Thesis 未破（trigger_met=true,
+    ADX 34.9, MACD hist 擴張, VR 2.38x）。明日守 478.5（4/22 低）+ 440 stop。'
+  - '2454 聯發科 SKIP: 現 2215 (-3.49%)，RSI 82.4 極度超買，A 點 2000-2050 未達（距下緣 215 元、9.7%）。Google
+    TPU 催化被大盤洗出。skip_reason: 進場條件未達'
+  - '2303 聯電 SKIP: 現 73.6 (-6.36%)，逼近 invalidation 72（僅餘 1.6 元 / 2.2% 緩衝）。trigger_met=true
+    但 A 點 75-78 守穩條件反轉失效。skip_reason: 進場條件未達 + thesis 風險升高'
+  - '3450 聯鈞 FLAG: 現 333.5 (-8.25%)，close < 350 invalidation 閾值已過；但 daily bar 未 refresh，invalidation_met=false。依「invalidation
+    只在盤後執行」+ engine 需 T 日收盤 daily bar 刷新，延到明日 Phase 0 正式確認。非持倉，不需賣出，確認後 watchlist
+    移除。'
+  - '6531 愛普* SKIP: 現 785 (-0.88%)，盤中低 713 曾觸 A 點 720-750，但 VR 0.62x 量縮不是「量縮守穩」的建設性信號（反而是無承接）。skip_reason:
+    進場條件（量縮守穩）未達'
+  - '2337 旺宏 SKIP + FLAG: 現 126 (-6.32%)，記憶體族群殺盤確認，thesis 欄位仍空。skip_reason: thesis
+    失效風險；下輪盤前需補齊或移除'
+  - '2317 鴻海 SKIP: 現 225 (+1.81%)，突破 223.5 前高但 VR 2.54x 是大盤爆量下的被動量，且大盤反轉。skip_reason:
+    大環境反轉不追突破'
+  - 其他 watchlist（2330/3711/4958/3653/6669/3661）均未滿足進場條件。
+  - '風控門檻: TWII 若明日跌破 37,500（-0.57%）→ regime 降級為只做持倉管理'
+  - '明日 Round 1 驗證: (1) 3450 invalidation 正式確認並清 watchlist；(2) 2303 守 72；(3) 3189
+    守 478.5 + 440；(4) TWII 守 37,500。'
+  - Skip 不是失敗，大盤警示下「只做最強結構」即是紀律。

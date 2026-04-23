@@ -183,6 +183,14 @@ def watchlist_update(
     from market_core.models import WatchlistItem
 
     item = WatchlistItem.model_validate(data)
+    if item.status in {"watch", "hold"}:
+        missing = [f for f in ("thesis", "trigger", "invalidation") if not getattr(item, f).strip()]
+        if missing:
+            typer.echo(
+                f"{item.symbol}: status={item.status} requires non-empty {', '.join(missing)}.",
+                err=True,
+            )
+            raise typer.Exit(1)
     workspace.upsert_watchlist_item(item)
     typer.echo(f"Updated watchlist for {item.symbol}.")
 
@@ -211,24 +219,6 @@ def doc_add(
         typer.echo(f"doc-add failed: {exc}", err=True)
         raise typer.Exit(1) from exc
     _echo(payload)
-
-
-@app.command()
-def check_triggers():
-    """Evaluate watchlist trigger/invalidation conditions (shorthand view)."""
-    evaluated = workspace.load_evaluated_watchlist()
-    rows = []
-    for item in evaluated.items:
-        if item.evaluation is None:
-            continue
-        rows.append(
-            {
-                "symbol": item.symbol,
-                "status": item.status,
-                **item.evaluation.model_dump(mode="json"),
-            }
-        )
-    _echo(rows)
 
 
 @app.command()

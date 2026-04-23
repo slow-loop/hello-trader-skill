@@ -2,196 +2,211 @@
 
 ## 任務
 
-負責台股每日研究主流程：量化選股 → 情緒掃描 → 新聞宏觀 → 交叉比對 → watchlist 維護。
-預設使用「交易研究」，只有符合條件時才升級到「深度研究」。
+台股每日研究主流程：Regime 判斷 → 量化選股 → 情緒掃描 → 新聞宏觀 → 交叉比對 → watchlist 維護。
+
+每次 flow 啟動**先做 Regime 判斷**。盤中 flow 輕量（只跑 Phase 0），盤後跑完整 Phase 0-5。
+
+## 節奏 Cadence
+
+| 時段 | 做什麼 |
+|---|---|
+| 盤前 | Phase 0 完整版：Regime + 預檢 + 隔夜新聞、設 pending 單 |
+| 盤中（至多 1 次） | Phase 0 + 持倉 thesis 健檢 + pending 狀態；不跑 Phase 1-5 |
+| 盤後 | Phase 0-5 完整流程 |
+| 週末 | 每檔 watchlist thesis review |
+
+**盤中禁做**：
+- Phase 1 Screener（資料是 T-1）
+- 新標的加入 watchlist
+- 未在 pending 清單的新進場
+
+**例外**：持倉族群突發消息可在 journal 記「持倉 thesis 擴展」觀察，仍不新增 watchlist item，留到盤後。
 
 ## 檔案
 
-**專案根目錄**：`/Users/cw/Documents/GitHub/hello-trader-skill/skills/tw-trader`，所有檔案路徑都相對於此目錄
+**專案根目錄**：`/Users/cw/Documents/GitHub/hello-trader-skill/skills/tw-trader`
 
-- `data/account/lessons.md`: 可重複使用的規則與教訓
-- `data/account/watchlist.yaml`: 追蹤中的股票與簡短 thesis
-- `data/account/journals/{YYYY-MM-DD}.yaml`: 當日研究與交易紀錄
-- `data/config/technical_config.yaml`: 全域技術分析設定
-- `data/config/sources.tw.yaml`: 外部 `web-reader` 新聞來源設定
-- `data/account/research/{YYYY-MM-DD}-tw-{symbol_or_theme}.md` 投資標的或主題研究
-- `data/account/research/{YYYY-MM-DD}-tw-brief-{HHMM}.md` 當日市場簡報（Phase 1-5 敘述性摘要，前端時間軸顯示；HHMM 由 `tw doc-add` 自動補上）
-- `data/account/research/template/template.md`: 個股交易研究範本
-- `data/account/research/template/brief.template.md`: 市場簡報範本
-- `data/account/screener/{YYYY-MM-DD}.json`: screener 原始輸出（由 Phase 1 redirect 寫入）
+- `data/account/lessons.md`: 規則與教訓
+- `data/account/watchlist.yaml`: 追蹤清單與 thesis
+- `data/account/journals/{YYYY-MM-DD}.yaml`: 當日紀錄
+- `data/config/technical_config.yaml`: 技術分析設定
+- `data/config/sources.tw.yaml`: web-reader 來源設定
+- `data/account/research/{YYYY-MM-DD}-tw-{symbol_or_theme}.md`: 個股/主題研究
+- `data/account/research/{YYYY-MM-DD}-tw-brief-{HHMM}.md`: 當日市場簡報（HHMM 由 `doc-add` 自動補）
+- `data/account/research/template/template.md`: 個股研究範本
+- `data/account/research/template/brief.template.md`: 簡報範本
+- `data/account/screener/{YYYY-MM-DD}.json`: screener 原始輸出
 
 ## CLI
 
 ```bash
-# 量化雷達（含技術指標 + 籌碼 enrichment）— 直接呼叫 market-core，不需 backend
-uv run market screener --strategy momentum
-# 快速版（不做 enrichment，只看成交值與漲跌）
-uv run market screener --strategy momentum --no-enrich
-
-# 大盤總覽
+# 大盤 + 個股行情
 uv run market overview
-
-# 個股分析
 uv run market analysis 2330
 uv run market quote 2330
 
-# 帳戶狀態（local YAML）
-uv run python -m tw_trader.cli account
+# 量化雷達（盤後才跑）
+uv run market screener --strategy momentum
+uv run market screener --strategy momentum --no-enrich
 
-# Watchlist（含 raw + analysis + evaluation）
+# 帳戶 / watchlist
+uv run python -m tw_trader.cli account
 uv run python -m tw_trader.cli watchlist
 
-# Watchlist trigger/invalidation 條件摘要（optional shorthand）
-uv run python -m tw_trader.cli check-triggers
-
-# 散戶情緒（PTT/Reddit）
+# 情緒 / 新聞
 uv run web-reader data/config/sources.tw.yaml --tags=sentiment
-
-# 新聞宏觀
 uv run web-reader data/config/sources.tw.yaml --tags=tw,macro
-
-# 深度研究用
 uv run web-reader data/config/sources.tw.yaml --tags=research
 
-# --- 資料更新指令 (Agent 專用) ---
-# 更新 Watchlist (透過暫存檔)
+# 更新（agent 專用，透過暫存檔）
 uv run python -m tw_trader.cli watchlist-update --file tmp/update_item.yaml
-# 新增 Journal (透過暫存檔)
 uv run python -m tw_trader.cli journal-add --file tmp/journal_entry.yaml
-# 發佈研究文件到時間軸（補 created_at + brief 自動補 HHMM + 寫事件）
 uv run python -m tw_trader.cli doc-add data/account/research/{filename}.md
 ```
 
-市場簡報（brief）與個股研究是 markdown，agent 直接 Write，寫完一律用 `tw doc-add` 發佈：
-- Brief 草稿檔名：`data/account/research/{YYYY-MM-DD}-tw-brief-draft.md`（或任何不含 HHMM 的名字），`doc-add` 會按系統時間 rename 成 `brief-{HHMM}`
-- 個股 / 主題：`data/account/research/{YYYY-MM-DD}-tw-{symbol_or_theme}.md`，檔名不變，`doc-add` 只補 frontmatter `created_at`
-- Brief frontmatter 三欄：`date`、`session`、`screener_source`（`created_at` 由 `doc-add` 自動補，不要手填）
-- 生命週期：一份文件 `doc-add` 後就算定稿，不回頭改。當天情勢變了（盤中 → 盤後、新聞突發）就另寫一份新 draft 再 `doc-add`
-- `screener_source` 必須指到 `data/account/screener/{date}.json`；若 Phase 1 跳過（非盤後）則留空字串並於內文敘述原因
+Markdown（brief / 個股研究）直接 Write，寫完一律 `doc-add`：
+- Brief 草稿：不含 HHMM 的檔名，`doc-add` 會 rename 成 `brief-{HHMM}`
+- 個股/主題：`{date}-tw-{symbol_or_theme}.md`，`doc-add` 只補 `created_at`
+- Brief frontmatter：`date` / `session` / `screener_source`（`created_at` 不要手填）
+- 生命週期：`doc-add` 後就算定稿；新情勢另寫 draft 再 `doc-add`
+- `screener_source` 指到 `data/account/screener/{date}.json`；Phase 1 跳過則留空並註明
 
 ## 資料時間軸對照表
 
 | 指令 | 資料來源 | 時間點 | 備註 |
 |---|---|---|---|
-| `market screener` | TWSE STOCK_DAY_ALL | 最近收盤日（可能 T-1 至今日約 15:00 前） | 上榜結果的 `as_of` 欄位為 FMTQIK 最新交易日；盤中跑到的很可能是 T-1 快照 |
-| `market overview` | TWSE FMTQIK（TAIEX） | 最近收盤日 | 盤中不會出現今日即時指數；若要今日即時需 Fugle 個股分析自行合成 |
-| `market quote {symbol}` | Fugle intraday | 即時（含盤中 tick） | 盤前/盤後會回報最近收盤價 |
-| `market analysis {symbol}` | Fugle historical candles + intraday quote | 最近收盤日技術指標 + 即時 quote | 盤中的 metrics 仍以日線為準 |
-| `watchlist` | 同 `analysis`，加 TWSE FMTQIK 做 benchmark | 同上 | `relative_performance` 顯示個股相對 TAIEX 的當日漲跌差 |
-| `web-reader sentiment/news` | PTT / RSS 新聞 | 近乎即時 | PTT 盤中閒聊長串注意時間戳 |
+| `market screener` | TWSE STOCK_DAY_ALL | 最近收盤日 | 盤中跑到的是 T-1 快照 |
+| `market overview` | TWSE FMTQIK + yfinance | `benchmark_quote`：盤後為同日，盤中為 T-1；`benchmark_metrics`（SMA20/ADX）：yfinance 最新收盤 | Regime 判斷直接讀 `benchmark_metrics` |
+| `market quote {symbol}` | Fugle intraday | 即時 | 盤前/盤後回報最近收盤 |
+| `market analysis {symbol}` | Fugle candles + intraday | 日線指標 + 即時 quote | 盤中 metrics 仍以日線為準 |
+| `watchlist` | 同 analysis + FMTQIK benchmark | 同上 | `relative_performance` = 當日個股 vs TAIEX |
+| `web-reader` | PTT / RSS | 近即時 | PTT 盤中長串要看時間戳 |
 
-盤中跑 screener 不代表錯誤，但要意識到上榜名單反映的是前一個交易日；若當天市場風格已變，優先相信 `market quote` / `market overview` 的即時資訊。
+盤中跑 screener 不是錯誤，但要記得是 T-1 名單；當日風格變了優先相信 `market quote` / `market overview`。
 
 ## 規則
 
-- **動能與籌碼優先**：不能只看新聞說故事，必須同步檢驗「價量是否共振」與「法人籌碼是否進駐」。沒有資金配合的故事，只是市場雜音。
-- **建置催化劑日曆**：研究輸出必須明確列出下一個驗證點（如：法說會日期、營收發布日、重要展覽），方便 Trading Agent 在關鍵時刻執行預期。
-- 預設先做交易研究，不做全面 deep research
-- 不是每次都要更新正式個股研究
+- **先判 regime，再看個股**。Regime 是 flow 第一步，不跳過
+- **動能與籌碼優先**。沒有資金配合的故事就是雜音
+- **催化劑日曆**：研究必須列下一個驗證點（法說、營收、展覽、研報發布日）
+- 預設交易研究，不做 deep research
 - 不要只貼資料，要做明確判斷
-- **新增 watchlist 時，同步建立研究文件**（送交個股交易研究子流程），不要事後幾天才補
-- **研究文件強制更新觸發條件**：個股現價相對前次研究的基準價格移動 >10%，或 thesis 的成立/失效條件對應的關鍵技術指標（支撐/壓力/籌碼）已不適用，則強制重跑個股交易研究
-- **嚴禁直接讀寫結構化 YAML 檔案**：對於 `watchlist.yaml` 與 `journals/*.yaml`，嚴禁使用 `write_to_file` 直接修改或覆寫。必須先將內容寫入 `tmp/` 下的 YAML 暫存檔，再透過對應的 `cli` 指令更新。Brief 與個股研究是 markdown 檔，agent 直接 Write 即可，寫完 re-read 確認可解析。
+- **新增 watchlist 時同步建立研究文件**，不要事後補
+- **研究強制更新觸發**：現價相對 thesis 基準 >10%，或 thesis 關鍵條件失效
+- **嚴禁直接讀寫結構化 YAML**：`watchlist.yaml` / `journals/*.yaml` 必須透過 `tmp/` + CLI；markdown 可直接 Write，寫完 re-read 確認可解析
 
 ## 主流程
 
-### Step 0：無 backend 需求
+### Phase 0：讀上下文 + Regime + 預檢
 
-所有指令都是 local 執行，直接讀寫 `data/account/` 下的 YAML。不需要啟動任何 server。
+**讀**：`lessons.md`、`watchlist.yaml`、近 3 日 journal、`cli account`、`cli watchlist`（同時讀 `brief.template.md` 作為 Phase 5 參考）
 
-### Phase 0：準備
+**Regime 判斷**：跑 `uv run market overview`。
 
-1. 讀 `data/account/lessons.md`、`data/account/watchlist.yaml`、最近 journal、查看目前持倉 `cli account`
-   - 同時讀 `data/account/research/template/brief.template.md` 作為 Phase 5 簡報的結構參考
-2. 跑 `cli watchlist` 取得 watchlist 的 raw + analysis + evaluation
-   - `watchlist` 是唯一完整來源；不要再期待獨立的 trigger 檔案或獨立資料來源
-   - `check-triggers` 只是 `watchlist.evaluation` 的摘要 view，適合快速看 trigger/invalidation 狀態
-3. **強制更新預檢（讀完即執行）**：對每個 watchlist 標的，確認：
-   - (a) 現價是否相對 thesis 基準價移動 >10%？若是 → 本次研究強制重跑個股交易研究
-   - (b) `watchlist.evaluation.invalidation_met=true`？若是 → 本次研究立刻移除該標的，不帶入後續步驟
-   - (c) `watchlist.evaluation.trigger_met=true`？標注為高優先進場候選
-   - 不完成預檢，不進行 Phase 1
+`benchmark_quote` 提供今日 TWII 收盤價與漲跌幅（盤後為同日資料，盤中為 T-1）。
+`benchmark_metrics` 提供：
+- `sma_20`：TWII 20 日均線
+- `adx_14`：趨勢強度
+- `dist_to_sma20_pct`：今日收盤距 20MA 的百分比（正 = 站上，負 = 跌破）
 
-### Phase 1：量化雷達（數據先行，鎖定名單）
+寫入 journal.notes（一段話 + 一個判定）：
+- TWII 現價、`dist_to_sma20_pct`、`adx_14`、當日漲跌幅
+- 一句話描述情勢（例：「站上 20MA +8.9%，ADX 26，連三日強勢多頭」）
+- 判定：**`允許新進場` / `只做持倉管理`**
+  - `dist_to_sma20_pct` > 0（TWII 在 20MA 上）→ 允許新進場
+  - `dist_to_sma20_pct` < 0（TWII 跌破 20MA）→ 只做持倉管理
+  - 跌破 60MA → 只做持倉管理 + 考慮減碼
+- 與前一輪比較：變化 / 無變化 / 明顯惡化（自由敘述）
+
+**預檢**：對每個 watchlist 標的：
+- 現價相對 thesis 基準 >10% → 強制重跑個股研究
+- `evaluation.invalidation_met=true` **且為盤後** → 本輪移除
+- `evaluation.invalidation_met=true` **但為盤中** → 標記「待盤後確認」，**不移除**
+- `evaluation.trigger_met=true` → 高優先進場候選（交棒 Trading）
+
+**盤中分支**：盤中 flow 到此結束，寫 journal（簡短 entry 記 regime + 預檢），交棒 `TRADING_TW.md`。
+
+以下 Phase 1-5 僅在盤後或 regime 明顯惡化時執行。
+
+### Phase 1：量化雷達（盤後）
 
 跑 `uv run market screener --strategy momentum > data/account/screener/{YYYY-MM-DD}.json`
 
-Screener 現在自動附帶技術指標（RSI, ADX, 量比）與籌碼資訊（外資/投信連買天數, 融資趨勢），可直接用於篩選：
-- **原始輸出固定寫入 `data/account/screener/{date}.json`**；card 只引用 `source` 與 `highlights`，不重抄整張表
-- 記錄上榜名單（含指標），標注哪些是 watchlist 已有、哪些是新面孔
+Screener 自帶技術指標（RSI, ADX, 量比）+ 籌碼（外資/投信連買、融資）：
+- 原始輸出固定寫入 `screener/{date}.json`，brief 只引用 `source` 與 `highlights`
+- 記錄上榜名單，標注 watchlist 已有 vs 新面孔
 - 優先關注：ADX > 20 + 外資或投信連買 ≥ 3 日的新面孔
-- **名單鎖定**：Phase 1 輸出固定後，後續 Phase 不得追加 screener 名單
-- 若非盤後時段（如週末、盤中），Phase 1 跳過，在 journal 標注「screener 跳過：非盤後」
+- **名單鎖定**：Phase 1 固定後，後續 Phase 不得追加
 
-### Phase 2：散戶情緒（先跑）
+### Phase 2：散戶情緒
 
 跑 `uv run web-reader data/config/sources.tw.yaml --tags=sentiment`
 
-- 整理：PTT 今天有沒有 watchlist 以外的新 ticker 被反覆提到？整體情緒偏多/偏空？
-- **PTT 高 push 文章（≥30 push）需讀原文**：用 `uv run web-reader "<url>" --format=md` 取得完整內容，這類文章通常反映市場主流論點
-- **如果高 push 文章是「盤中閒聊 / 盤後閒聊」長串**：不要把整串推文當成單一 thesis。至少做三件事：(1) 先讀首段判斷市場背景；(2) 聚焦最近 60-90 分鐘的推文；(3) 只記錄被重複提到的 ticker / 主題。若沒有重複 ticker，就明確記錄「情緒噪音，不形成候選」。
-- 記下結論（1-3 條），不要在這裡做完整分析，留到 Phase 4 彙整
+- 整理：PTT 有沒有 watchlist 以外的新 ticker 被反覆提到？整體偏多/偏空？
+- 高 push 文章（≥30 push）讀原文：`uv run web-reader "<url>" --format=md`
+- 如果是「盤中/盤後閒聊」長串：(1) 先讀首段判斷背景；(2) 聚焦最近 60-90 分鐘；(3) 只記重複提到的 ticker/主題。沒有重複 → 「情緒噪音，不形成候選」。
+- 記 1-3 條結論，留到 Phase 4 彙整
 
-### Phase 3：新聞與宏觀（後跑）
+### Phase 3：新聞與宏觀
 
 跑 `uv run web-reader data/config/sources.tw.yaml --tags=tw,macro`
 
-- 整理：今天的市場主線、次主線、重要宏觀催化
-- **輔以大盤動能與籌碼觀察**：透過 `market overview` 總覽，確認市場資金真實流向（強勢族群、投信外資動向），驗證新聞敘事是否被真金白銀買單
-- 記下結論，不要和 Phase 2 的輸出混在一起
+- 整理：市場主線、次主線、重要宏觀催化
+- 輔以 `market overview`：驗證新聞敘事是否被真金白銀買單
+- 記下結論，不和 Phase 2 混
 
-### Phase 4：交叉比對
+### Phase 4：交叉比對 + 進場模式分類
 
-將 Phase 1（screener）、Phase 2（sentiment）、Phase 3（macro/news）三方資料交叉比對：
+三方資料交叉比對後，將候選**分到三個進場模式**（觀念分類，具體數字進場條件由 Trading phase 用個股技術面自己訂）：
 
-- **三方共振**（screener 上榜 + 情緒面提到 + 新聞有催化）→ 最高優先，做個股交易研究
+- **Breakout**：訊號是「突破新高 + 放量 + 趨勢強」——screener 上榜新面孔 + 籌碼連買 + 新聞催化
+- **Pullback**：訊號是「前 5 日強勢後回測均線量縮」——thesis 已成立、在等 A 點的 watchlist 老面孔
+- **Catalyst**：訊號是「具體事件驅動」——法說、財報、研報點名、法規。事件發生當下進場，不等回測
+
+**交叉比對判定**：
+- **三方共振**（screener + PTT + news）→ 最高優先，做個股研究，標 mode
 - **雙重確認**（screener + news，或 screener + PTT）→ 加 watchlist，視情況做個股研究
-- **有故事但動能未到**（news + PTT 都提到，但 screener 沒上榜）→ watchlist 觀察，等動能確認
-- **screener only**（上榜但完全沒有新聞或討論）→ 可能是隔日沖或假訊號，不進 watchlist，頂多在 journal 記一筆留意
-- **單一來源**（只有 PTT 炒，或只有一篇新聞）→ 跳過
-- **若 Phase 1 因非盤後而跳過**：不得僅憑 Phase 2 / Phase 3 盤中資訊把新標的正式加入 watchlist；最多只在 journal 記為 observation，等盤後 screener 與技術面確認再決定
+- **有故事但動能未到**（news + PTT，screener 未上榜）→ watchlist 觀察
+- **screener only** → 可能假訊號，journal 記一筆不加 watchlist
+- **單一來源** → 跳過
+- **Phase 1 跳過（非盤後）** → 不得僅憑 Phase 2/3 加入 watchlist，最多 journal observation
 
-列出明天最值得繼續看的候選名單（需具備明確題材與價量支持）。
+**若 Phase 0 regime = `只做持倉管理`** → 本輪不新增 watchlist，只做既有 thesis review。
 
 ### Phase 5：Watchlist 更新 & 個股研究 & Journal
 
 1. **更新 Watchlist**：
-   - 對於需要新增或修改的標的，將 `WatchlistItem` 資料寫入 `tmp/watchlist_update_{symbol}.yaml`。
-   - 執行 `uv run python -m tw_trader.cli watchlist-update --file tmp/watchlist_update_{symbol}.yaml`。
-   - 移除標的則直接在 journal 記錄並在未來維護時處理。
-2. 判斷哪些股票需要進行到「個股交易研究」：
-   - 新股票想加入 watchlist
-   - 股票想從 `watch` 升級成 `hold`
+   - 新增/修改寫入 `tmp/watchlist_update_{symbol}.yaml`，執行 `cli watchlist-update --file ...`
+   - **新增項目 thesis 內須註明 `entry_mode: breakout | pullback | catalyst`**
+   - 移除則在 journal 記錄，未來維護時清除
+2. **個股交易研究**：以下情況派 sub-agent 跑子流程：
+   - 新標的加入 watchlist
+   - 從 `watch` 升 `hold`
    - thesis 明顯改變
-   - 持有中的股票出現重大催化或重大風險
-3. 對需要個股交易研究的股票，每一個標的指派一個 sub-agent 執行 `### 子流程：個股交易研究`
-4. **寫市場簡報（Brief）**：
-   - 先 Write 到 `data/account/research/{YYYY-MM-DD}-tw-brief-draft.md`，結構參考 `data/account/research/template/brief.template.md`，frontmatter 必填 `date` / `session` / `screener_source`（`created_at` 不要手填）。
-   - 執行 `uv run python -m tw_trader.cli doc-add data/account/research/{YYYY-MM-DD}-tw-brief-draft.md`，CLI 會 rename 成 `brief-{HHMM}` 並補 `created_at`。
-   - 同日若多次更新（如盤中 → 盤後），各自寫新 draft 再 `doc-add`，前端以 latest 為最終版，舊版保留不動。
-   - `doc-add` 後 re-read 一次確認 YAML frontmatter 可解析。
-5. **更新 Journal**：
-   - 生成當日的 `JournalEntry` 內容。
-   - 先寫入 `tmp/journal_entry_{date}.yaml`。
-   - 執行 `uv run python -m tw_trader.cli journal-add --date {YYYY-MM-DD} --file tmp/journal_entry_{date}.yaml`。
+   - 持倉出現重大催化或風險
+3. **市場簡報（Brief）**：
+   - Write 到 `data/account/research/{date}-tw-brief-draft.md`，結構照 `brief.template.md`
+   - frontmatter 必填 `date` / `session` / `screener_source`
+   - **Brief 必含 Regime 區塊**（Phase 0 的判斷 + 一句話描述）
+   - 跑 `cli doc-add ...`，rename 成 `brief-{HHMM}` 並補 `created_at`
+   - `doc-add` 後 re-read 確認可解析
+4. **Journal**：
+   - 寫入 `tmp/journal_entry_{date}.yaml`，執行 `cli journal-add --file ...`
 
 ### 子流程：個股交易研究
 
-個股交易研究的目標是回答：市場在交易什麼、為什麼是這檔、thesis 成立條件、thesis 失效條件
-
 1. 讀 `data/account/research/template/template.md`
-2. 個股交易研究以單一主標的為核心，不重做整體市場掃描
-3. 按照 template 的研究架構，上網多輪尋找相關資料
-   - 新聞與催化先用 `uv run web-reader data/config/sources.tw.yaml --tags=tw,macro`，再跑 `uv run web-reader data/config/sources.tw.yaml --tags=research`（分兩次，不要合併）
-   - 如果某個來源或單篇文章值得深挖，再直接跑 `uv run web-reader "<url>" --format=md`
-   - 新聞與催化優先使用 1 個月內資料
-   - 至少比較 3-5 檔同族群或同題材股票
-   - 如果比較後發現主標的不是最佳選擇，要在結論中明確指出更值得研究或追蹤的股票
-4. 建立研究檔：
-   - 單一股票：`data/account/research/{YYYY-MM-DD}-tw-{symbol}.md`
-   - 主題研究：`data/account/research/{YYYY-MM-DD}-tw-{theme}.md`
-5. 發佈：`uv run python -m tw_trader.cli doc-add data/account/research/{YYYY-MM-DD}-tw-{symbol_or_theme}.md`，CLI 會補 `created_at` 並寫 `doc.add` 事件。
+2. 單一主標的為核心，不重做整體市場掃描
+3. 按 template 多輪尋找資料：
+   - 新聞：先 `--tags=tw,macro`，再 `--tags=research`（分兩次）
+   - 單篇深挖：`uv run web-reader "<url>" --format=md`
+   - 優先 1 個月內資料
+   - 至少比較 3-5 檔同族群/同題材
+   - 主標不是最佳 → 結論指出更值得追蹤的股票
+4. **thesis 必含 entry_mode 與 A 點定義**（A 點 = 進場甜蜜點，B 點 = 驗證點）
+5. 建立研究檔：`{date}-tw-{symbol}.md` 或 `{date}-tw-{theme}.md`
+6. 發佈：`cli doc-add ...`
 
 ## 下一步
 
-研究流程結束後，接著執行 `prompts/RESEARCH_TW_REFLECT.md`。
+研究流程結束後，執行 `prompts/RESEARCH_TW_REFLECT.md`。

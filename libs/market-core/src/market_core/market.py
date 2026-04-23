@@ -141,9 +141,12 @@ def build_overview(config: MarketRuntimeConfig, profile: MarketProfile | None = 
     session = get_market_session(resolved_profile)
     benchmark_symbol = config.market.benchmark_symbol or resolved_profile.benchmark_symbol
     benchmark_quote = None
+    benchmark_metrics = None
     if benchmark_symbol:
         if resolved_profile.id == "tw_equity" and benchmark_symbol.upper() in {"^TWII", "TAIEX"}:
             benchmark_quote = _twse_taiex_quote(resolved_profile)
+            live_price = benchmark_quote.price if benchmark_quote else None
+            benchmark_metrics = _twse_taiex_benchmark_metrics(live_price)
         if benchmark_quote is None:
             try:
                 benchmark_quote = get_quote(benchmark_symbol, resolved_profile)
@@ -157,6 +160,7 @@ def build_overview(config: MarketRuntimeConfig, profile: MarketProfile | None = 
         reason=str(session["reason"]),
         benchmark_symbol=benchmark_symbol,
         benchmark_quote=benchmark_quote,
+        benchmark_metrics=benchmark_metrics,
         news=get_news(config),
     )
 
@@ -291,79 +295,71 @@ def _try_fugle_bars(
     tf = FUGLE_TIMEFRAME_MAP.get(timeframe)
     if tf is None:
         raise ValueError(f"unsupported Fugle timeframe '{timeframe}'; supported: {sorted(FUGLE_TIMEFRAME_MAP)}")
-    load_dotenv(find_dotenv(usecwd=True), override=True)
     api_key = os.getenv("FUGLE_API_KEY")
     if not api_key:
         return None
-    try:
-        client = RestClient(api_key=api_key)
-        stock_id = symbol.removesuffix(".TW").removesuffix(".TWO")
-        end = datetime.now(timezone.utc)
-        start = end - timedelta(days=lookback_days)
+    client = RestClient(api_key=api_key)
+    stock_id = symbol.removesuffix(".TW").removesuffix(".TWO")
+    end = datetime.now(timezone.utc)
+    start = end - timedelta(days=lookback_days)
 
-        data = client.stock.historical.candles(**{
-            "symbol": stock_id,
-            "timeframe": tf,
-            "from": start.strftime("%Y-%m-%d"),
-            "to": end.strftime("%Y-%m-%d"),
-            "fields": "open,high,low,close,volume,turnover,change",
-        })
-        if not data:
-            return None
-
-        # API returns {"data": [...], "symbol": ..., ...}
-        rows = data["data"] if isinstance(data, dict) else data
-        return [
-            Bar(
-                symbol=symbol,
-                market_profile=profile.id,
-                bar_time=row["date"],
-                open=float(row["open"]),
-                high=float(row["high"]),
-                low=float(row["low"]),
-                close=float(row["close"]),
-                volume=_safe_int(row.get("volume")),
-                source="fugle",
-            )
-            for row in rows
-        ]
-    except Exception:
+    data = client.stock.historical.candles(**{
+        "symbol": stock_id,
+        "timeframe": tf,
+        "from": start.strftime("%Y-%m-%d"),
+        "to": end.strftime("%Y-%m-%d"),
+        "fields": "open,high,low,close,volume,turnover,change",
+    })
+    if not data:
         return None
+
+    # API returns {"data": [...], "symbol": ..., ...}
+    rows = data["data"] if isinstance(data, dict) else data
+    return [
+        Bar(
+            symbol=symbol,
+            market_profile=profile.id,
+            bar_time=row["date"],
+            open=float(row["open"]),
+            high=float(row["high"]),
+            low=float(row["low"]),
+            close=float(row["close"]),
+            volume=_safe_int(row.get("volume")),
+            source="fugle",
+        )
+        for row in rows
+    ]
 
 
 def _try_fugle_quote(symbol: str, profile: MarketProfile) -> Quote | None:
-    load_dotenv(find_dotenv(usecwd=True), override=True)
     api_key = os.getenv("FUGLE_API_KEY")
     if not api_key:
         return None
-    try:
-        client = RestClient(api_key=api_key)
-        stock_id = symbol.removesuffix(".TW").removesuffix(".TWO")
-        payload = client.stock.intraday.quote(symbol=stock_id)
-        ticker = client.stock.intraday.ticker(symbol=stock_id)
-        price = payload.get("lastPrice") or payload.get("closePrice")
-        if price is None:
-            return None
-        change_pct = _safe_float(payload.get("changePercent"))
-        is_limit_up, is_limit_down = _tw_limit_flags(profile, change_pct)
-        return Quote(
-            symbol=symbol,
-            market_profile=profile.id,
-            name=ticker.get("name"),
-            price=float(price),
-            source="fugle",
-            open=_safe_float(payload.get("openPrice")),
-            high=_safe_float(payload.get("highPrice")),
-            low=_safe_float(payload.get("lowPrice")),
-            prev_close=_safe_float(payload.get("previousClose")),
-            change=_safe_float(payload.get("change")),
-            change_pct=change_pct,
-            volume=_safe_int(payload.get("tradeVolume")),
-            is_limit_up=is_limit_up,
-            is_limit_down=is_limit_down,
-        )
-    except Exception:
+    client = RestClient(api_key=api_key)
+    stock_id = symbol.removesuffix(".TW").removesuffix(".TWO")
+    payload = client.stock.intraday.quote(symbol=stock_id)
+    ticker = client.stock.intraday.ticker(symbol=stock_id)
+    price = payload.get("lastPrice") or payload.get("closePrice")
+    if price is None:
         return None
+    change_pct = _safe_float(payload.get("changePercent"))
+    is_limit_up, is_limit_down = _tw_limit_flags(profile, change_pct)
+    return Quote(
+        symbol=symbol,
+        market_profile=profile.id,
+        name=ticker.get("name"),
+        price=float(price),
+        source="fugle",
+        open=_safe_float(payload.get("openPrice")),
+        high=_safe_float(payload.get("highPrice")),
+        low=_safe_float(payload.get("lowPrice")),
+        prev_close=_safe_float(payload.get("previousClose")),
+        change=_safe_float(payload.get("change")),
+        change_pct=change_pct,
+        volume=_safe_int(payload.get("tradeVolume")),
+        is_limit_up=is_limit_up,
+        is_limit_down=is_limit_down,
+    )
 
 
 # TW equity 10% daily limit. Fugle's changePercent already accounts for tick rounding,
@@ -378,11 +374,60 @@ def _tw_limit_flags(profile: MarketProfile, change_pct: float | None) -> tuple[b
 
 
 _TWSE_FMTQIK_URL = "https://openapi.twse.com.tw/v1/exchangeReport/FMTQIK"
+# www.twse.com.tw updates with today's data post-close; openapi.twse.com.tw lags by ~1 day
+_TWSE_FMTQIK_WWW_URL = "https://www.twse.com.tw/exchangeReport/FMTQIK?response=json"
 _logger = logging.getLogger(__name__)
 
 
+def _fetch_twse_fmtqik_www() -> list[dict]:
+    """Fetch TAIEX daily summary from www.twse.com.tw (same-day, post-close).
+
+    Returns rows in the same dict format as fetch_twse_fmtqik():
+    {Date, TradeVolume, TradeValue, Transaction, TAIEX, Change}
+    where Date is a 7-digit ROC date string (e.g. "1150422").
+    """
+    try:
+        request = urllib.request.Request(
+            _TWSE_FMTQIK_WWW_URL,
+            headers={"User-Agent": "market-core/1.0"},
+        )
+        context = ssl._create_unverified_context()
+        with urllib.request.urlopen(request, context=context, timeout=10) as response:
+            payload = json.loads(response.read().decode("utf-8"))
+    except Exception as exc:
+        _logger.warning("twse fmtqik www fetch failed: %s", exc)
+        return []
+
+    if not isinstance(payload, dict) or payload.get("stat") != "OK":
+        return []
+    rows = payload.get("data", [])
+    if not rows:
+        return []
+
+    # Array format: [日期, 成交股數, 成交金額, 成交筆數, 加權股價指數, 漲跌點數]
+    # Date field is "115/04/22" — convert to 7-digit "1150422"
+    result = []
+    for row in rows:
+        if not isinstance(row, list) or len(row) < 6:
+            continue
+        roc_date = str(row[0]).replace("/", "").strip()  # "115/04/22" → "1150422"
+        result.append({
+            "Date": roc_date,
+            "TradeVolume": str(row[1]),
+            "TradeValue": str(row[2]),
+            "Transaction": str(row[3]),
+            "TAIEX": str(row[4]),
+            "Change": str(row[5]),
+        })
+    return sorted(result, key=lambda r: str(r.get("Date", "")))
+
+
 def fetch_twse_fmtqik() -> list[dict]:
-    """Fetch TAIEX daily summary (FMTQIK) from TWSE OpenAPI. Sorted latest-last."""
+    """Fetch TAIEX daily summary (FMTQIK). Tries same-day source first, falls back to T-1."""
+    rows = _fetch_twse_fmtqik_www()
+    if rows:
+        return rows
+    # Fallback: openapi.twse.com.tw lags by ~1 day but is more stable
     try:
         request = urllib.request.Request(
             _TWSE_FMTQIK_URL,
@@ -392,7 +437,7 @@ def fetch_twse_fmtqik() -> list[dict]:
         with urllib.request.urlopen(request, context=context, timeout=10) as response:
             payload = json.loads(response.read().decode("utf-8"))
     except Exception as exc:
-        _logger.warning("twse fmtqik fetch failed: %s", exc)
+        _logger.warning("twse fmtqik fallback fetch failed: %s", exc)
         return []
 
     if not isinstance(payload, list):
@@ -416,38 +461,106 @@ def _roc_date_to_iso(roc: str) -> str | None:
     return f"{year:04d}-{text[3:5]}-{text[5:7]}"
 
 
+_TWII_FUGLE_SYMBOL = "IX0001"
+
+
 def _twse_taiex_quote(profile: MarketProfile) -> Quote | None:
-    rows = fetch_twse_fmtqik()
-    if not rows:
+    """Live TAIEX quote via Fugle IX0001 intraday feed."""
+    api_key = os.getenv("FUGLE_API_KEY")
+    if not api_key:
         return None
-    latest = rows[-1]
-    try:
-        close = float(str(latest["TAIEX"]).replace(",", ""))
-        change = float(str(latest["Change"]).replace(",", ""))
-    except (KeyError, ValueError, TypeError):
+    client = RestClient(api_key=api_key)
+    payload = client.stock.intraday.quote(symbol=_TWII_FUGLE_SYMBOL)
+    price = payload.get("closePrice") or payload.get("lastPrice")
+    if price is None:
         return None
 
-    prev_close = close - change
-    change_pct = round(change / prev_close * 100, 4) if prev_close else None
-    iso_date = _roc_date_to_iso(str(latest.get("Date", "")))
-    timestamp = f"{iso_date}T13:30:00+08:00" if iso_date else utc_now_iso()
-    try:
-        trade_value = float(str(latest.get("TradeValue", "0")).replace(",", ""))
-    except ValueError:
-        trade_value = 0.0
+    last_updated_us = payload.get("lastUpdated")
+    if last_updated_us:
+        timestamp = datetime.fromtimestamp(last_updated_us / 1_000_000, tz=timezone.utc).isoformat()
+    else:
+        timestamp = utc_now_iso()
+
+    total = payload.get("total") or {}
+    trade_value = total.get("tradeValue")
 
     return Quote(
         symbol="^TWII",
         market_profile=profile.id,
         name="TAIEX",
-        price=close,
-        source="twse",
+        price=float(price),
+        source="fugle",
         timestamp=timestamp,
-        prev_close=prev_close,
-        change=round(change, 4),
-        change_pct=change_pct,
-        volume=int(trade_value) if trade_value else None,
+        open=_safe_float(payload.get("openPrice")),
+        high=_safe_float(payload.get("highPrice")),
+        low=_safe_float(payload.get("lowPrice")),
+        prev_close=_safe_float(payload.get("previousClose")),
+        change=_safe_float(payload.get("change")),
+        change_pct=_safe_float(payload.get("changePercent")),
+        volume=_safe_int(trade_value),
     )
+
+
+def _twse_taiex_benchmark_metrics(
+    live_price: float | None = None,
+    lookback_days: int = 90,
+) -> dict[str, float] | None:
+    """Compute SMA20 / ADX14 for TWII using Fugle IX0001 daily candles.
+
+    When ``live_price`` is provided, ``dist_to_sma20_pct`` is computed against
+    it so regime reflects the current intraday state instead of T-1 close.
+    """
+    api_key = os.getenv("FUGLE_API_KEY")
+    if not api_key:
+        return None
+    client = RestClient(api_key=api_key)
+    end = datetime.now(timezone.utc)
+    start = end - timedelta(days=lookback_days)
+    data = client.stock.historical.candles(**{
+        "symbol": _TWII_FUGLE_SYMBOL,
+        "timeframe": "D",
+        "from": start.strftime("%Y-%m-%d"),
+        "to": end.strftime("%Y-%m-%d"),
+        "fields": "open,high,low,close,volume",
+    })
+    rows = data.get("data", []) if isinstance(data, dict) else data
+    if not rows:
+        return None
+
+    rows = sorted(rows, key=lambda r: str(r.get("date", "")))
+    bars = [
+        Bar(
+            symbol="^TWII",
+            market_profile="tw_equity",
+            bar_time=row["date"],
+            open=float(row["open"]),
+            high=float(row["high"]),
+            low=float(row["low"]),
+            close=float(row["close"]),
+            volume=_safe_int(row.get("volume")),
+            source="fugle",
+        )
+        for row in rows
+    ]
+    df_bars = bars_to_dataframe(bars)
+    technical = build_technical_analysis(df_bars, default_analysis_config())
+
+    vals = technical.values
+    sma_20 = vals.get("sma_20")
+    adx_14 = vals.get("adx_14")
+    close = vals.get("close")
+
+    metrics: dict[str, float] = {}
+    if sma_20 is not None:
+        metrics["sma_20"] = round(float(sma_20), 2)
+    if adx_14 is not None:
+        metrics["adx_14"] = round(float(adx_14), 4)
+
+    reference_price = live_price if live_price is not None else (float(close) if close is not None else None)
+    if reference_price is not None and sma_20 and sma_20 != 0:
+        metrics["dist_to_sma20_pct"] = round((reference_price - float(sma_20)) / float(sma_20) * 100, 4)
+
+    return metrics if metrics else None
 
 
 def _is_tw_equity_symbol(symbol: str) -> bool:

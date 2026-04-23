@@ -42,6 +42,15 @@ sources:
     cache:
       ttl: 7200
 
+  - name: yt-gooaye
+    reader: youtube_channel
+    tags: [finance, kol, youtube]
+    params:
+      handle: "@Gooaye"
+      limit: 3
+    cache:
+      ttl: 3600
+
   # Email example (uncomment and fill in credentials)
   # - name: morning-email
   #   reader: email

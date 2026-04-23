@@ -20,28 +20,18 @@ signals:
 cattrade:
   sheet_id: "1k16nGFCE7oBXrEqvTpHSA2Z5530GM_kou-wiWklTsfY"
   fetch_timeout_sec: 15
-  scoring:
-    pattern_b_base: 40
-    same_up_bonus: 15
-    down_penalty: 10
-    short_rank_weight: 5
-    mid_rank_weight: 8
-    vol_z_sweet_spot: [1.5, 3.0]
-    vol_z_overheated: 5.0
+  # v2: signals from 排行榜快照 (综合分 + 结构标签). Every symbol always has a score.
   veto:
-    pumped_1d_rank_max: 3
-    pumped_1w_rank_max: 3
-    short_impact_threshold: 1.0
+    pumped_1d_pct: 50.0              # 1d 额变 > this AND 1w > pumped_1w_pct → veto
+    pumped_1w_pct: 100.0
   filters:
-    min_oi_usdt: 5_000_000
+    min_oi_usdt: 5_000_000           # skip illiquid
+    min_freshness: 60.0              # 数据新鲜度分 threshold
   run:
-    min_entry_score: 40.0            # don't enter unless top candidate >= this
+    min_entry_score: 15.0            # 综合分 threshold for entry (median is ~7.5, top-40 starts ~15)
     min_conviction_healthy: 0.95     # conviction >= this → hold, don't trim
     max_close_pct_per_run: 0.10      # cap: close at most 10% per run
     min_close_pct: 0.02              # below this, skip (not worth fees)
-    # absent-from-sheet handling: ranking churn is noisy, so don't exit on 1 tick.
-    absent_streak_threshold: 3       # ticks of continuous absence before trimming
-    absent_trim_pct: 0.05            # % to trim per tick once streak hits threshold
     # time stop: close if held this long without being in profit (hours)
     time_stop_hours: 24              # 0 = disabled
     # multi-position mode (testnet forward-testing)

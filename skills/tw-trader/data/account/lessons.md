@@ -24,7 +24,9 @@
 
 ## 工具可用性
 
-- 每次 skill 執行前先跑 `uv run market quote 2330` 確認 Fugle API 可用性。若返回 ValueError / failed to fetch，先排查 FUGLE_API_KEY env var（根因：`load_dotenv(override=False)` 不覆蓋空字串，需確保 .env 有效且 market-core 載入 override=True）。API 失效期間不以 watchlist 快照替代 market analysis 作為進場依據。
+- 每次 skill 執行前先跑 `uv run market quote 2330` 確認 Fugle API 可用性。Fugle 失敗會把原生 exception 冒到 CLI（HTTP 狀態碼 / rate-limit / auth 訊息可見），依訊息排查。
+- `cli watchlist` 的 `context_snapshot` 走 market-core 即時 analyze 路徑，等同 `market analysis <symbol>`，可直接作為進場依據（不是靜態快照）。
+- Fugle 真正 throw exception → 拒絕進場，排查後重跑；不猜、不以舊資料替代。
 
 ## 盤中 vs 盤後研究的角色
 

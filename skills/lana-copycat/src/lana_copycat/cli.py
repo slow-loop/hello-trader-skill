@@ -37,6 +37,10 @@ def _setup_logging(level: str = "INFO") -> None:
         level=getattr(logging, level.upper(), logging.INFO),
         format="%(asctime)s %(levelname)s %(name)s %(message)s",
     )
+    # Quiet down noisy libs — keep our own loggers at INFO
+    for name in ("httpx", "httpcore", "urllib3", "websockets",
+                 "binance", "lana_copycat.trader"):
+        logging.getLogger(name).setLevel(logging.WARNING)
 
 
 # ── scan ──────────────────────────────────────────────────────────────────────
@@ -213,22 +217,21 @@ def _load_cattrade_ctx(cfg: dict) -> tuple[str, dict]:
 
 
 def _fetch_and_pick(sheet_id: str, merged_cfg: dict, timeout: int, include_symbols: set[str] | None = None):
-    from .signals.cattrade import fetch_cattrade_sections, pick_cattrade
-    sections = fetch_cattrade_sections(sheet_id, timeout_sec=timeout)
-    return pick_cattrade(sections, merged_cfg, include_symbols=include_symbols)
+    from .signals.cattrade import fetch_cattrade_xlsx, pick_cattrade
+    _, rankings, _ = fetch_cattrade_xlsx(sheet_id, timeout_sec=timeout)
+    return pick_cattrade(rankings, merged_cfg, include_symbols=include_symbols)
 
 
 def _fetch_xlsx_and_pick(
     sheet_id: str, merged_cfg: dict, timeout: int, include_symbols: set[str] | None = None,
 ):
-    """Fetch full XLSX workbook + run the picker off its TUI sheet.
+    """Fetch full XLSX workbook + run the picker off 排行榜快照.
 
     Returns (candidates, xlsx_bytes, snapshot_ts).
     """
-    from .signals.cattrade import fetch_cattrade_xlsx, _parse, pick_cattrade
-    xlsx_bytes, tui_csv, snapshot_ts = fetch_cattrade_xlsx(sheet_id, timeout_sec=timeout)
-    sections = _parse(tui_csv)
-    cands = pick_cattrade(sections, merged_cfg, include_symbols=include_symbols)
+    from .signals.cattrade import fetch_cattrade_xlsx, pick_cattrade
+    xlsx_bytes, rankings, snapshot_ts = fetch_cattrade_xlsx(sheet_id, timeout_sec=timeout)
+    cands = pick_cattrade(rankings, merged_cfg, include_symbols=include_symbols)
     return cands, xlsx_bytes, snapshot_ts
 
 
@@ -330,7 +333,7 @@ def _cattrade_run_once(cfg: dict, dry_run: bool) -> dict:
     cattrade_cfg = cfg.get("cattrade", {})
     run_cfg = cattrade_cfg.get("run", {})
 
-    min_entry_score = run_cfg.get("min_entry_score", 40.0)
+    min_entry_score = run_cfg.get("min_entry_score", 15.0)
     min_conviction_healthy = run_cfg.get("min_conviction_healthy", 0.95)
     max_close_pct = run_cfg.get("max_close_pct_per_run", 0.10)
     min_close_pct = run_cfg.get("min_close_pct", 0.02)
@@ -459,6 +462,9 @@ def _cattrade_run_once(cfg: dict, dry_run: bool) -> dict:
             )
 
     # ── Branch B — reconcile each open position ───────────────────────────────
+    # v2 model: every held position ALWAYS has a row in 排行榜快照 (since
+    # include_symbols forces inclusion). So we never hit the "absent" edge —
+    # conviction and label are always defined.
     for pos in open_pos:
         symbol_usdt = pos["symbol"]
         base = symbol_usdt.removesuffix("USDT")
@@ -489,75 +495,37 @@ def _cattrade_run_once(cfg: dict, dry_run: bool) -> dict:
                      "current_score": current.score if current else None,
                      **pos_ctx}
                 decisions.append(d)
-                state_mod.drop(state, symbol_usdt)
                 if not dry_run:
                     order = _close_full(client, symbol_usdt, qty)
                     d["order_id"] = str(order.get("orderId", ""))
                     journal.write_close(symbol_usdt, qty, mark, d["reason"])
                 continue
 
-        # ── L2: explicit thesis reversal (Pattern D / Pattern E on THIS symbol)
-        if current and "D" in current.patterns:
-            d = {"action": "close_full", "symbol": symbol_usdt,
-                 "reason": "Pattern D (大户做空) appeared",
-                 "current_score": current.score, "pattern": "D", **pos_ctx}
-            decisions.append(d)
-            state_mod.drop(state, symbol_usdt)
-            if not dry_run:
-                order = _close_full(client, symbol_usdt, qty)
-                d["order_id"] = str(order.get("orderId", ""))
-                journal.write_close(symbol_usdt, qty, mark, "Pattern D appeared")
-            continue
-        if current and "E" in current.patterns:
-            d = {"action": "close_full", "symbol": symbol_usdt,
-                 "reason": "Pattern E (pumped) appeared",
-                 "current_score": current.score, "pattern": "E", **pos_ctx}
-            decisions.append(d)
-            state_mod.drop(state, symbol_usdt)
-            if not dry_run:
-                order = _close_full(client, symbol_usdt, qty)
-                d["order_id"] = str(order.get("orderId", ""))
-                journal.write_close(symbol_usdt, qty, mark, "Pattern E appeared")
-            continue
-
-        # ── L4: absent from sheet — debounced trim, never full close
-        # Ranking churn in 5m/15m sections is noisy; one-tick absence is
-        # almost always "someone else bubbled up", not thesis reversal.
+        # current should never be None now — safety fallback
         if current is None:
-            streak = state_mod.bump_absent(state, symbol_usdt)
-            conv_ctx = {**pos_ctx, "current_score": None, "conviction": 0.0,
-                        "absent_streak": streak,
-                        "absent_threshold": absent_streak_threshold}
-            if streak < absent_streak_threshold:
-                decisions.append({"action": "hold", "symbol": symbol_usdt,
-                                  "reason": f"absent {streak}/{absent_streak_threshold}",
-                                  **conv_ctx})
-                continue
-            close_qty = _round_qty(client, symbol_usdt, qty * absent_trim_pct)
-            if close_qty <= 0:
-                decisions.append({"action": "hold", "symbol": symbol_usdt,
-                                  "reason": f"absent {streak}, trim rounded to 0",
-                                  **conv_ctx})
-                continue
-            d = {"action": "partial_close", "symbol": symbol_usdt,
-                 "close_qty": close_qty, "pct": absent_trim_pct,
-                 "reason": f"absent streak {streak}", **conv_ctx}
-            decisions.append(d)
-            if not dry_run:
-                order = _close_qty(client, symbol_usdt, close_qty)
-                d["order_id"] = str(order.get("orderId", ""))
-                journal.write_partial_close(
-                    symbol=symbol_usdt, qty=close_qty, price=mark,
-                    conviction=0.0, reason=f"absent streak {streak}",
-                )
+            decisions.append({"action": "hold", "symbol": symbol_usdt,
+                              "reason": "not found in rankings (unexpected)",
+                              "current_score": None, "conviction": 0.0, **pos_ctx})
             continue
 
-        # Signal present again — reset the absent counter
-        state_mod.reset_absent(state, symbol_usdt)
+        # ── L2: explicit thesis reversal — 结构标签 turned bearish
+        # Pattern D (大户领先做空) or SELL_LEAD (主动卖盘领先) → full close
+        if "D" in current.patterns or "SELL_LEAD" in current.patterns:
+            reason = f"label={current.label}"
+            d = {"action": "close_full", "symbol": symbol_usdt,
+                 "reason": reason, "current_score": current.score,
+                 "current_label": current.label, **pos_ctx}
+            decisions.append(d)
+            if not dry_run:
+                order = _close_full(client, symbol_usdt, qty)
+                d["order_id"] = str(order.get("orderId", ""))
+                journal.write_close(symbol_usdt, qty, mark, reason)
+            continue
 
-        # ── L3: conviction-based reconciliation (existing behavior)
+        # ── L3: conviction-based trim. conviction = current_综合分 / entry_综合分
         conviction = current.score / entry_score if entry_score > 0 else 1.0
         conv_ctx = {**pos_ctx, "current_score": current.score,
+                    "current_label": current.label,
                     "conviction": round(conviction, 3)}
         if conviction >= min_conviction_healthy:
             decisions.append({"action": "hold", "symbol": symbol_usdt, **conv_ctx})
@@ -591,9 +559,10 @@ def _cattrade_run_once(cfg: dict, dry_run: bool) -> dict:
             journal.write_partial_close(
                 symbol=symbol_usdt, qty=close_qty, price=mark,
                 conviction=conviction,
-                reason=f"score {entry_score}→{current.score} (conv={conviction:.2f})",
+                reason=f"score {entry_score:.2f}→{current.score:.2f} (conv={conviction:.2f})",
             )
 
+    # absent_streak state no longer used — just clear it
     state_mod.save(state)
 
     return {"ts": datetime.now(timezone.utc).isoformat(), "dry_run": dry_run,
@@ -602,9 +571,16 @@ def _cattrade_run_once(cfg: dict, dry_run: bool) -> dict:
             "sheet_absent": sheet_absent, "open_pos_count": len(open_pos)}
 
 
-def _fmt_cand(c: dict) -> str:
-    pat = ",".join(c["patterns"]) if c["patterns"] else ""
-    return f"{c['symbol']}({c['score']:.0f}" + (f",{pat}" if pat else "") + ")"
+def _action_style(action: str) -> str:
+    return {
+        "open":          "[green]OPEN[/]",
+        "partial_close": "[yellow]TRIM[/]",
+        "close_full":    "[red]CLOSE[/]",
+        "hold":          "[dim]hold[/]",
+        "skip_entry":    "[dim]skip[/]",
+        "skip_stale":    "[dim]stale[/]",
+        "skip_unmanaged": "[dim]unmanaged[/]",
+    }.get(action, action)
 
 
 def _print_run_result(out: dict, json_out: bool) -> None:
@@ -617,109 +593,123 @@ def _print_run_result(out: dict, json_out: bool) -> None:
 
     mode = "[dim]testnet[/]" if out.get("testnet") else "[bold red]LIVE[/]"
     dr = " [yellow]DRY[/]" if out.get("dry_run") else ""
-    console.print(f"[bold]cattrade run[/]  {mode}{dr}")
-
-    # SHEET line
-    sheet_top = out.get("sheet_top", [])
-    sheet_weak = out.get("sheet_weak_held", [])
-    sheet_absent = out.get("sheet_absent", [])
-    top_str = "  ".join(_fmt_cand(c) for c in sheet_top) or "[dim]none[/]"
-    extras = ""
-    if sheet_weak:
-        extras += "  " + "  ".join(f"[yellow]{_fmt_cand(c)}*[/]" for c in sheet_weak)
-    if sheet_absent:
-        extras += "  " + "  ".join(f"[red]{s}:absent[/]" for s in sheet_absent)
-    console.print(f"  SHEET  {top_str}{extras}")
+    snap = out.get("snapshot_ts") or ""
+    snap_str = f"  [dim]snap={snap}[/]" if snap else ""
+    console.print(f"[bold]cattrade run[/]  {mode}{dr}{snap_str}")
 
     decisions = out.get("decisions", [])
-    if not decisions:
-        console.print("  [dim]no action[/]")
+
+    # Stale: single-line short-circuit
+    if any(d.get("action") == "skip_stale" for d in decisions):
+        console.print("  [dim]gsheet unchanged — skipped[/]")
         return
 
-    for d in decisions:
+    # ── Table 1: Sheet top candidates ────────────────────────────────────────
+    sheet_top = out.get("sheet_top", [])
+    t1 = Table(title="Sheet — top candidates", show_lines=False,
+               title_style="bold cyan", title_justify="left")
+    t1.add_column("#", style="dim", width=3)
+    t1.add_column("Sym", style="bold")
+    t1.add_column("Score", justify="right")
+    t1.add_column("Patterns")
+    if sheet_top:
+        for i, c in enumerate(sheet_top, 1):
+            pats = ",".join(c.get("patterns") or []) or "-"
+            t1.add_row(str(i), c["symbol"], f"{c['score']:.1f}", pats)
+    else:
+        t1.add_row("-", "[dim]none[/]", "-", "-")
+    console.print(t1)
+
+    # ── Table 2: Portfolio + decisions ───────────────────────────────────────
+    pos_actions = {"hold", "partial_close", "close_full", "open", "skip_unmanaged"}
+    pos_decisions = [d for d in decisions if d.get("action") in pos_actions]
+
+    t2 = Table(title="Portfolio", show_lines=False,
+               title_style="bold cyan", title_justify="left")
+    t2.add_column("Sym", style="bold")
+    t2.add_column("Score", justify="right")   # entry→current
+    t2.add_column("Conv", justify="right")
+    t2.add_column("Qty", justify="right")
+    t2.add_column("Mark", justify="right")
+    t2.add_column("PnL", justify="right")
+    t2.add_column("Action")
+    t2.add_column("Detail", style="dim")
+
+    total_pnl = 0.0
+    held_count = 0
+
+    for d in pos_decisions:
         action = d.get("action")
         sym = d.get("symbol", "")
-
-        if action == "skip_stale":
-            console.print(f"  [dim]STALE  gsheet unchanged ({d.get('snapshot_ts')})[/]")
-            continue
-
-        if action == "skip_entry":
-            top = d.get("top")
-            top_score = d.get("top_score")
-            score_str = f"{top}({top_score:.0f})" if top and top_score is not None else "none"
-            console.print(f"  NO POS  top={score_str}  skip_entry")
-            continue
-
-        if action == "open":
-            order_id = d.get("order_id", "")
-            order_str = f"  orderId={order_id} [green]✓[/]" if order_id else ""
-            console.print(
-                f"  OPEN   {sym}  score={d.get('score', 0):.0f}  patterns={d.get('patterns')}"
-            )
-            if order_str or d.get("qty"):
-                console.print(
-                    f"  ORDER  {sym} BUY {d.get('qty', '?')} MARKET{order_str}"
-                )
-            continue
-
-        if action == "skip_unmanaged":
-            console.print(f"  SKIP   {sym}  {d.get('reason')}")
-            continue
-
-        # Position decisions — build common fields
+        qty = d.get("qty", 0)
         mark = d.get("mark", 0)
         pnl = d.get("pnl", 0)
-        qty = d.get("qty", 0)
-        entry_score = d.get("entry_score", 0)
-        current_score = d.get("current_score")
+        entry_score = d.get("entry_score")
+        cur_score = d.get("current_score")
         conviction = d.get("conviction")
-        pattern = d.get("pattern", "")
+        reason = d.get("reason", "")
 
-        pnl_str = (f"[green]+{pnl:.2f}[/]" if pnl >= 0 else f"[red]{pnl:.2f}[/]")
-
-        if current_score is None:
-            streak = d.get("absent_streak")
-            threshold = d.get("absent_threshold")
-            if streak is not None and threshold:
-                score_chain = f"({entry_score:.0f}→absent {streak}/{threshold})"
-            else:
-                score_chain = f"({entry_score:.0f}→absent)"
-            conv_str = "conv=0.00"
-        elif pattern:
-            score_chain = f"({entry_score:.0f}→{pattern})"
-            conv_str = "conv=0.00"
+        if action == "open":
+            # New entry — no pos yet
+            score_str = f"→{d.get('score', 0):.1f}"
+            conv_str = "-"
+            qty_str = f"{d.get('qty', '?')}"
+            mark_str = f"{d.get('entry_price', 0):.4f}" if d.get("entry_price") else "-"
+            pnl_str = "-"
+            detail = ",".join(d.get("patterns") or []) or ""
+            oid = d.get("order_id")
+            if oid:
+                detail = (detail + f"  oid={oid}").strip()
         else:
-            score_chain = f"({entry_score:.0f}→{current_score:.0f})"
-            conv_str = f"conv={conviction:.2f}" if conviction is not None else ""
+            held_count += 1
+            total_pnl += pnl
+            if entry_score is not None and cur_score is not None:
+                score_str = f"{entry_score:.1f}→{cur_score:.1f}"
+            elif entry_score is not None:
+                score_str = f"{entry_score:.1f}→?"
+            else:
+                score_str = "-"
+            conv_str = f"{conviction:.2f}" if conviction is not None else "-"
+            qty_str = f"{qty}"
+            mark_str = f"{mark:.4f}" if mark else "-"
+            pnl_str = (f"[green]+{pnl:.2f}[/]" if pnl >= 0 else f"[red]{pnl:.2f}[/]")
+            detail_parts: list[str] = []
+            if d.get("current_label"):
+                detail_parts.append(d["current_label"])
+            if action == "partial_close":
+                pct = d.get("pct", 0)
+                detail_parts.append(f"close {pct:.0%}")
+            if reason:
+                detail_parts.append(reason)
+            oid = d.get("order_id")
+            if oid:
+                detail_parts.append(f"oid={oid}")
+            detail = "  ".join(detail_parts)
 
-        pos_line = (
-            f"  POS    {sym}  qty={qty}  mark={mark:.2f}  PnL={pnl_str}"
-            f"  {conv_str}{score_chain}"
-        )
+        t2.add_row(sym, score_str, conv_str, qty_str, mark_str, pnl_str,
+                   _action_style(action), detail)
 
-        if action == "hold":
-            reason = d.get("reason", "")
-            reason_str = f"  [dim]({reason})[/]" if reason else ""
-            console.print(pos_line + f"  → [dim]hold[/]{reason_str}")
+    # Skip_entry (no position, no candidate)
+    for d in decisions:
+        if d.get("action") != "skip_entry":
+            continue
+        top = d.get("top")
+        ts = d.get("top_score")
+        top_str = f"{top}({ts:.1f})" if top and ts is not None else "none"
+        t2.add_row("-", "-", "-", "-", "-", "-",
+                   _action_style("skip_entry"),
+                   f"top={top_str}  {d.get('reason','')}")
 
-        elif action == "partial_close":
-            close_qty = d.get("close_qty", 0)
-            pct = d.get("pct", 0)
-            reason = d.get("reason", "")
-            order_id = d.get("order_id", "")
-            order_str = f"  orderId={order_id} [green]✓[/]" if order_id else ""
-            reason_str = f"  [dim]({reason})[/]" if reason else ""
-            console.print(pos_line + f"  → partial_close {pct:.0%}{reason_str}")
-            console.print(f"  ORDER  {sym} SELL {close_qty} reduceOnly{order_str}")
+    if pos_decisions or any(d.get("action") == "skip_entry" for d in decisions):
+        console.print(t2)
+    else:
+        console.print("  [dim]no action[/]")
 
-        elif action == "close_full":
-            reason = d.get("reason", "")
-            order_id = d.get("order_id", "")
-            order_str = f"  orderId={order_id} [green]✓[/]" if order_id else ""
-            reason_str = f"  [dim]({reason})[/]" if reason else ""
-            console.print(pos_line + f"  → [red]close_full[/]{reason_str}")
-            console.print(f"  ORDER  {sym} SELL {qty} reduceOnly{order_str}")
+    # Summary line
+    if held_count:
+        pnl_fmt = (f"[green]+{total_pnl:.2f}[/]" if total_pnl >= 0
+                   else f"[red]{total_pnl:.2f}[/]")
+        console.print(f"[dim]── {held_count} open  PnL {pnl_fmt} USDT[/]")
 
 
 @cattrade_app.command("run")

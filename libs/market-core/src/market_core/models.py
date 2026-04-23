@@ -266,5 +266,6 @@ class MarketOverview(BaseModel):
     reason: str
     benchmark_symbol: str | None = None
     benchmark_quote: Quote | None = None
+    benchmark_metrics: dict[str, float] | None = None
     news: list[NewsItem] = Field(default_factory=list)
     watchlist_symbols: list[str] = Field(default_factory=list)

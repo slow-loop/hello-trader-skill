@@ -1,10 +1,16 @@
-"""cattrade public Google Sheet signal.
+"""Cattrade signal pipeline (v2 — rankings-based).
 
-Fetches cattrade's 11 ranking sections and extracts "大戶領先做多" (Pattern B)
-stealth accumulation signals — the most direct MM-positioning edge in the sheet.
+**Source of truth: `排行榜快照` sheet** — contains all 536 contracts with:
+  - `综合分` (composite score, authoritative)
+  - `结构标签` (structure label: 大户领先做多 / 大户领先做空 / 多头共振 / ...)
+  - Multi-window pct changes (5m/15m/1h/4h/1d/1w)
+  - Data freshness score
 
-Exposes ``get_cattrade_scores()`` returning ``{base_ticker: score}`` for merging
-into the main scoring pipeline.
+This replaces the old TUI总览 approach that reconstructed a score from
+top-N rankings per window. With rankings:
+  - every held position always has a score (no more "absent")
+  - Pattern D/B/E detection is a direct string match on 结构标签
+  - conviction = current_综合分 / entry_综合分 is always well-defined
 """
 
 from __future__ import annotations
@@ -20,294 +26,244 @@ import httpx
 
 log = logging.getLogger(__name__)
 
-CSV_URL_TMPL = "https://docs.google.com/spreadsheets/d/{sheet_id}/export?format=csv"
 XLSX_URL_TMPL = "https://docs.google.com/spreadsheets/d/{sheet_id}/export?format=xlsx"
 TUI_SHEET = "TUI总览"
+RANKINGS_SHEET = "排行榜快照"
 
-SECTIONS: dict[str, str] = {
-    "5m 异动榜": "move_5m",
-    "15m 异动榜": "move_15m",
-    "1h 异动榜": "move_1h",
-    "4h 异动榜": "move_4h",
-    "1d 异动榜": "move_1d",
-    "1w 异动榜": "move_1w",
-    "多窗口持仓量榜": "multi_volume",
-    "多窗口持仓额榜": "multi_amount",
-    "市场份额相对榜": "market_share",
-    "波动区间榜": "range",
-    "结构分歧榜": "structure",
-}
+# 结构标签 canonical values (from cattrade.futures_metrics)
+LABEL_WHALE_LONG   = "大户领先做多"     # primary entry signal (Pattern B)
+LABEL_WHALE_SHORT  = "大户领先做空"     # exit signal (Pattern D)
+LABEL_BULL_SYNC    = "多头共振"         # bullish multi-window alignment
+LABEL_BUY_LEAD     = "主动买盘领先"     # active buying pressure
+LABEL_SELL_LEAD    = "主动卖盘领先"     # bearish — active selling pressure
+LABEL_NEUTRAL      = "中性"
+LABEL_CONFLICT     = "结构冲突"
 
-LONG_STRUCT = "大户领先做多"
-SHORT_STRUCT_FORMS = {"大户领先做空", "主动买领先空"}
-UP_DIRECTIONS = {"同向上", "上拐"}
-DOWN_DIRECTIONS = {"同向下", "下拐"}
-_STRING_FIELDS = {"合约代码", "方向一致性", "结构形态", "量方向", "额方向"}
+BULLISH_LABELS   = {LABEL_WHALE_LONG, LABEL_BULL_SYNC, LABEL_BUY_LEAD}
+BEARISH_LABELS   = {LABEL_WHALE_SHORT, LABEL_SELL_LEAD}
 
 
 @dataclass
 class CattradeCandidate:
-    symbol: str  # e.g. "AT" (base ticker)
-    score: float = 0.0
-    direction: str = "long"
-    patterns: list[str] = field(default_factory=list)
+    symbol: str                 # base ticker, e.g. "AT"
+    score: float = 0.0          # 综合分
+    rank: int = 0               # 排名
+    label: str = ""             # 结构标签
+    freshness: float = 0.0      # 数据新鲜度分
+    oi_usdt: float = 0.0        # 当前持仓额
+    direction: str = "long"     # "long" / "short" / "neutral" / "veto"
+    patterns: list[str] = field(default_factory=list)  # synthesized: B / D / E
     reasons: list[str] = field(default_factory=list)
-    oi_usdt: float = 0.0
-    raw: dict[str, dict] = field(default_factory=dict)
+    changes: dict[str, float] = field(default_factory=dict)  # {"5m": -0.1, "1h": 0.5, ...}
+    raw: dict[str, Any] = field(default_factory=dict)
 
 
-# ── fetch + parse ─────────────────────────────────────────────────────────────
-
-def _coerce(key: str, v: str) -> object:
-    if v == "" or v is None:
-        return None
-    if key in _STRING_FIELDS:
-        return v
-    if v.endswith("%"):
-        try:
-            return float(v[:-1])
-        except ValueError:
-            return v
-    suffix_map = {"K": 1_000, "M": 1_000_000, "B": 1_000_000_000}
-    if len(v) > 1 and v[-1] in suffix_map:
-        try:
-            return float(v[:-1]) * suffix_map[v[-1]]
-        except ValueError:
-            pass
-    try:
-        return float(v.replace(",", "").lstrip("+"))
-    except ValueError:
-        return v
-
-
-def _parse(text: str) -> dict[str, list[dict]]:
-    rows = list(csv.reader(io.StringIO(text)))
-    sections: dict[str, list[dict]] = {}
-    current_key: str | None = None
-    current_header: list[str] = []
-    for row in rows:
-        if not row:
-            continue
-        first = row[0].strip() if row[0] else ""
-        if first in SECTIONS:
-            current_key = SECTIONS[first]
-            current_header = [c.strip() for c in row[1:]]
-            sections[current_key] = []
-            continue
-        if current_key and first == "" and len(row) > 1 and row[1].strip():
-            values = [c.strip() for c in row[1:]]
-            item: dict = {}
-            for h, v in zip(current_header, values):
-                if h:
-                    item[h] = _coerce(h, v)
-            if item.get("合约代码"):
-                sections[current_key].append(item)
-    return sections
-
+# ── fetch ────────────────────────────────────────────────────────────────────
 
 _SNAPSHOT_TS_RE = re.compile(r"快照时间\(UTC\)[，,]([^，,\r\n]+)")
 
 
-def _extract_snapshot_ts(text: str) -> str | None:
-    """Extract `快照时间(UTC)` from the metadata row. Source of truth for dedup."""
-    m = _SNAPSHOT_TS_RE.search(text)
+def _extract_snapshot_ts(tui_csv: str) -> str | None:
+    m = _SNAPSHOT_TS_RE.search(tui_csv)
     return m.group(1).strip() if m else None
 
 
-def _xlsx_sheet_to_csv(xlsx_bytes: bytes, sheet_name: str) -> str:
-    """Convert one sheet of an XLSX workbook to CSV text (for `_parse`)."""
+def _sheet_rows(xlsx_bytes: bytes, sheet_name: str) -> list[tuple]:
     import openpyxl
     wb = openpyxl.load_workbook(io.BytesIO(xlsx_bytes), data_only=True, read_only=True)
-    ws = wb[sheet_name]
+    return list(wb[sheet_name].iter_rows(values_only=True))
+
+
+def _rows_to_csv(rows: list[tuple]) -> str:
     buf = io.StringIO()
     w = csv.writer(buf)
-    for row in ws.iter_rows(values_only=True):
+    for row in rows:
         w.writerow(["" if c is None else c for c in row])
     return buf.getvalue()
 
 
-def fetch_cattrade_xlsx(sheet_id: str, timeout_sec: int = 15) -> tuple[bytes, str, str | None]:
-    """Fetch the full workbook (all 4 tabs) as XLSX bytes.
+def fetch_cattrade_xlsx(sheet_id: str, timeout_sec: int = 15) -> tuple[bytes, list[dict], str | None]:
+    """Fetch the full workbook + parse 排行榜快照 into a list of row dicts.
 
-    Returns (xlsx_bytes, tui_csv_text, snapshot_ts). `tui_csv_text` is
-    the TUI总览 sheet converted to CSV so `_parse` can consume it without
-    code changes. snapshot_ts is extracted from the TUI metadata row.
+    Returns (xlsx_bytes, rankings, snapshot_ts).
     """
     url = XLSX_URL_TMPL.format(sheet_id=sheet_id)
     resp = httpx.get(url, follow_redirects=True, timeout=timeout_sec)
     resp.raise_for_status()
     xlsx_bytes = resp.content
-    tui_csv = _xlsx_sheet_to_csv(xlsx_bytes, TUI_SHEET)
-    return xlsx_bytes, tui_csv, _extract_snapshot_ts(tui_csv)
+
+    # snapshot_ts from TUI sheet metadata row
+    tui_rows = _sheet_rows(xlsx_bytes, TUI_SHEET)
+    snapshot_ts = _extract_snapshot_ts(_rows_to_csv(tui_rows[:2]))
+
+    rankings = _parse_rankings(xlsx_bytes)
+    return xlsx_bytes, rankings, snapshot_ts
 
 
-def fetch_cattrade_sections(sheet_id: str, timeout_sec: int = 15) -> dict[str, list[dict]]:
-    _, tui_csv, _ = fetch_cattrade_xlsx(sheet_id, timeout_sec=timeout_sec)
-    return _parse(tui_csv)
+# ── parse 排行榜快照 ─────────────────────────────────────────────────────────
+
+_PCT_RE = re.compile(r"^-?[\d.]+%$")
 
 
-# ── scoring ───────────────────────────────────────────────────────────────────
+def _num(v: Any) -> float | None:
+    """Coerce 综合分 / percentages / K/M/B suffixed numbers to float."""
+    if v is None or v == "":
+        return None
+    if isinstance(v, (int, float)):
+        return float(v)
+    s = str(v).strip()
+    if not s:
+        return None
+    # percentage
+    if _PCT_RE.match(s):
+        try:
+            return float(s[:-1])
+        except ValueError:
+            return None
+    # K/M/B suffix
+    suffix = {"K": 1e3, "M": 1e6, "B": 1e9}
+    if len(s) > 1 and s[-1] in suffix:
+        try:
+            return float(s[:-1].replace(",", "")) * suffix[s[-1]]
+        except ValueError:
+            pass
+    try:
+        return float(s.replace(",", "").lstrip("+"))
+    except ValueError:
+        return None
 
-def _build_candidates(sections: dict[str, list[dict]]) -> dict[str, CattradeCandidate]:
-    pool: dict[str, CattradeCandidate] = {}
-    for section_key, rows in sections.items():
-        for row in rows:
-            sym = row.get("合约代码")
-            if not sym:
-                continue
-            cand = pool.setdefault(sym, CattradeCandidate(symbol=sym))
-            cand.raw[section_key] = row
-            oi = row.get("现持仓额")
-            if isinstance(oi, (int, float)) and oi > cand.oi_usdt:
-                cand.oi_usdt = float(oi)
-    return pool
+
+def _parse_rankings(xlsx_bytes: bytes) -> list[dict]:
+    """Parse 排行榜快照 sheet. Rows 1-2 are banners, row 3 is header, rest is data."""
+    rows = _sheet_rows(xlsx_bytes, RANKINGS_SHEET)
+    if len(rows) < 4:
+        return []
+    header = [h for h in rows[2]]  # row index 2 = row 3
+    out: list[dict] = []
+    for raw in rows[3:]:
+        if not raw or raw[1] in (None, ""):
+            continue
+        item = {}
+        for h, v in zip(header, raw):
+            if h:
+                item[h] = v
+        if item.get("代码"):
+            out.append(item)
+    return out
 
 
-def _score(cand: CattradeCandidate, cfg: dict[str, Any]) -> None:
-    score = 0.0
-    scoring = cfg.get("scoring", {})
+# ── scoring ──────────────────────────────────────────────────────────────────
+
+def _build_candidate(row: dict) -> CattradeCandidate:
+    sym = str(row.get("代码", "")).strip()
+    score = _num(row.get("综合分")) or 0.0
+    rank = int(_num(row.get("排名")) or 0)
+    label = str(row.get("结构标签") or "").strip()
+    freshness = _num(row.get("数据新鲜度分")) or 0.0
+    oi = _num(row.get("当前持仓额")) or 0.0
+
+    # pct changes across windows
+    changes: dict[str, float] = {}
+    for win in ("5m", "15m", "1h", "4h", "1d", "1w"):
+        v = _num(row.get(f"{win}额变(%)"))
+        if v is not None:
+            changes[win] = v
+
+    return CattradeCandidate(
+        symbol=sym, score=score, rank=rank, label=label,
+        freshness=freshness, oi_usdt=oi, changes=changes, raw=row,
+    )
+
+
+def _classify(cand: CattradeCandidate, cfg: dict) -> None:
+    """Attach direction / patterns / reasons based on label + pumped filter."""
+    label = cand.label
     veto = cfg.get("veto", {})
+    pumped_1d_pct = float(veto.get("pumped_1d_pct", 50.0))
+    pumped_1w_pct = float(veto.get("pumped_1w_pct", 100.0))
 
-    # Veto: Pattern E (already pumped)
-    r1d = cand.raw.get("move_1d", {}).get("量排名")
-    r1w = cand.raw.get("move_1w", {}).get("量排名")
-    if (
-        isinstance(r1d, (int, float))
-        and isinstance(r1w, (int, float))
-        and r1d <= veto.get("pumped_1d_rank_max", 3)
-        and r1w <= veto.get("pumped_1w_rank_max", 3)
-    ):
+    # Exit signal: 大户领先做空 (Pattern D)
+    if label == LABEL_WHALE_SHORT:
+        cand.direction = "short"
+        cand.patterns.append("D")
+        cand.reasons.append("label=大户领先做空")
+        return
+
+    # Bearish (active selling lead) — treat as exit/skip for longs
+    if label == LABEL_SELL_LEAD:
+        cand.direction = "short"
+        cand.patterns.append("SELL_LEAD")
+        cand.reasons.append("label=主动卖盘领先")
+        return
+
+    # Pumped veto (Pattern E): already ran 1d+1w → don't chase
+    d1 = cand.changes.get("1d")
+    w1 = cand.changes.get("1w")
+    if d1 is not None and w1 is not None and d1 > pumped_1d_pct and w1 > pumped_1w_pct:
         cand.direction = "veto"
         cand.patterns.append("E")
-        cand.reasons.append(f"pumped: 1d#{int(r1d)} + 1w#{int(r1w)}")
-        cand.score = -999
+        cand.reasons.append(f"pumped 1d={d1:.0f}% 1w={w1:.0f}%")
         return
 
-    # Veto: Pattern C (fake spike)
-    r5m = cand.raw.get("move_5m", {}).get("量排名")
-    row_mv = cand.raw.get("multi_volume") or {}
-    short_impact = row_mv.get("短时冲击占比")
-    if (
-        isinstance(r5m, (int, float))
-        and r5m <= 3
-        and "move_1h" not in cand.raw
-        and isinstance(short_impact, (int, float))
-        and short_impact > veto.get("short_impact_threshold", 1.0)
-    ):
-        cand.direction = "veto"
-        cand.patterns.append("C")
-        cand.score = -999
-        return
-
-    # Pattern B: top-trader stealth long
-    struct_row = cand.raw.get("structure")
-    if struct_row:
-        form = struct_row.get("结构形态")
-        strength = struct_row.get("结构强度") or 0
-        if form == LONG_STRUCT and isinstance(strength, (int, float)) and strength > 10:
-            score += scoring.get("pattern_b_base", 40) + float(strength)
-            cand.patterns.append("B")
-            cand.reasons.append(f"大户领先做多 strength={strength}")
-            concentration = struct_row.get("大户集中度") or 0
-            if isinstance(concentration, (int, float)) and concentration > 2:
-                score += 10
-                cand.reasons.append(f"concentration={concentration}")
-
-        if form in SHORT_STRUCT_FORMS and isinstance(strength, (int, float)) and strength > 10:
-            cand.direction = "short"
-            cand.patterns.append("D")
-            score -= 20 + float(strength)
-
-    # Pattern A: early momentum
-    in_15m = "move_15m" in cand.raw
-    direction_key = None
-    if "multi_volume" in cand.raw:
-        direction_key = cand.raw["multi_volume"].get("方向一致性")
-    if in_15m and direction_key in UP_DIRECTIONS:
-        r1d_check = cand.raw.get("move_1d", {}).get("量排名")
-        if not (isinstance(r1d_check, (int, float)) and r1d_check <= 3):
-            score += 20
-            cand.patterns.append("A")
-            cand.reasons.append(f"early momentum 15m + {direction_key}")
-
-    if direction_key in UP_DIRECTIONS:
-        score += scoring.get("same_up_bonus", 15)
-    elif direction_key in DOWN_DIRECTIONS and cand.direction != "short":
-        score -= scoring.get("down_penalty", 10)
-
-    # Cross-section breadth
-    short_hits = sum(1 for k in ("move_15m", "move_1h") if k in cand.raw)
-    mid_hits = sum(1 for k in ("multi_volume", "multi_amount") if k in cand.raw)
-    score += short_hits * scoring.get("short_rank_weight", 5)
-    score += mid_hits * scoring.get("mid_rank_weight", 8)
-
-    # Volume Z sweet spot
-    for key in ("move_15m", "move_1h"):
-        row = cand.raw.get(key)
-        if not row:
-            continue
-        z = row.get("量Z分数")
-        if not isinstance(z, (int, float)):
-            continue
-        lo, hi = scoring.get("vol_z_sweet_spot", [1.5, 3.0])
-        if lo < z < hi:
-            score += 10
-        elif z > scoring.get("vol_z_overheated", 5.0):
-            score -= 15
-        break
-
-    cand.score = round(score, 2)
+    # Bullish labels
+    if label == LABEL_WHALE_LONG:
+        cand.direction = "long"
+        cand.patterns.append("B")
+        cand.reasons.append("label=大户领先做多")
+    elif label in (LABEL_BULL_SYNC, LABEL_BUY_LEAD):
+        cand.direction = "long"
+        cand.patterns.append("BULL")
+        cand.reasons.append(f"label={label}")
+    else:
+        # 中性 / 结构冲突 — hold if held, don't enter
+        cand.direction = "neutral"
 
 
 def pick_cattrade(
-    sections: dict[str, list[dict]],
+    rankings: list[dict],
     cfg: dict[str, Any],
     include_symbols: set[str] | None = None,
 ) -> list[CattradeCandidate]:
-    """Filter + score + rank. Returns longs only, positive-scored.
+    """Score + rank all 500+ contracts. Returns list sorted by score desc.
 
-    include_symbols: base tickers (e.g. {"PAXG"}) that are always included in
-    the result even if their score is <= 0, so callers can distinguish
-    "weak signal" from "completely absent from sheet".
+    - Every contract gets a CattradeCandidate (no more "absent").
+    - Longs (direction=="long") above min_oi sorted by score.
+    - include_symbols forces inclusion regardless of OI / direction filters,
+      so callers can always look up held positions.
     """
-    pool = _build_candidates(sections)
     min_oi = cfg.get("filters", {}).get("min_oi_usdt", 5_000_000)
+    min_freshness = cfg.get("filters", {}).get("min_freshness", 60.0)
+    include_symbols = include_symbols or set()
+
     out: list[CattradeCandidate] = []
-    for cand in pool.values():
-        if cand.oi_usdt and cand.oi_usdt < min_oi:
-            if not (include_symbols and cand.symbol in include_symbols):
+    for row in rankings:
+        cand = _build_candidate(row)
+        _classify(cand, cfg)
+        forced = cand.symbol in include_symbols
+        if not forced:
+            if cand.freshness < min_freshness:
                 continue
-        _score(cand, cfg)
-        if cand.direction == "veto":
-            if include_symbols and cand.symbol in include_symbols:
-                out.append(cand)
-            continue
-        if cand.direction == "long" and cand.score > 0:
-            out.append(cand)
-        elif include_symbols and cand.symbol in include_symbols:
-            out.append(cand)
+            if cand.oi_usdt and cand.oi_usdt < min_oi:
+                continue
+            if cand.direction != "long":
+                continue
+        out.append(cand)
+
     out.sort(key=lambda c: c.score, reverse=True)
     return out
 
 
-# ── public API ────────────────────────────────────────────────────────────────
+# ── public API ───────────────────────────────────────────────────────────────
 
 DEFAULT_CATTRADE_CFG: dict[str, Any] = {
-    "scoring": {
-        "pattern_b_base": 40,
-        "same_up_bonus": 15,
-        "down_penalty": 10,
-        "short_rank_weight": 5,
-        "mid_rank_weight": 8,
-        "vol_z_sweet_spot": [1.5, 3.0],
-        "vol_z_overheated": 5.0,
-    },
     "veto": {
-        "pumped_1d_rank_max": 3,
-        "pumped_1w_rank_max": 3,
-        "short_impact_threshold": 1.0,
+        "pumped_1d_pct": 50.0,   # 1d 额变 >50% AND
+        "pumped_1w_pct": 100.0,  # 1w 额变 >100% → skip (already pumped)
     },
-    "filters": {"min_oi_usdt": 5_000_000},
+    "filters": {
+        "min_oi_usdt": 5_000_000,
+        "min_freshness": 60.0,
+    },
 }
 
 
@@ -316,15 +272,12 @@ def get_cattrade_scores(
     cfg: dict[str, Any] | None = None,
     timeout_sec: int = 15,
 ) -> dict[str, float]:
-    """Fetch cattrade sheet, pick long candidates, return ``{base_ticker: score}``.
-
-    Returns empty dict on any failure (network, parse, empty sheet).
-    """
+    """Fetch cattrade sheet, return {base_ticker: 综合分} for all bullish longs."""
     merged_cfg = {**DEFAULT_CATTRADE_CFG, **(cfg or {})}
     try:
-        sections = fetch_cattrade_sections(sheet_id, timeout_sec=timeout_sec)
+        _, rankings, _ = fetch_cattrade_xlsx(sheet_id, timeout_sec=timeout_sec)
     except Exception as e:
         log.warning("cattrade fetch failed: %s", e)
         return {}
-    cands = pick_cattrade(sections, merged_cfg)
+    cands = pick_cattrade(rankings, merged_cfg)
     return {c.symbol: c.score for c in cands}

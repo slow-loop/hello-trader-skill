@@ -160,6 +160,27 @@ async def _dispatch(reader: str, url: Optional[str], params: dict) -> list[ReadR
         result = await read_youtube(url, **params)
         return [result]
 
+    elif reader == "youtube_channel":
+        from .readers.youtube import list_channel_videos
+        channel = params.get("handle") or params.get("channel_id") or url
+        if not channel:
+            raise ValueError("youtube_channel requires 'handle', 'channel_id', or 'url' param")
+        videos = await list_channel_videos(channel_id_or_handle=channel, limit=params.get("limit", 5))
+        results = []
+        for v in videos:
+            results.append(
+                ReadResult(
+                    url=v["url"],
+                    title=v["title"],
+                    text=f"Title: {v['title']}\nPublished: {v['published_at']}\nURL: {v['url']}",
+                    source_type="youtube_channel",
+                    language="zh",
+                    published_at=v["published_at"],
+                    raw=v
+                )
+            )
+        return results
+
     elif reader in ("json", "json_api"):
         from .readers.json_api import read_json
         result = await read_json(url, **params)

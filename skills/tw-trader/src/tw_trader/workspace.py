@@ -43,6 +43,7 @@ ACCOUNT_SUBDIR = "data/account"
 class JournalEntry(BaseModel):
     at: str = ""
     type: str = "note"
+    round: int = 1
     actions: list[str] = Field(default_factory=list)
     notes: list[str] = Field(default_factory=list)
 

@@ -13,6 +13,8 @@ from pathlib import Path
 from typing import Optional
 from urllib.parse import parse_qs, urlparse
 
+import httpx
+
 from openai import OpenAI
 import yt_dlp
 
@@ -222,6 +224,107 @@ async def read_youtube(
         )
     except Exception as e:
         return ReadResult.fail(url, f"All strategies failed: {e}", source_type="youtube")
+
+
+async def resolve_channel_id(channel_id_or_handle: str) -> str:
+    """
+    Resolve a YouTube channel ID from a channel ID, handle, or URL via YouTube Data API v3.
+    Returns the channel ID (starting with "UC").
+    """
+    if channel_id_or_handle.startswith("UC") and len(channel_id_or_handle) == 24:
+        return channel_id_or_handle
+
+    api_key = os.environ.get("YOUTUBE_API_KEY")
+    if not api_key:
+        raise ValueError("YOUTUBE_API_KEY environment variable is required to resolve channel IDs.")
+
+    # Handle URLs
+    handle = channel_id_or_handle
+    if "youtube.com/" in handle:
+        parsed = urlparse(handle)
+        path = parsed.path.strip("/")
+        if path.startswith("@"):
+            handle = path
+        elif path.startswith("channel/"):
+            return path.split("/")[1]
+
+    if not handle.startswith("@"):
+        handle = f"@{handle}"
+
+    url = "https://www.googleapis.com/youtube/v3/channels"
+    params = {
+        "part": "id",
+        "forHandle": handle,
+        "key": api_key
+    }
+    
+    # Best practice: use gzip
+    headers = {"Accept-Encoding": "gzip", "User-Agent": "web-reader (gzip)"}
+
+    logger.info(f"Resolving channel ID for {handle} via YouTube API...")
+    async with httpx.AsyncClient() as client:
+        resp = await client.get(url, params=params, headers=headers)
+        resp.raise_for_status()
+        data = resp.json()
+
+        if data.get("items") and len(data["items"]) > 0:
+            return data["items"][0]["id"]
+            
+    raise ValueError(f"Could not resolve channel ID for: {channel_id_or_handle}")
+
+
+async def list_channel_videos(channel_id_or_handle: str, limit: int = 5) -> list[dict]:
+    """
+    List recent videos for a YouTube channel via YouTube Data API v3.
+    Provides gzip optimization and field filtering to minimize payload size.
+    
+    Args:
+        channel_id_or_handle: YouTube channel ID (UC...) or handle (@name).
+        limit: Max number of videos to return.
+    """
+    api_key = os.environ.get("YOUTUBE_API_KEY")
+    if not api_key:
+        raise ValueError("YOUTUBE_API_KEY environment variable is required to list channel videos.")
+
+    channel_id = await resolve_channel_id(channel_id_or_handle)
+    
+    # Convert Channel ID (UC...) to Uploads Playlist ID (UU...)
+    if not channel_id.startswith("UC"):
+        raise ValueError(f"Invalid Channel ID format: {channel_id}")
+    uploads_playlist_id = "UU" + channel_id[2:]
+
+    url = "https://www.googleapis.com/youtube/v3/playlistItems"
+    params = {
+        "part": "snippet",
+        "playlistId": uploads_playlist_id,
+        "maxResults": limit,
+        "key": api_key,
+        # Best practice: Use fields to optimize payload size
+        "fields": "items(snippet(title,publishedAt,resourceId/videoId))"
+    }
+    
+    # Best practice: use gzip
+    headers = {"Accept-Encoding": "gzip", "User-Agent": "web-reader (gzip)"}
+
+    async with httpx.AsyncClient() as client:
+        resp = await client.get(url, params=params, headers=headers)
+        resp.raise_for_status()
+        data = resp.json()
+
+    results = []
+    for item in data.get("items", []):
+        snippet = item.get("snippet", {})
+        video_id = snippet.get("resourceId", {}).get("videoId")
+        if not video_id:
+            continue
+            
+        results.append({
+            "id": video_id,
+            "title": snippet.get("title", ""),
+            "url": f"https://www.youtube.com/watch?v={video_id}",
+            "published_at": snippet.get("publishedAt", ""),
+        })
+    return results
 
 
 async def transcribe_youtube(url: str) -> str:
