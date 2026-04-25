@@ -1,0 +1,16 @@
+{
+  "factor_id": "volume_surge",
+  "ic_by_period": {
+    "1": -0.15879120879120878,
+    "5": -0.09945054945054944,
+    "20": 0.16868131868131866
+  },
+  "ic_std_by_period": {
+    "1": 0.9119105480932352,
+    "5": 0.9103888451060697,
+    "20": 0.8685058173599467
+  },
+  "sample_size": 69,
+  "report": "/Users/cc/Documents/GitHub/hello-trader-skill/skills/strategy-lab/data/experiments/factor_ic_2026-04-24_volume_surge/factor_ic_volume_surge.md",
+  "git_hash": "b4cdc2a"
+}

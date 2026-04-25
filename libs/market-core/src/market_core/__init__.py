@@ -1,4 +1,16 @@
+from market_core.factors import FACTOR_REGISTRY, FactorOutput, evaluate_all, list_factors, register
+from market_core.features import compute_features
 from market_core.market import analyze_symbol, bars_to_dataframe, build_analysis, build_overview, get_bars, get_news, get_quote
+from market_core.strategy import (
+    BacktestSummary,
+    EntryRules,
+    FactorRef,
+    RiskRules,
+    StrategyConfig,
+    apply_strategy,
+    load_strategy,
+)
+from market_core.universes import resolve_universe
 from market_core.models import (
     AnalysisExpressionConfig,
     AnalysisIndicatorConfig,
@@ -43,6 +55,20 @@ from market_core.technical import (
 )
 
 __all__ = [
+    "BacktestSummary",
+    "EntryRules",
+    "FACTOR_REGISTRY",
+    "FactorOutput",
+    "FactorRef",
+    "RiskRules",
+    "StrategyConfig",
+    "apply_strategy",
+    "compute_features",
+    "evaluate_all",
+    "list_factors",
+    "load_strategy",
+    "register",
+    "resolve_universe",
     "AnalysisConfig",
     "AnalysisExpressionConfig",
     "AnalysisIndicatorConfig",

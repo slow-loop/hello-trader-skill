@@ -37,6 +37,10 @@ def detect_source_type(url: str) -> SourceType:
     if "reddit.com" in host or "redd.it" in host:
         return "reddit"
 
+    # Stocktwits
+    if "stocktwits.com" in host:
+        return "stocktwits"
+
     # Substack
     if ".substack.com" in host:
         return "substack"

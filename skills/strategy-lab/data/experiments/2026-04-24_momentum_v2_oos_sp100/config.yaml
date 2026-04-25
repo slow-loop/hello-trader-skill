@@ -1,0 +1,39 @@
+name: momentum
+version: 1.0.0
+description: |
+  Refined momentum strategy based on IC analysis (megacap_tech 2021-2024, n~8k).
+  Retained factors with positive 5D IC on full 4-year window including 2022 bear:
+    - trend_strength:  IC(5D)=+0.033, n=7785, t=2.9  → reliable broad signal
+    - rsi_overbought:  IC(5D)=+0.091, n=379,  t=1.8  → momentum continuation
+  Dropped (IC negative or near zero on 4Y):
+    - near_52w_high:   IC(5D)=-0.010, n=2350  → no edge, removed
+    - breakout_20d:    IC(5D)=-0.163, n=57    → too sparse + mean-reverting
+    - volume_surge:    IC(5D)=-0.100, n=69    → mean-reverting short-term
+    - pullback_to_20ma: IC(5D)=-0.300, n=6   → no statistical power
+
+factors:
+  - id: trend_strength
+    weight: 1.5
+    min_score: 0.3
+    required: true
+  - id: rsi_overbought
+    weight: 1.2
+    min_score: 0.3
+
+entry:
+  composite_score_min: 0.5
+  regime_must_be: [risk_on]
+  must_include: []
+
+risk:
+  initial_stop_formula: "close - 1.5 * atr_14"
+  target_r: 2.0
+  max_position_pct: 30.0
+  account_risk_pct: 1.0
+
+agent_flow_hint: |
+  1. uv run factor signal --strategy <this yaml> --universe sp500
+  2. Filter: entry_ok=True + regime=risk_on
+  3. Top candidates ranked by composite_score
+  4. Sizing: 1% account risk per trade (stop = close - 1.5*ATR)
+  5. Max 30% single position; stops only move up (trailing)

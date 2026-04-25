@@ -1,0 +1,39 @@
+name: momentum
+version: 0.1.0
+description: |
+  Seed momentum strategy: trend + breakout + leadership + volume confirmation,
+  with RSI overbought as a soft negative flag. Long-only. Entry requires
+  trend_strength firing; composite score gated >= 1.0 and risk_on regime.
+factors:
+  - id: trend_strength
+    weight: 1.0
+    min_score: 0.3
+    required: true
+  - id: breakout_20d
+    weight: 1.2
+    min_score: 0.3
+  - id: near_52w_high
+    weight: 0.8
+    min_score: 0.3
+  - id: pullback_to_20ma
+    weight: 0.9
+    min_score: 0.3
+  - id: volume_surge
+    weight: 0.5
+  - id: rsi_overbought
+    weight: 1.0
+entry:
+  composite_score_min: 1.0
+  regime_must_be: [risk_on]
+  must_include: []
+risk:
+  initial_stop_formula: "close - 1.5 * atr_14"
+  target_r: 2.0
+  max_position_pct: 30.0
+  account_risk_pct: 1.0
+agent_flow_hint: |
+  1. uv run factor signal --strategy <this yaml> --universe sp500
+  2. 讀 top 20，逐檔看 firing_factors + per_factor 分數
+  3. regime_must_be 不滿足 → skip 全部
+  4. 同族群超過 2 檔 → 留分數最高者
+  5. 風險：單筆 account_risk_pct=1%，單檔上限 30%

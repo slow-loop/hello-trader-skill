@@ -10,7 +10,7 @@ from typing import Any, Literal, Optional
 from pydantic import BaseModel, ConfigDict, Field
 
 
-SourceType = Literal["web", "rss", "json", "youtube", "email", "reddit", "substack", "gnews", "ptt", "cnyes", "unknown"]
+SourceType = Literal["web", "rss", "json", "youtube", "youtube_channel", "apple_podcast", "email", "reddit", "stocktwits", "substack", "gnews", "ptt", "cnyes", "unknown"]
 
 
 class ReadResult(BaseModel):

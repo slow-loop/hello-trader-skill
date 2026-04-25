@@ -1,0 +1,28 @@
+[project]
+name = "us-trader"
+version = "0.1.0"
+description = "US equity trading skill (agent-driven, factor-based)."
+readme = "README.md"
+requires-python = ">=3.13"
+dependencies = [
+    "typer>=0.15.0",
+    "pyyaml>=6.0",
+    "python-dotenv>=1.0",
+    "pydantic>=2.0",
+    "market-core",
+    "web-reader",
+]
+
+[project.scripts]
+us-trader = "us_trader.cli:app"
+
+[build-system]
+requires = ["setuptools>=61"]
+build-backend = "setuptools.build_meta"
+
+[tool.setuptools.packages.find]
+where = ["src"]
+
+[tool.uv.sources]
+market-core = { path = "../../libs/market-core", editable = true }
+web-reader = { path = "../../libs/web-reader", editable = true }

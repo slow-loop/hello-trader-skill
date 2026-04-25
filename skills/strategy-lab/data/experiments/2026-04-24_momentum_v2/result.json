@@ -1,0 +1,15 @@
+{
+  "strategy": "momentum",
+  "version": "1.0.0",
+  "period": "2023-01-03..2024-12-31",
+  "universe": "AAPL,MSFT",
+  "universe_size": 2,
+  "sharpe": 1.2978288120163297,
+  "total_return": 0.45993787320047574,
+  "max_drawdown": -0.1604672013175606,
+  "calmar": 2.866242256511162,
+  "turnover": 0.00398406374501992,
+  "num_trades": 2,
+  "report": "/Users/cc/Documents/GitHub/hello-trader-skill/skills/strategy-lab/data/experiments/2026-04-24_momentum_v2/strategy_bt_momentum.md",
+  "git_hash": "b4cdc2a"
+}

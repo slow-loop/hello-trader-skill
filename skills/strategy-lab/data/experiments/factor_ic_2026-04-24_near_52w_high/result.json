@@ -1,0 +1,16 @@
+{
+  "factor_id": "near_52w_high",
+  "ic_by_period": {
+    "1": 0.003527857423961321,
+    "5": -0.009858792001649143,
+    "20": -0.03492204044152095
+  },
+  "ic_std_by_period": {
+    "1": 0.634001454998851,
+    "5": 0.6122277013274411,
+    "20": 0.6235981451607282
+  },
+  "sample_size": 2350,
+  "report": "/Users/cc/Documents/GitHub/hello-trader-skill/skills/strategy-lab/data/experiments/factor_ic_2026-04-24_near_52w_high/factor_ic_near_52w_high.md",
+  "git_hash": "b4cdc2a"
+}

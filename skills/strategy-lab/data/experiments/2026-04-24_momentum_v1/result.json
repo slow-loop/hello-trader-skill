@@ -1,0 +1,15 @@
+{
+  "strategy": "momentum",
+  "version": "0.1.0",
+  "period": "2024-01-02..2024-12-31",
+  "universe": "megacap_tech",
+  "universe_size": 15,
+  "sharpe": -0.2980456981623359,
+  "total_return": -0.019292330844093427,
+  "max_drawdown": -0.12153064360495443,
+  "calmar": -0.15874457891299226,
+  "turnover": 0.05555555555555555,
+  "num_trades": 14,
+  "report": "data/experiments/2026-04-24_momentum_v1/strategy_bt_momentum.md",
+  "git_hash": "b4cdc2a"
+}

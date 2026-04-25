@@ -1,0 +1,35 @@
+# web-reader sources for us-trader.
+# Slim starting set; extend as needed.
+sources:
+  - name: yahoo-top-stories
+    url: https://finance.yahoo.com/topstories/rss
+    type: rss
+    tags: [us, market]
+  - name: yahoo-market-news
+    url: https://finance.yahoo.com/rss/topstories
+    type: rss
+    tags: [us, macro]
+  - name: reuters-business
+    url: https://www.reuters.com/business/rss
+    type: rss
+    tags: [us, macro]
+  - name: stocktwits-trending
+    url: https://api.stocktwits.com/api/2/trending/symbols.json
+    type: json
+    tags: [sentiment, trending]
+  - name: reddit-wsb-top-daily
+    url: https://www.reddit.com/r/wallstreetbets/top.json?t=day&limit=25
+    type: json
+    tags: [sentiment, retail]
+  - name: finviz-top-gainers
+    url: https://finviz.com/screener.ashx?v=111&s=ta_topgainers
+    type: html
+    tags: [us, screener]
+  - name: seeking-alpha-market
+    url: https://seekingalpha.com/market_currents.xml
+    type: rss
+    tags: [us, research]
+  - name: fed-press-releases
+    url: https://www.federalreserve.gov/feeds/press_all.xml
+    type: rss
+    tags: [macro, fed]

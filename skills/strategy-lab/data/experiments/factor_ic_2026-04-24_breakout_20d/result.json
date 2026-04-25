@@ -1,0 +1,16 @@
+{
+  "factor_id": "breakout_20d",
+  "ic_by_period": {
+    "1": 0.075,
+    "5": -0.1625,
+    "20": 0.17500000000000002
+  },
+  "ic_std_by_period": {
+    "1": 0.9432828890081979,
+    "5": 0.9444632706279358,
+    "20": 0.9104466175884562
+  },
+  "sample_size": 57,
+  "report": "/Users/cc/Documents/GitHub/hello-trader-skill/skills/strategy-lab/data/experiments/factor_ic_2026-04-24_breakout_20d/factor_ic_breakout_20d.md",
+  "git_hash": "b4cdc2a"
+}

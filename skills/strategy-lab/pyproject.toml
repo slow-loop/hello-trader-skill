@@ -1,0 +1,27 @@
+[project]
+name = "strategy-lab"
+version = "0.1.0"
+description = "Offline research skill: factor IC analysis + strategy backtest + promote."
+readme = "README.md"
+requires-python = ">=3.13"
+dependencies = [
+    "typer>=0.15.0",
+    "pyyaml>=6.0",
+    "pandas>=2.3.3",
+    "python-dotenv>=1.0",
+    "market-core[backtest]",
+    "setuptools>=82.0.1",
+]
+
+[project.scripts]
+lab = "strategy_lab.cli:app"
+
+[build-system]
+requires = ["setuptools>=61"]
+build-backend = "setuptools.build_meta"
+
+[tool.setuptools.packages.find]
+where = ["src"]
+
+[tool.uv.sources]
+market-core = { path = "../../libs/market-core", editable = true }

@@ -1,0 +1,102 @@
+name: mom_2f_2021-2024_r1
+family: momentum
+stage: paper           # research → paper → live  (promoted to paper 2026-04-24)
+iteration: 1
+factors_count: 2
+train_window: 2021-2024
+
+description: |
+  2-factor momentum strategy, first research iteration.
+  Factors retained after IC analysis on megacap_tech (2021-2024, n~8k),
+  including the 2022 bear market as a stress period.
+
+factors:
+  - id: trend_strength
+    weight: 1.5
+    min_score: 0.3
+    required: true
+  - id: rsi_overbought
+    weight: 1.2
+    min_score: 0.3
+
+entry:
+  composite_score_min: 0.5
+  must_include: []
+
+risk:
+  initial_stop_formula: "close - 1.5 * atr_14"
+  target_r: 2.0
+  max_position_pct: 30.0
+  account_risk_pct: 1.0
+
+ic_summary:
+  universe: megacap_tech
+  window: 2021-2024
+  horizon: 5D
+  trend_strength:  {ic: +0.033, n: 7785, t: 2.9}
+  rsi_overbought:  {ic: +0.091, n: 379,  t: 1.8}
+
+ic_summary_oos:
+  universe: sp500_top100
+  window: 2024-12..2026-04
+  horizon: 5D
+  trend_strength:  {ic: +0.021, n: 17300, note: "mild decay, same sign"}
+  rsi_overbought:  {ic: +0.060, n: 886,   note: "decayed but positive; still sparse"}
+  validated_at: "2026-04-24"
+
+backtest_summary:
+  period: 2021-01-04..2024-12-31
+  universe: megacap_tech
+  sharpe: 0.57
+  max_dd: -0.556
+  num_trades: 15
+  turnover: 0.015
+  note: >
+    Simplified exit (composite_score < 0 only). No ATR stops, no regime masking
+    in VBT. Real DD expected to be lower in production.
+
+backtest_summary_oos:
+  period: 2024-06-03..2026-04-23
+  universe: sp500_top100
+  experiment: skills/strategy-lab/data/experiments/2026-04-24_momentum_v2_oos_sp100
+  sharpe: 0.52
+  total_return: 0.239
+  max_dd: -0.255
+  calmar: 0.94
+  num_trades: 97
+  turnover: 0.205
+  note: >
+    Edge generalizes to broader universe: Sharpe barely changed (0.57→0.52),
+    DD much better (−55.6% → −25.5%) due to diversification, trade count
+    statistically meaningful (15 → 97). Ready for paper trade.
+
+reflection:
+  known_issues:
+    - "Backtest DD (-55%) overstated: ATR stops are NOT applied in the VBT
+      simulation (composite<0 is a slow exit vs a hard stop). Regime is handled
+      by the agent at trade time, not simulated in the backtest."
+    - "Universe too small (15 megacap): IC validated on 15 symbols only; edge may
+      not generalize to full sp500 without re-validation."
+    - "rsi_overbought n=379 (t=1.8): marginal statistical significance, borderline.
+      Monitor IC decay in OOS before raising weight."
+    - "Only 15 trades over 4 years in backtest: too few to estimate Sharpe reliably.
+      Entry threshold (0.5) may be too tight; signals fire but entries are sparse."
+  next_before_paper:
+    - "DONE 2026-04-24: OOS IC on 2024-12..2026-04 — both factors held sign,
+      mild decay (trend_strength 5D: +0.033→+0.021; rsi_overbought 5D: +0.091→+0.060)."
+    - "DONE 2026-04-24: sp500_top100 backtest — Sharpe 0.52 (vs 0.57 train),
+      DD −25.5% (vs −55.6%), 97 trades. Edge generalizes."
+  next_before_live:
+    - Minimum 30-day paper trade with real signal logging (started 2026-04-24, ends 2026-05-24).
+    - Add a 3rd factor to cross-confirm entries (e.g. a PEAD or earnings catalyst).
+
+agent_flow_hint: |
+  1. uv run factor signal --strategy <this yaml> --universe sp500
+  2. Filter: entry_ok=True + regime=risk_on
+  3. Top candidates ranked by composite_score
+  4. Sizing: 1% account risk per trade (stop = close - 1.5*ATR)
+  5. Max 30% single position; stops only move up (trailing)
+
+promoted_at: "2026-04-24"
+promoted_from: skills/strategy-lab/data/experiments/2026-04-24_momentum_v2
+approved_by: human

@@ -1,0 +1,16 @@
+{
+  "factor_id": "pullback_to_20ma",
+  "ic_by_period": {
+    "1": -0.29999999999999993,
+    "5": -0.29999999999999993,
+    "20": -0.49999999999999994
+  },
+  "ic_std_by_period": {
+    "1": 0.9899494936611665,
+    "5": 0.9899494936611665,
+    "20": 0.7071067811865475
+  },
+  "sample_size": 6,
+  "report": "/Users/cc/Documents/GitHub/hello-trader-skill/skills/strategy-lab/data/experiments/factor_ic_2026-04-24_pullback_to_20ma/factor_ic_pullback_to_20ma.md",
+  "git_hash": "b4cdc2a"
+}

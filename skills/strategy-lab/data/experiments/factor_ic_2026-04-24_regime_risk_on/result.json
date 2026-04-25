@@ -1,0 +1,16 @@
+{
+  "factor_id": "regime_risk_on",
+  "ic_by_period": {
+    "1": 0.015133132326891964,
+    "5": 0.00912234685089645,
+    "20": 0.02453769950861671
+  },
+  "ic_std_by_period": {
+    "1": 0.38719100219714675,
+    "5": 0.38061412541211115,
+    "20": 0.4410827737305374
+  },
+  "sample_size": 2030,
+  "report": "/Users/cc/Documents/GitHub/hello-trader-skill/skills/strategy-lab/data/experiments/factor_ic_2026-04-24_regime_risk_on/factor_ic_regime_risk_on.md",
+  "git_hash": "b4cdc2a"
+}

@@ -140,6 +140,11 @@ async def _dispatch(reader: str, url: Optional[str], params: dict) -> list[ReadR
         result = await read_reddit(url, **params)
         return [result]
 
+    elif reader == "stocktwits":
+        from .readers.stocktwits import read_stocktwits
+        result = await read_stocktwits(url, **params)
+        return [result]
+
     elif reader == "substack":
         from .readers.substack import read_substack
         result = await read_substack(url, **params)

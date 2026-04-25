@@ -1,0 +1,16 @@
+{
+  "factor_id": "trend_strength",
+  "ic_by_period": {
+    "1": -0.004632326702743882,
+    "5": 0.021360652137377385,
+    "20": 0.041277661022289684
+  },
+  "ic_std_by_period": {
+    "1": 0.26270336576347214,
+    "5": 0.233491406659053,
+    "20": 0.19537453646187003
+  },
+  "sample_size": 17300,
+  "report": "/Users/cc/Documents/GitHub/hello-trader-skill/skills/strategy-lab/data/experiments/factor_ic_2026-04-24_trend_strength/factor_ic_trend_strength.md",
+  "git_hash": "b4cdc2a"
+}

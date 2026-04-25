@@ -66,6 +66,9 @@ async def _run_url(url: str, no_cache: bool, output_format: str) -> None:
     elif source_type == "reddit":
         from .readers.reddit import read_reddit
         result = await read_reddit(url)
+    elif source_type == "stocktwits":
+        from .readers.stocktwits import read_stocktwits
+        result = await read_stocktwits(url)
     elif source_type == "substack" and url.startswith("substack://search"):
         from .readers.substack import search_substack
         raw = url[len("substack://search"):]
