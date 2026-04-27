@@ -1,0 +1,40 @@
+name: momentum
+version: 1.2.0
+description: |
+  v4: adds ATR-based stop loss to the backtest engine (strategy config unchanged
+  from v3). Prior versions had initial_stop_formula in config but the engine
+  ignored it. Now strategy_bt.py computes sl_stop = 1.5 * atr_14 / close and
+  passes it to vectorbt's from_signals.
+
+  Expected effect: significantly lower MaxDD (v3 IS was -55.6%), may reduce total
+  return but improve risk-adjusted metrics.
+
+  Factors unchanged from v3:
+    - trend_strength (required, IC20=+0.041, n=17300)
+    - rsi_overbought (drag, no min_score)
+
+factors:
+  - id: trend_strength
+    weight: 1.5
+    min_score: 0.3
+    required: true
+  - id: rsi_overbought
+    weight: 0.8
+
+entry:
+  composite_score_min: 0.5
+  must_include: []
+  must_exclude: []
+
+risk:
+  initial_stop_formula: "close - 1.5 * atr_14"
+  target_r: 2.0
+  max_position_pct: 30.0
+  account_risk_pct: 1.0
+
+agent_flow_hint: |
+  1. uv run factor signal --strategy <this yaml> --universe sp500
+  2. Top candidates ranked by composite_score (entry_ok=True)
+  3. Sizing: 1% account risk per trade (stop = close - 1.5*ATR)
+  4. Max 30% single position; stops only move up (trailing)
+  5. Agent overlays regime judgment (VIX, SPX trend) — not encoded here

@@ -1,0 +1,15 @@
+{
+  "strategy": "momentum",
+  "version": "1.1.0",
+  "period": "2024-06-03..2026-04-24",
+  "universe": "sp500_top100",
+  "universe_size": 98,
+  "sharpe": 0.4954546873994168,
+  "total_return": 0.2284401133053615,
+  "max_drawdown": -0.24606854402545425,
+  "calmar": 0.9283596739684483,
+  "turnover": 0.35578947368421054,
+  "num_trades": 169,
+  "report": "/Users/cc/Documents/GitHub/hello-trader-skill/skills/strategy-lab/data/experiments/2026-04-25_momentum_v3/strategy_bt_momentum.md",
+  "git_hash": "b87c4fc"
+}

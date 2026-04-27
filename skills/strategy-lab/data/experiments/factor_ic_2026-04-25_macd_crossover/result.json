@@ -1,0 +1,16 @@
+{
+  "factor_id": "macd_crossover",
+  "ic_by_period": {
+    "1": 0.013079533831497129,
+    "5": -0.004961809207668199,
+    "20": -0.006098846437485657
+  },
+  "ic_std_by_period": {
+    "1": 0.3408897180155642,
+    "5": 0.3486744667045384,
+    "20": 0.33016194053048864
+  },
+  "sample_size": 18786,
+  "report": "/Users/cc/Documents/GitHub/hello-trader-skill/skills/strategy-lab/data/experiments/factor_ic_2026-04-25_macd_crossover/factor_ic_macd_crossover.md",
+  "git_hash": "b87c4fc"
+}

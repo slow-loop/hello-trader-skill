@@ -212,6 +212,25 @@ async def _dispatch(reader: str, url: Optional[str], params: dict) -> list[ReadR
         result = await read_cnyes(**params)
         return [result]
 
+    elif reader == "apple_podcast":
+        from .readers.apple_podcast import list_episodes, read_podcast
+        podcast_title = params.get("podcast_title")
+        limit = params.get("limit")
+        episode_uuids = params.get("episode_uuids")
+
+        if episode_uuids:
+            uuids = episode_uuids
+        else:
+            episodes = list_episodes(podcast_title=podcast_title)
+            if limit:
+                episodes = episodes[:int(limit)]
+            uuids = [ep.uuid for ep in episodes]
+
+        results = []
+        for uuid in uuids:
+            results.append(await read_podcast(uuid))
+        return results
+
     else:
         return [ReadResult.fail(url or f"{reader}://", f"Unknown reader: {reader}", source_type="unknown")]
 

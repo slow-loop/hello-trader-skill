@@ -149,7 +149,9 @@ ExploreItem.model_rebuild()
 
 
 def _extract_subdomain(url: str) -> Optional[str]:
-    """Extract subdomain from Substack URL. e.g. 'thegeneralist' from 'https://thegeneralist.substack.com'."""
+    """Extract subdomain from Substack URL. e.g. 'thegeneralist' from 'https://thegeneralist.substack.com'.
+    For custom domains (e.g. newsletter.semianalysis.com), returns the full host so callers can
+    use it as the base domain for API requests."""
     from urllib.parse import urlparse
 
     parsed = urlparse(url)
@@ -158,8 +160,8 @@ def _extract_subdomain(url: str) -> Optional[str]:
     if ".substack.com" in host:
         return host.replace(".substack.com", "")
 
-    # Custom domain — try to resolve via API
-    return None
+    # Custom domain — return the host directly so we can hit its Substack API endpoint
+    return host if host else None
 
 
 async def _fetch_api(url: str, timeout: float = 30.0, params: Optional[dict] = None) -> Any:
@@ -227,9 +229,18 @@ async def read_substack(
         )
 
 
+def _pub_base_url(publication: str) -> str:
+    """Return the base URL for a publication. Handles both subdomain and custom domain forms."""
+    # If it looks like a full domain (contains a dot, not a simple subdomain slug)
+    if "." in publication:
+        return f"https://{publication}"
+    return f"https://{publication}.substack.com"
+
+
 async def _read_posts_list(publication: str, limit: int = 10) -> ReadResult:
     """Fetch recent posts from a publication."""
-    api_url = f"https://{publication}.substack.com/api/v1/posts?limit={limit}"
+    base = _pub_base_url(publication)
+    api_url = f"{base}/api/v1/posts?limit={limit}"
     posts = await _fetch_api(api_url)
 
     if not isinstance(posts, list):
@@ -243,7 +254,8 @@ async def _read_posts_list(publication: str, limit: int = 10) -> ReadResult:
         subtitle = p.get("subtitle", "")
         date = p.get("post_date", "")[:10] if p.get("post_date") else ""
         slug = p.get("slug", "")
-        post_url = f"https://{publication}.substack.com/p/{slug}"
+        base = _pub_base_url(publication)
+        post_url = f"{base}/p/{slug}"
         audience = p.get("audience", "everyone")
 
         lines.append(f"### {title}")
@@ -266,7 +278,7 @@ async def _read_posts_list(publication: str, limit: int = 10) -> ReadResult:
             "audience": audience,
         })
 
-    pub_url = f"https://{publication}.substack.com"
+    pub_url = _pub_base_url(publication)
     return ReadResult(
         url=pub_url,
         text="\n".join(lines),
@@ -278,7 +290,8 @@ async def _read_posts_list(publication: str, limit: int = 10) -> ReadResult:
 
 async def _read_post(publication: str, slug: str) -> ReadResult:
     """Fetch a specific post's content."""
-    api_url = f"https://{publication}.substack.com/api/v1/posts/{slug}"
+    base = _pub_base_url(publication)
+    api_url = f"{base}/api/v1/posts/{slug}"
     post = await _fetch_api(api_url)
 
     title = post.get("title", "Untitled")
@@ -305,7 +318,7 @@ async def _read_post(publication: str, slug: str) -> ReadResult:
     text_parts.append("")
     text_parts.append(body_md)
 
-    post_url = f"https://{publication}.substack.com/p/{slug}"
+    post_url = f"{_pub_base_url(publication)}/p/{slug}"
 
     published_at = None
     if post.get("post_date"):

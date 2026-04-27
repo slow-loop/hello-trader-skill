@@ -36,6 +36,9 @@ def _clip(x, lo=-1.0, hi=1.0):
     confidence_base=0.6,
     description="Price above SMA50 + SMA200 + ADX > 20. Classic O'Neil trend filter.",
     requires=["close", "sma_50", "sma_200", "adx_14"],
+    ic={"sp500_5d": 0.021, "sp500_20d": 0.041},
+    ic_sample_size=17300,
+    ic_updated_at="2026-04-24",
 )
 def trend_strength(f):
     """Strong uptrend: price above both MAs + ADX confirms trending regime."""

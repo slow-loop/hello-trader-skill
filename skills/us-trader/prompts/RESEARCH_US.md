@@ -104,15 +104,44 @@ uv run web-reader data/config/sources.us.yaml --tags=fed
 
 **Regime = `positions_only` / `reduce`** → 不新增 watchlist，只做既有 thesis review。
 
-## 產出
+### Phase 5：Watchlist 更新 & 個股研究 & Journal
 
-1. **Watchlist 更新**：寫 `tmp/watchlist_entry_{symbol}.yaml`，執行 `us-trader watchlist-update --file ...`
-   - 必含 `entry_mode`（breakout / pullback / catalyst）
-   - 必含 `thesis`、`invalidation`、`a_point`（進場甜蜜點）、`b_point`（驗證點）
-2. **Brief**：Write 到 `data/accounts/us-momentum/research/{date}-us-brief.md`
-   - frontmatter：`date` / `session` / `regime` / `strategy_version`
-   - 必含 Regime 區塊 + top 5 signals + watchlist changes
-3. **Journal**：寫 `tmp/journal_entry.yaml`，`us-trader journal-add`
+#### 1. Watchlist 更新
+
+寫 `tmp/watchlist_entry_{symbol}.yaml`，執行 `us-trader watchlist-update --file ...`。
+- 必含 `entry_mode`（breakout / pullback / catalyst）
+- 必含 `thesis`、`invalidation`、`a_point`（甜蜜點）、`b_point`（驗證點）
+- 必含 `signal` block（composite、firing_factors、close、atr_14、initial_stop、target_2r）
+
+#### 2. 個股交易研究（sub-agent）
+
+下列情況啟動個股研究子流程：
+- **新標的加入 watchlist**
+- **watchlist 標的從 `observation` 升為進場候選**（trigger_met → true）
+- **thesis 基準價位相對現價 >10% 偏移**
+- **持倉出現重大催化或風險**
+
+每次個股研究：
+1. 讀 `data/accounts/us-momentum/research/template/template.md`
+2. 以該標的為核心，執行：
+   - `uv run us-trader signal --universe "{symbol},{peer1},{peer2},{peer3}"` → 同族群比較
+   - `uv run web-reader data/config/sources.us.yaml --tags=us,market` → 近期新聞
+   - 如有具體文章 URL：`uv run web-reader "<url>" --format=md` → 單篇深挖
+3. 至少比較 3 檔同族群/同波段標的；若主標不是最強，結論中指出哪檔更值得進
+4. 填寫 template，確認 earnings date（⚠️ 財報前 3 日 = 黑暗期）
+5. 輸出到 `data/accounts/us-momentum/research/{date}-us-{symbol}.md`
+
+#### 3. Brief
+
+Write 到 `data/accounts/us-momentum/research/{date}-us-brief.md`：
+- frontmatter：`date` / `session` / `regime` / `strategy_version`
+- 必含 Regime 區塊 + top 5 signals + watchlist changes
+
+#### 4. Journal
+
+寫 `tmp/journal_entry.yaml`，`us-trader journal-add`。
+
+---
 
 ## 規則
 
@@ -121,6 +150,7 @@ uv run web-reader data/config/sources.us.yaml --tags=fed
 - **Signal 帶 IC 的就重視**（backtest_summary 或 registry 的 ic 欄位）。沒 IC 的 factor 當「直覺」，不當硬規則
 - **Earnings blackout**：財報前 3 日不新進場
 - **FOMC/CPI 當日不新進場**（除非 strategy 說可以）
+- **新進 watchlist 的標的必須有研究文件**，不要事後補
 
 ## 下一步
 

@@ -1,0 +1,144 @@
+- date: '2026-04-26'
+  round: 1
+  session: weekend
+  regime: allow_new_entry
+  strategy_version: mom_2f_2021-2024_r1
+  account: us-momentum
+  regime_summary: 'SPX dist_sma20 +4.84% (above), VIX 18.71 (<20, falling), QQQ dist_sma50
+    +9.55%. All three allow_new_entry gates pass. Tech leading (QQQ > SPX), SOX exploding
+    +38.6% in 20d. Record highs S&P + Nasdaq on Friday April 24. Regime tier: allow_new_entry.
+    Iran diplomacy reducing geopolitical premium. No upcoming FOMC this week.
+
+    '
+  trades: []
+  skipped_candidates:
+  - symbol: AMD
+    skip_reason: earnings_blackout
+    notes: Q1 2026 earnings expected April 29 — 3-day blackout rule applies
+  - symbol: INTC
+    skip_reason: too_extended
+    notes: Post-earnings gap, SMA20 dist +38.6%, poor R:R at current price
+  - symbol: GOOG
+    skip_reason: earnings_blackout
+    notes: Reports April 29 — blackout
+  - symbol: AMZN
+    skip_reason: earnings_blackout
+    notes: Reports ~April 30 — blackout
+  - symbol: TXN
+    skip_reason: too_extended
+    notes: SMA20 dist +26.9%, lower priority behind semis with better R:R
+  watchlist_updates:
+  - symbol: AVGO
+    action: added
+    entry_mode: breakout
+    a_point: 418-425 (or pullback to 405-412)
+    stop: 403.59
+    target_2r: 461.1
+    thesis_summary: Semi AI infra, trend_strength firing, SOX rally tailwind, no earnings
+      blackout
+  - symbol: BK
+    action: added
+    entry_mode: breakout
+    a_point: 132-136 (near SMA20 breakout)
+    stop: 129.89
+    target_2r: 142.36
+    thesis_summary: Financials, trend_strength 0.874, cleanest setup in list (+4.6%
+      above SMA20)
+  - symbol: MS
+    action: added
+    entry_mode: pullback
+    a_point: 180-183 (near SMA20)
+    stop: 180.51
+    target_2r: 203.19
+    thesis_summary: Financials, moderate trend, prefer pullback entry to SMA20 for
+      R:R
+  notes: 'First research session since account initialization (2026-04-24). Weekend
+    session. Regime is cleanly risk-on — all gates pass. Signal scan on sp500_top100
+    produced 12 signals with entry_ok=true, dominated by trend_strength alone (rsi_overbought
+    not firing anywhere, consistent with early-to-mid trend phase rather than blow-off).
+    Top signals AMD/INTC blocked by earnings blackout or extreme extension. Focusing
+    on AVGO (semi AI), BK and MS (financials broadening) as primary watchlist for
+    Monday. No trades executed (weekend session — market closed). All three candidates
+    to be evaluated at Monday pre-market for regime confirmation before any entry.
+    Strategy config not modified. web-reader config fixed (type→reader field).
+
+    '
+  sources_scanned:
+  - yahoo_finance_rss
+  - seeking_alpha_market
+  - fed_press_releases
+  - stocktwits_trending
+  timestamp: '2026-04-26T05:17:53Z'
+- date: '2026-04-26'
+  round: 1
+  session: weekend_supplement
+  regime: allow_new_entry
+  strategy_version: mom_2f_2021-2024_r1
+  account: us-momentum
+  notes: 'Wave 3（光子/光學）/ Wave 4（電力/冷卻）/ 類比晶片（TXN/ADI/MCHP）共 16 檔完整掃描。 訊號觸發（entry_ok=true）共
+    8 檔：AAOI(1.225)、MCHP(1.098)、TXN(1.074)、 BE(0.829)、ADI(0.796)、CIEN(0.781)、POET(0.695，跳過過延)、COHR(0.535，弱)。
+    不觸發（entry_ok=false）：VRT、OKLO、SMR、CEG、VST、CCJ、LITE、FN。 主論斷：AI 基礎設施週期正從 Wave 1/2（GPU）外溢到光子互聯（Wave
+    3）和電力/冷卻（Wave 4）。 訊號最強的光子標的是 AAOI，類比最佳 R:R 是 MCHP（ATR 緊）。 所有新進場候選在週一需先確認財報日期再執行。
+    觀察重點：VRT（液冷龍頭，訊號近門檻）、CCJ（SMA20 最近，+5.6%，鈾概念）。
+
+    '
+  watchlist_updates:
+  - symbol: AAOI
+    action: added
+    wave: photonics
+    composite: 1.225
+  - symbol: MCHP
+    action: added
+    wave: analog_semi
+    composite: 1.098
+    earnings_check: true
+  - symbol: ADI
+    action: added
+    wave: analog_semi
+    composite: 0.796
+    earnings_check: true
+  - symbol: CIEN
+    action: added
+    wave: photonics
+    composite: 0.781
+  - symbol: BE
+    action: added
+    wave: power
+    composite: 0.829
+    earnings_check: true
+  - symbol: VRT
+    action: added
+    wave: power_cooling
+    mode: observation
+  - symbol: CCJ
+    action: added
+    wave: uranium
+    mode: observation
+  - symbol: COHR
+    action: added
+    wave: photonics
+    mode: observation
+  trades: []
+  skipped_candidates:
+  - symbol: POET
+    skip_reason: too_extended
+    notes: SMA20 dist +96.9%，micro-cap
+  - symbol: SMR
+    skip_reason: liquidity_speculation
+    notes: NuScale，無收入，流動性薄
+  - symbol: OKLO
+    skip_reason: below_threshold
+    notes: trend_strength 0.193，純概念
+  - symbol: LITE
+    skip_reason: below_threshold
+    notes: trend_strength 0.273 < 0.3
+  - symbol: FN
+    skip_reason: below_threshold
+    notes: trend_strength 0.167 < 0.3
+  - symbol: VST
+    skip_reason: below_threshold
+    notes: trend_strength=0.0
+  - symbol: CEG
+    skip_reason: below_threshold
+    notes: trend_strength=0.0
+  timestamp: '2026-04-26T06:17:42Z'

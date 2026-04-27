@@ -55,7 +55,6 @@ def run_strategy_backtest(
     init_cash: float = 100_000.0,
     fees: float = 0.001,
     slippage: float = 0.0005,
-    stop_atr_multiple: float = 1.5,
 ) -> StrategyBTResult:
     """Run the strategy across all symbols, pool results into a single portfolio."""
     vbt = _require_vectorbt()
@@ -68,7 +67,9 @@ def run_strategy_backtest(
     for sym, feat in features_by_symbol.items():
         sig = apply_strategy(config, feat)
         entries = sig["entry_ok"].astype(bool).fillna(False)
-        # Exit when composite score flips below 0 OR stop hit (ATR-based).
+        # Exit when composite score drops below 0 (thesis gone).
+        # ATR-based stops are intentionally not modelled here: they cause whipsaw
+        # with signal-based exits and the agent applies regime/stop logic live.
         composite = sig["composite_score"].fillna(0.0)
         exit_signal = composite < 0.0
 

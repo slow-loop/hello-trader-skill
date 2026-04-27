@@ -1,9 +1,12 @@
 """YAML config loader for web-reader."""
 
+import os
+import re
 from pathlib import Path
 from typing import Any, Optional
 
 import yaml
+from dotenv import load_dotenv
 from pydantic import BaseModel, Field
 
 
@@ -38,14 +41,31 @@ class FeedConfig(BaseModel):
     sources: list[SourceConfig] = Field(default_factory=list)
 
 
+def _expand_env_vars(obj: Any) -> Any:
+    """Recursively expand ${VAR} placeholders in string values."""
+    if isinstance(obj, str):
+        return re.sub(r"\$\{([^}]+)\}", lambda m: os.environ.get(m.group(1), m.group(0)), obj)
+    if isinstance(obj, dict):
+        return {k: _expand_env_vars(v) for k, v in obj.items()}
+    if isinstance(obj, list):
+        return [_expand_env_vars(i) for i in obj]
+    return obj
+
+
 def load_config(path: str | Path) -> FeedConfig:
-    """Load a feeds.yaml file."""
+    """Load a feeds.yaml file, expanding ${ENV_VAR} placeholders."""
     p = Path(path)
     if not p.exists():
         raise FileNotFoundError(f"Config not found: {p}")
 
+    # Load .env from the same directory as the config file (or cwd)
+    load_dotenv(p.parent / ".env", override=False)
+    load_dotenv(override=False)
+
     with open(p) as f:
         raw = yaml.safe_load(f)
+
+    raw = _expand_env_vars(raw)
 
     if raw is None:
         return FeedConfig()

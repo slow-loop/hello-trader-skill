@@ -1,0 +1,15 @@
+{
+  "strategy": "momentum",
+  "version": "1.2.0",
+  "period": "2020-01-02..2024-12-31",
+  "universe": "megacap_tech",
+  "universe_size": 15,
+  "sharpe": 0.3887375415029697,
+  "total_return": 0.4486274558542012,
+  "max_drawdown": -0.2651083072266904,
+  "calmar": 1.6922421652769493,
+  "turnover": 0.2917329093799682,
+  "num_trades": 367,
+  "report": "/Users/cc/Documents/GitHub/hello-trader-skill/skills/strategy-lab/data/experiments/2026-04-25_momentum_v4_atr_stop/strategy_bt_momentum.md",
+  "git_hash": "b87c4fc"
+}

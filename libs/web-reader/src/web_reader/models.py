@@ -4,10 +4,10 @@ Core data models for web-reader.
 Design: One flat ReadResult instead of 3-layer nesting.
 """
 
-from datetime import datetime
+from datetime import datetime, timedelta, timezone
 from typing import Any, Literal, Optional
 
-from pydantic import BaseModel, ConfigDict, Field
+from pydantic import BaseModel, ConfigDict, Field, model_validator
 
 
 SourceType = Literal["web", "rss", "json", "youtube", "youtube_channel", "apple_podcast", "email", "reddit", "stocktwits", "substack", "gnews", "ptt", "cnyes", "unknown"]
@@ -79,5 +79,12 @@ class EmailRequest(BaseModel):
     folder: str = "INBOX"
     start_date: Optional[datetime] = None
     end_date: Optional[datetime] = None
+    hours: Optional[int] = None  # shorthand: fetch last N hours; sets start_date if not provided
     limit: Optional[int] = None
     senders: Optional[list[str]] = None
+
+    @model_validator(mode="after")
+    def _apply_hours_window(self) -> "EmailRequest":
+        if self.hours is not None and self.start_date is None:
+            self.start_date = datetime.now(tz=timezone.utc) - timedelta(hours=self.hours)
+        return self

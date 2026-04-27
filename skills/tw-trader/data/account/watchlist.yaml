@@ -15,36 +15,37 @@
   - close < nearest_support * 0.98
   updated_at: '2026-04-16'
 - symbol: '3189'
-  thesis: AI 資料中心擴建推動 ABF 載板需求，景碩受惠高階 ABF 基板成長。連四日強漲（4/18-4/22，其中 4/19-4/21 三連漲停），ADX
-    34.9 趨勢極強，是 ABF 族群（南電、臻鼎）的領頭羊。欣興被關催化劑使法人資金持續外溢至景碩、南電。
-  status: hold
-  notes: '2026-04-21 12:52 建倉：200 股 @ 473.5，停損 440，目標 525，R:R 1.53。
-
-    2026-04-22 盤後更新：收 491.5 (+3.80%)，盤中 high 509（接近 target 525 剩 3.7%），unrealized
-    PnL +3,600 (+3.80%)。
-
-    技術面：RSI 76.8、ADX 34.9（趨勢極強）、MACD hist 26.3 擴張、VR 2.38x 持續爆量、Stoch 97 極超買、BB 上軌外。
-
-    今日 K 棒：open 496, high 509, low 478.5, close 491.5，上影線 13.0 大於實體 -4.5（高點有獲利了結賣壓但仍收紅
-    +3.8%）。大盤 +0.73% 而 3189 +3.80% 相對強勢 excess +3.07%。
-
-    加碼評估（已在 4/22 盤中 Trading run 否決）：@503 加碼 100 股至 300 股 → R:R 0.41 不達標；改為回測 460-480
-    量縮守穩為加碼甜蜜點。
-
-    明日：守 480+ 續強持有；若衝 525 target 觸發自動止盈；若 VR 再放大且 RSI 過 80 需警戒；若跌破 478.5（今日低）且量縮，考慮部分減碼。
+  thesis: 'AI 資料中心擴建推動 ABF 載板需求，景碩受惠高階 ABF 基板成長。 連五日強漲（4/20-4/24，其中 4/19-4/21 三連漲停，4/24
+    再漲停 526），ADX >30 趨勢極強。 ABF 族群同步共振（南電 8046 於 4/24 亦漲停），欣興被關催化劑使法人資金持續外溢至景碩、南電。
 
     '
-  trigger: 守 480 以上繼續持有；若回測 460-480 量縮守穩可加碼至 300 股（停損升至 460）；若直攻 525 target 執行止盈；若衝
-    540+ 考慮停損移至 490 鎖利
-  invalidation: 收盤跌破 440（停損觸發）；或 ADX < 25 且 MACD 翻負（趨勢失效）；或 ABF 族群（南電、臻鼎）同步轉弱連兩日
+  status: hold
+  notes: '2026-04-21 12:52 建倉：200 股 @ 473.5，初始停損 440，目標 525，R:R 1.53。 4/22：收 491.5
+    (+3.80%)，unrealized PnL +3,600。 4/23：收 479 (-2.54%)，回測中，浮盈縮至 +1,100 = 0.16R。 4/24：收
+    526 (+9.81%)，漲停！超越 target 525。浮盈 = (526-473.5)×200 = +10,500 = 1.57R。 4/24 技術：RSI
+    84.7，MACD_hist 13.07（持續擴張），VR 2.10x，SMA20 392.9。 4/26 週末 Reassess：Momentum intact（MACD
+    hist expanding）；ABF 族群共振（南電漲停）； 決定 HOLD，取消舊 TP(525) 及 SL(440)；新 stop=490，新 target
+    reassess=600。 週一盤前必做：用 Fugle 確認 4/25 收盤後，重設 STOP_LOSS @ 490（或依 4/25 低點調整）。 加碼評估：回測
+    500-510 量縮守穩時考慮 +50 股，stop 移至 500，總部位 250×500=125,000（<30%淨值）。
+
+    '
+  trigger: '【已達 target 525，4/26 週末 reassess = HOLD】 MACD hist 持續擴張（13.07 > 10.80 >
+    9.62），ABF 族群南電漲停共振，momentum intact。 新 stop = 490（上移自 440，週一 Fugle 可用時重設）。 新 target
+    reassess at 600（前高不存在，取 +14% 整數關卡；到達時重跑 thesis）。 若回測 500-510 量縮守穩，可考慮加碼（加碼 ≤50
+    股，stop 500）。
+
+    '
+  invalidation: '收盤跌破 490（新 stop，Fugle 可用後設置）； 或 ADX < 25 且 MACD 翻負（趨勢失效）； 或 ABF 族群（南電、臻鼎）連兩日同步轉弱。
+
+    '
   trigger_conditions:
   - price_above_sma_20
   - macd_histogram_positive
   - adx_14 > 25
   invalidation_conditions:
   - price_below_sma_20 and macd_histogram_negative
-  - close < 440
-  updated_at: '2026-04-22'
+  - close < 490
+  updated_at: '2026-04-26'
 - symbol: '3711'
   thesis: 台積電 CoWoS 等先進封裝需求強勁，日月光作為全球最大封測廠直接受益；今日法說日量能突破（1.57x）+5.31%，外資連買。
   status: watch
@@ -105,45 +106,27 @@
   invalidation_conditions:
   - price_below_sma_20 and macd_histogram_negative
   updated_at: '2026-04-20'
-- symbol: '3450'
-  thesis: 聯鈞受惠 AI 資料中心 800G/1.6T 光連接升級與 CPO/光模組需求；4/20 +4.64%、量比 1.97x 放量為光通訊族群三檔共振之一。4/21
-    鴻海工業富聯發表 CPO 全光交換機再強化族群題材。
-  status: watch
-  notes: '2026-04-21 更新：4/20 收 383，RSI 75.5/Stoch 94 超買，但 ADX 23.2 趨勢成形、trigger_met=true。族群同族比較：4979.TWO
-    RSI 83.7 極度過熱且量比 0.87x 背離；6442 光聖昨日漲停（+9.98%）；聯鈞技術面相對健康但亦偏高。不追漲停後高點，等回測 355-370（SMA20
-    附近）量縮守穩，或整理突破 388 高點再評估。停損設 350（EMA20 + 結構守位）。
-
-    '
-  trigger: 回測 355-370 SMA20 附近量縮守穩後帶量再攻，或整理後突破 388 高點且 volume_ratio >= 1.5x
-  invalidation: 收盤跌破 350 元且 MACD 翻負；或 ADX 回落 < 20 且量縮
-  trigger_conditions:
-  - price_above_sma_20
-  - macd_histogram_positive
-  - volume_breakout_1_5x
-  - adx_14 > 22
-  invalidation_conditions:
-  - price_below_sma_20 and macd_histogram_negative
-  - close < 350
-  updated_at: '2026-04-21'
 - symbol: '2454'
-  thesis: 聯發科進入「AI 設計話語權重估 + AI SoC 超級週期」階段。Google 新一代 TPU 亮相（聯發科為 Google Tensor IP/設計夥伴），4/21
-    漲停至 2090 元，投信今日買超 1,052 張，是 IC 設計族群中流動性最佳且 AI 敘事最完整的標的。
-  status: watch
-  notes: '2026-04-21 新增：Google TPU 催化漲停，PTT 爆量討論，投信買超1,052張（上市第19名）。
-
-    技術面：RSI 77.19（超買），ADX 28.21（趨勢成形），vol 1.75x，BB 1.117（上軌外）。
-
-    族群比較：聯發科 > 世芯-KY（流動性與題材廣度優）> 瑞昱/聯詠（落後）。
-
-    不追高（漲停後），等回測 2000-2050 守穩後進場（A點）；若跌回 1900-1950 為更佳加倉點。
-
-    催化劑日曆：4/22 明日開盤動向確認；5月中旬 Q1財報+法說（核心驗證點）；H2 Google Tensor 新款發布。
-
-    停損：1850 元（EMA20 + 結構失守）。目標：2200-2300/2400-2500。
+  thesis: '聯發科進入「AI 設計話語權重估 + AI SoC 超級週期」階段。Google TPU v8 架構（張亮處理器）聯發科為設計夥伴， 本週亮三顆漲停（4/21
+    漲停 2090、4/23 拉回、4/24 再度漲停 2435 歷史天價）， Q1 財報 + 5 月中旬法說為下一個關鍵驗證點。
 
     '
-  trigger: 回測 2000-2050 守穩後帶量再攻（volume_ratio ≥ 1.5x），或明日開高確認守穩；ADX 升破 30 為趨勢強化信號。
-  invalidation: 跌破 1850 元（EMA20 失守）且 MACD 翻負；或 Q1 法說未提及 Google TPU 合作進展；或 IC 設計族群整體反轉。
+  status: watch
+  notes: '2026-04-21 新增：Google TPU 催化漲停，PTT 爆量討論，投信買超 1,052 張。 4/22-4/24：三漲停 (2090→2295→2435)，歷史天價，目前遠超原始
+    A 點 2000-2050。 4/24 技術面：RSI 91，MACD_hist +55.2，SMA20 1,759（現價 +38% 乖離）= 極度延伸。
+    2026-04-26 週末 A 點更新：原 A 點 2000-2050 已作廢（現價距 25%）； 新 A 點改為 2200-2300（三漲停後首次有效回測區），停損
+    2050，目標 2700 reassess。 催化劑日曆：5 月中旬 Q1 財報 + 法說（核心驗證）；H2 Google Tensor 新款發布。
+
+    '
+  trigger: '(A) 回測 2200-2300 量縮守穩後帶量再攻（VR ≥ 1.5x，RSI < 75）—— 三漲停後第一次有效回測甜蜜點； 停損 2050（前漲停起漲點），目標
+    2700 reassess。 (B) 法說確認 Google Tensor 出貨量 + 突破 2500，則進入 Catalyst 模式，止損上移至 2200。
+    目前 4/24 收 2435（RSI 91，極度超買），不追高，等回測。
+
+    '
+  invalidation: '跌破 2100（前漲停起漲區 EMA20 對應位置）且 MACD 翻負； 或 5 月法說 Google TPU 合作未提進度；或
+    IC 設計族群整體反轉。
+
+    '
   trigger_conditions:
   - price_above_sma_20
   - macd_histogram_positive
@@ -151,7 +134,8 @@
   - adx_14 > 25
   invalidation_conditions:
   - price_below_ema_20 and macd_histogram_negative
-  updated_at: '2026-04-21'
+  - close < 2100
+  updated_at: '2026-04-26'
 - symbol: '3653'
   thesis: 健策是 AI 伺服器散熱基板（vapor chamber）台灣龍頭，直供 NVIDIA/AMD，毛利率 40-50%。NVIDIA Feynman
     高功耗催化，公司已公開表態「明年可賺超過 15 元股本」，EPS 跳升 3-5 倍潛力。千金股本放大彈性。4/20 漲停、4/21 續強 +7%，投信買超
@@ -182,23 +166,27 @@
   - price_below_sma_20 and macd_histogram_negative
   updated_at: '2026-04-21'
 - symbol: '6669'
-  thesis: AI GPU 伺服器 ODM 超級週期。緯穎（Wiwynn）是 GB200 NVL72 液冷機架 Microsoft/Meta/Google 首選
-    ODM，毛利率高於傳統 ODM，受益 2026-2028 CSP AI infra 建置潮。4/21 投信爆買 3,042 百萬（全市場第一）確認機構配置開始。
-  status: watch
-  notes: '2026-04-21 新增：screener 上榜 VR=2.07x，今日 +6% 至 4220（open=4030, high=4270），投信
-    3,042 百萬爆買第一名。
-
-    技術面：RSI=69.2（健康），ADX=18（趨勢未確立），MACD=-39（仍負），BB=1.159（外側）。
-
-    外資未在今日前十榜，目前只有投信單方佈局，等待外資跟進確認雙法人共振。
-
-    等 MACD 轉正 + ADX≥20 後回測 4050-4100 守穩進場。停損 3640。
-
-    族群：緯穎 > 廣達（毛利/客戶層級）> 緯創母（稀釋效應）。
+  thesis: '緯穎（Wiwynn）AI GPU 伺服器 ODM 超級週期。GB200 NVL72 液冷機架首選 ODM（Microsoft/Meta/Google），
+    毛利率高於傳統 ODM。4/21 投信爆買 3,042 百萬（全市場第一），4/24 再度大漲 +9.1% 至 4,635， MACD 已轉正（+67.5），ADX
+    方向確立，CSP AI infra 建置 2026-2028 主題延續。
 
     '
-  trigger: MACD 轉正 + ADX≥20 + VR≥1.5x 回測 4050-4100 守穩（A點）；或外資跟進買超確認雙法人共振（B點）
-  invalidation: 跌破 3640 支撐且 MACD 持續負；或 Q1 法說 GB200 訂單低於預期；或 Microsoft Azure 資本支出大幅削減
+  status: watch
+  notes: '2026-04-21 新增：screener 上榜 VR=2.07x，今日 +6% 至 4220，投信爆買第一名 3,042 百萬。 MACD
+    4/21 仍負 (-39)，等 MACD 轉正 + ADX≥20 再進場。 4/24 (+9.1%)：4635，MACD_hist +67.5（已轉正！），RSI
+    89，SMA20 3,730。MACD 轉正觸發條件已達。 2026-04-26 週末 A 點更新：MACD 已轉正、ADX 已 >20，原 A 點 4050-4100
+    作廢（現價已超過）； 新 A 點更新為 4300-4450（近期突破後回測支撐區），停損 4000，目標 5200 reassess。 外資是否跟進仍是 B
+    點驗證條件（仍為投信主導）。
+
+    '
+  trigger: '(A) 回測 4300-4450 量縮守穩後帶量再攻（VR ≥ 1.5x）——上一波突破後回測甜蜜點； 停損 4000（前支撐），目標 5200
+    reassess。 (B) 外資連買確認雙法人共振（目前仍為投信單力）後直接進場，停損同 A。 目前 RSI 89 極度超買，不追高，等回測。
+
+    '
+  invalidation: '跌破 4000（前段整理高點，EMA20 附近）且 MACD 翻負； 或 Q1/Q2 法說 GB200 訂單低於預期；或 Microsoft
+    Azure 資本支出大幅削減。
+
+    '
   trigger_conditions:
   - price_above_sma_20
   - macd_histogram_positive
@@ -206,28 +194,29 @@
   - volume_breakout_1_5x
   invalidation_conditions:
   - price_below_sma_20 and macd_histogram_negative
-  - close < 3640
-  updated_at: '2026-04-21'
+  - close < 4000
+  updated_at: '2026-04-26'
 - symbol: '3661'
-  thesis: AI ASIC 自研潮下的台灣設計服務龍頭。世芯（Alchip）為 Meta/Microsoft 設計次世代 AI 加速晶片，毛利率 45-50%，MACD
-    今日轉正 + 外資+投信雙買第二，法人共識最強的 IC 設計 AI 標的之一。
-  status: watch
-  notes: '2026-04-21 新增：screener 上榜（4/20 VR=1.89x ADX=20），今日 +9.9% 至 3985（開 3745 收高點，歷史新高），MACD=+2.3
-    剛轉正。
-
-    籌碼：外資 5,591 百萬（第二）+ 投信 2,368 百萬（第二），雙法人爆買日 = 機構配置共識啟動。
-
-    技術面：RSI=73.2（接近超買），ADX=19.9（趨勢剛成形），BB=1.121（外側）。
-
-    今日收盤即歷史新高，無上方賣壓。不追高，等回測 3700-3800 守穩後進場。停損 3500。
-
-    族群：世芯 > 聯發科（ASIC 純度更高）> 聯電（製造廠，不同維度）。
-
-    法說會預計 2026-05 中旬為關鍵驗證點。
+  thesis: 'AI ASIC 自研潮下台灣設計服務龍頭。世芯（Alchip）為 Meta/Microsoft 設計次世代 AI 加速晶片， 毛利率 45-50%，外資
+    + 投信雙法人持續配置。4/21 收 3,985（歷史新高），4/24 進一步漲 +5.9% 至 4,215， RSI 95 極度超買但 MACD histogram
+    持續擴張。5 月中旬法說為關鍵驗證點。
 
     '
-  trigger: 回測 3700-3800 量縮守穩後帶量再攻（A點）；ADX 升破 25 且 MACD histogram 繼續擴張（趨勢強化信號）
-  invalidation: 跌破 3500（結構破壞）且 MACD 翻負；或 ADX 回落<15 趨勢失效；或客戶轉向自建設計能力
+  status: watch
+  notes: '2026-04-21 新增：screener 上榜 VR=1.89x，+9.9% 至 3985 歷史新高，外資 + 投信雙買第二。 MACD +2.3
+    剛轉正，ADX 19.9 趨勢剛成形。原 A 點 3700-3800 守穩。 4/24 (+5.9%)：4215，RSI 95（極度超買），MACD_hist
+    +89.2，SMA20 3231（距 +30%）。 2026-04-26 週末 A 點更新：原 A 點 3700-3800 已作廢（現價 +14% 高於區間）；
+    新 A 點 3900-4000（歷史新高後回測支撐），停損 3600，目標 4800 reassess。 舊 invalidation 3500 已更新為
+    3600（保留安全距離）。5 月中旬法說為核心驗證。
+
+    '
+  trigger: '(A) 回測 3900-4000 量縮守穩後帶量再攻（VR ≥ 1.5x）——歷史新高後回測甜蜜點； 停損 3600（-10% 安全墊），目標
+    4800 reassess。 ADX 升破 25 且 MACD histogram 繼續擴張為趨勢強化信號。 目前 RSI 95 極度超買，不追高，等回測。
+
+    '
+  invalidation: '跌破 3600（結構破壞）且 MACD 翻負； 或 ADX 回落 < 15 趨勢失效；或 5 月法說未確認 ASIC 訂單量增長。
+
+    '
   trigger_conditions:
   - price_above_sma_20
   - macd_histogram_positive
@@ -235,8 +224,8 @@
   - volume_breakout_1_5x
   invalidation_conditions:
   - price_below_sma_20 and macd_histogram_negative
-  - close < 3500
-  updated_at: '2026-04-21'
+  - close < 3600
+  updated_at: '2026-04-26'
 - symbol: '2317'
   thesis: Apple 新 CEO Ternus（硬體背景）+ 晶片主管 Srouji 升首席工程師黃金搭檔上任，疊加 NVIDIA GB300 量產期雙題材共振。鴻海今日（4/22）爆量
     VR 2.51x、+4.74% 突破 SMA50，市值重返 3 兆元，ADX 15.4 趨勢剛啟動、RSI 64.4 未過熱，ODM 族群（廣達/緯穎/緯創）中技術位階最佳。
@@ -266,31 +255,34 @@
   - close < 212
   updated_at: '2026-04-22'
 - symbol: '2337'
-  thesis: ''
-  status: watch
-  notes: '2026-04-22 新增：sub-agent 個股研究完成，research/2026-04-22-tw-2337.md。
-
-    技術面：收 134.5 +1.51%，VR 1.64x，RSI 52（中性健康），ADX 27.8（趨勢成形中），留 4 元上影線（138.5 有賣壓）。
-
-    籌碼警示：今日法人連 5 賣（近 5 日 -84k 張），股價逆勢漲但籌碼背離，大摩報告尚未反映於法人動作。
-
-    4/23 外資動向驗證結果（4/22 收盤）：外資期貨大賣（-1260口），但個股法人動向需明日公布才確認。relative_performance 今日
-    excess -0.24%，微幅相對弱。大摩 Catalyst 有，但籌碼面尚未配合——等 4/23 外資買超確認再評估進場。
-
-    催化劑：(1) 大摩 4/22 報告欽點；(2) 1/27 法說會旺宏已確認「三星停產 MLC eMMC」為既定事實；(3) SK海力士擴先進封裝、SOCAMM2
-    為 NVIDIA Vera Rubin 設計 = 記憶體升級週期同步確認。
-
-    族群比較：2337 > 2408/2344（大摩 DDR4 示警）> 4967 十銓 / 8028 昇陽（BB 上軌外追高風險）> 6770 力積電（題材稀釋）。
-
-    進場規劃：(A) 突破 140 收盤 + 量能 >1.5x 日均；(B) 回測 125-128 量縮守穩；(C) 深回 118-120 重倉。今日 134.5
-    不追價。
+  thesis: '三星正式停產 MLC eMMC，旺宏（台灣最大 NOR Flash + NAND Flash 廠）為直接受益者，訂單排擠效應明確。 大摩 4/22
+    催化報告欽點，記憶體升級週期（SK海力士 SOCAMM2 for NVIDIA Vera Rubin）提供長線敘事。 短期技術面在 SMA20（134）下方整理，需等動能確認後進場。
 
     '
-  trigger: ''
-  invalidation: ''
-  trigger_conditions: []
-  invalidation_conditions: []
-  updated_at: '2026-04-22'
+  status: watch
+  notes: '2026-04-22 新增：sub-agent 個股研究完成，research/2026-04-22-tw-2337.md。 技術面：收 134.5
+    +1.51%，VR 1.64x，RSI 52（中性健康），ADX 27.8（趨勢成形中），留 4 元上影線（138.5 有賣壓）。 籌碼警示：今日法人連 5
+    賣（近 5 日 -84k 張），股價逆勢漲但籌碼背離，大摩報告尚未反映於法人動作。 4/23 (-6.32%)：記憶體族群殺盤，股價跌至 126。三星 DDR4
+    停產利多已提前 price in。 4/24 (+4.8%)：反彈至 132，仍低於 SMA20（134.4），MACD_hist -0.7（邊緣負）。 族群比較：2337
+    > 2408/2344（大摩 DDR4 示警）> 4967 十銓 / 8028 昇陽（BB 上軌外追高風險）。 進場規劃：(A) 突破 140 + VR ≥
+    1.5x；(B) 回測 125-128 守穩；(C) 深回 118-120 重倉。 2026-04-26 週末複審：MACD 仍負，SMA20 未站回，觀察中，entry_mode=pullback。
+
+    '
+  trigger: '(A) Breakout：收盤站回 SMA20 並突破 140 + VR ≥ 1.5x（趨勢確立，停損 125，目標 160 reassess）；
+    (B) Pullback：回測 125-128 量縮守穩後帶量再攻（停損 118，目標 150）。 目前不符合任何進場條件，觀察中。
+
+    '
+  invalidation: '收盤跌破 118（前低結構失守）；或 MACD 持續負 + 外資連三賣超（籌碼面惡化）； 或三星 MLC eMMC 停產消息被否定。
+
+    '
+  trigger_conditions:
+  - price_above_sma_20
+  - macd_histogram_positive
+  - volume_breakout_1_5x
+  invalidation_conditions:
+  - price_below_sma_20 and macd_histogram_negative
+  - close < 118
+  updated_at: '2026-04-26'
 - symbol: '6531'
   thesis: '大摩 4/22 盤前報告調升目標至 777 元，EMIB-T 矽電容為蘋果高階封裝核心，EPS 3年跳升 16→26→37。
 

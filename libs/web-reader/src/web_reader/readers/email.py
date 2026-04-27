@@ -7,6 +7,7 @@ Runs blocking IMAP I/O in a thread via asyncio.to_thread.
 
 import asyncio
 import email as email_lib
+import email.message
 import hashlib
 import imaplib
 import io

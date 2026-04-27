@@ -1,0 +1,123 @@
+# web-reader feeds config
+# Usage:
+#   uv run web-reader feeds.yaml --tags=podcast
+#   uv run web-reader feeds.yaml --tags=podcast,tw
+#
+# Apple Podcast sources require:
+#   - Episodes downloaded locally in Apple Podcasts.app
+#   - GROQ_API_KEY in .env (for Whisper transcription)
+
+defaults:
+  cache:
+    ttl: 86400  # 24h — podcast transcripts don't change
+
+sources:
+
+  # ── 台灣財經 ──────────────────────────────────────────────
+
+  - name: podcast-gooaye
+    reader: apple_podcast
+    tags: [podcast, tw, finance]
+    params:
+      podcast_title: "Gooaye 股癌"
+      limit: 3
+
+  - name: podcast-caibao-gou
+    reader: apple_podcast
+    tags: [podcast, tw, finance]
+    params:
+      podcast_title: "財報狗 - 掌握台股美股時事議題"
+      limit: 3
+
+  - name: podcast-yu-tinghao
+    reader: apple_podcast
+    tags: [podcast, tw, finance]
+    params:
+      podcast_title: "游庭皓的財經皓角"
+      limit: 3
+
+  - name: podcast-jiu-cai
+    reader: apple_podcast
+    tags: [podcast, tw, finance]
+    params:
+      podcast_title: "韭菜畢業班"
+      limit: 3
+
+  - name: podcast-ieo
+    reader: apple_podcast
+    tags: [podcast, tw, macro]
+    params:
+      podcast_title: "IEO 看什麼？國際財經、產業、科技觀察"
+      limit: 3
+
+  - name: podcast-play-stock
+    reader: apple_podcast
+    tags: [podcast, tw, finance]
+    params:
+      podcast_title: "就是愛玩股"
+      limit: 3
+
+  - name: podcast-macromicro
+    reader: apple_podcast
+    tags: [podcast, tw, macro]
+    params:
+      podcast_title: "MacroMicro 財經M平方"
+      limit: 3
+
+  - name: podcast-moneydj
+    reader: apple_podcast
+    tags: [podcast, tw, finance]
+    params:
+      podcast_title: "MoneyDJ財經新聞"
+      limit: 3
+
+  - name: podcast-uni-invest
+    reader: apple_podcast
+    tags: [podcast, tw, finance]
+    params:
+      podcast_title: "統一投顧"
+      limit: 3
+
+  - name: podcast-lu-yanli
+    reader: apple_podcast
+    tags: [podcast, tw, finance]
+    params:
+      podcast_title: "鈔錢部署｜盧燕俐"
+      limit: 3
+
+  - name: podcast-jenny-usstocks
+    reader: apple_podcast
+    tags: [podcast, tw, us-stocks]
+    params:
+      podcast_title: "美股投資學-財女珍妮"
+      limit: 3
+
+  - name: podcast-m-view
+    reader: apple_podcast
+    tags: [podcast, tw, tech]
+    params:
+      podcast_title: "M觀點 | 科技X商業X投資"
+      limit: 3
+
+  - name: podcast-zhao-hua
+    reader: apple_podcast
+    tags: [podcast, tw, finance]
+    params:
+      podcast_title: "兆華與股惑仔"
+      limit: 3
+
+  # ── 英文財經 ──────────────────────────────────────────────
+
+  - name: podcast-acquired
+    reader: apple_podcast
+    tags: [podcast, en, business]
+    params:
+      podcast_title: "Acquired"
+      limit: 2
+
+  - name: podcast-invest-like-best
+    reader: apple_podcast
+    tags: [podcast, en, finance]
+    params:
+      podcast_title: "Invest Like the Best with Patrick O'Shaughnessy"
+      limit: 2

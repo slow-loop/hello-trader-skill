@@ -178,6 +178,10 @@ async def read_url(
         cached = store.get_cached(url, ttl_seconds=cache_ttl, source_type=source_type)
         if cached:
             return cached
+        # Fallback: URL may have been pulled as part of an RSS feed
+        rss_entry = store.get_rss_entry(url)
+        if rss_entry:
+            return rss_entry
 
     # Dispatch to reader
     if source_type == "youtube":

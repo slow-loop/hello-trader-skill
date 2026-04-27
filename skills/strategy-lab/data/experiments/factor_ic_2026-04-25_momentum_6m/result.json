@@ -1,0 +1,16 @@
+{
+  "factor_id": "momentum_6m",
+  "ic_by_period": {
+    "1": 0.01517468613135547,
+    "5": 0.019039986469375953,
+    "20": 0.018771825859426078
+  },
+  "ic_std_by_period": {
+    "1": 0.2774786624932638,
+    "5": 0.26491366220568213,
+    "20": 0.23536018354390395
+  },
+  "sample_size": 117709,
+  "report": "/Users/cc/Documents/GitHub/hello-trader-skill/skills/strategy-lab/data/experiments/factor_ic_2026-04-25_momentum_6m/factor_ic_momentum_6m.md",
+  "git_hash": "b87c4fc"
+}

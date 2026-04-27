@@ -1,1 +1,563 @@
-[]
+- symbol: AVGO
+  entry_mode: breakout
+  thesis: 'Semi AI infrastructure play. SOX +38.6% in 20d; AVGO is a core AI/networking
+    chip name riding the same wave. trend_strength=1.0 (score 0.754), composite 1.131.
+    SMA20 dist +16% — extended but less so than AMD/INTC. Trend intact with ADX-style
+    breadth. Earnings blackout check: AVGO reports in June — no blackout risk for
+    now.
+
+    '
+  invalidation: Close below SMA20 (~364) or below 400 on a closing basis
+  a_point: 'Monday open 418-425 range; or pullback entry at 405-412 (above 1.5×ATR
+    stop zone). R:R target 461 (2R from entry at 422 with stop 403).
+
+    '
+  b_point: Close and hold above 440 with expanding volume = trend acceleration confirmed
+  signal:
+    composite_score: 1.131
+    firing_factors:
+    - trend_strength
+    trend_strength: 0.754
+    rsi_overbought: -0.094
+    close: 422.76
+    atr_14: 12.78
+    sma_20: 364.33
+    sma_50: 341.0
+    initial_stop: 403.59
+    target_1r: 442.0
+    target_2r: 461.1
+  added_date: '2026-04-26'
+  session: weekend
+  updated_at: '2026-04-26T05:17:49Z'
+- symbol: MS
+  entry_mode: pullback
+  thesis: 'Financials showing trend strength in rising-rate and M&A recovery environment.
+    MS: composite 0.947, trend_strength=0.631, only +5.6% above SMA20 — among the
+    cleanest setups in the top signal list. Financials can participate in risk-on
+    regime without the extreme extension seen in semis. Pullback to SMA20 zone (178-183)
+    is the ideal entry for better R:R.
+
+    '
+  invalidation: Close below SMA20 (178.01) on a closing basis
+  a_point: 'Pullback entry 180-183 (near SMA20), stop under 178. Or breakout entry
+    on strength above 192 with volume. Current price 188 is mid-range — prefer waiting
+    for pullback.
+
+    '
+  b_point: Break and sustained close above 192 with volume = momentum acceleration
+  signal:
+    composite_score: 0.947
+    firing_factors:
+    - trend_strength
+    trend_strength: 0.631
+    rsi_overbought: 0.0
+    close: 188.07
+    atr_14: 5.04
+    sma_20: 178.01
+    sma_50: 170.34
+    initial_stop: 180.51
+    target_1r: 195.6
+    target_2r: 203.2
+  added_date: '2026-04-26'
+  session: weekend
+  updated_at: '2026-04-26T05:17:49Z'
+- symbol: BK
+  entry_mode: breakout
+  thesis: 'Bank of New York Mellon: financials breakout with trend_strength firing
+    (score 0.874), composite 1.31. Only +4.6% above SMA20 — tightest extension in
+    top signals, giving cleaner entry near current price. Custodial bank benefits
+    from rising markets (AUM fees, securities services). Conservative position; low
+    ATR (2.77) means tight stops.
+
+    '
+  invalidation: Close below SMA20 (128.20) or below 129 (stop zone)
+  a_point: 'Current price 132-136 range is the entry zone (near SMA20 breakout territory).
+    ATR stop at 129.89 is tight. Good R:R with target 142-143.
+
+    '
+  b_point: Close above 136 sustained with volume — confirms trend extension
+  signal:
+    composite_score: 1.31
+    firing_factors:
+    - trend_strength
+    trend_strength: 0.874
+    rsi_overbought: 0.0
+    close: 134.05
+    atr_14: 2.77
+    sma_20: 128.2
+    sma_50: 121.56
+    initial_stop: 129.89
+    target_1r: 138.2
+    target_2r: 142.4
+  added_date: '2026-04-26'
+  session: weekend
+  updated_at: '2026-04-26T05:17:49Z'
+- symbol: AMD
+  entry_mode: observation
+  thesis: 'AMD is the top signal in the universe (composite 1.5, trend_strength 1.0)
+    and part of the SOX semi explosion. However: (1) extremely extended above SMA20
+    (+38.7%, SMA20 at 250 vs close 347); (2) AMD Q1 2026 earnings expected ~April
+    29 → 3-day earnings blackout applies NOW. No new entry until post-earnings reaction
+    settles and a pullback/base forms. Watching for post-earnings pullback to 290-320
+    range as future entry. If gap up > 5% Monday pre-market, becomes Round 2 candidate
+    per SKILL rules.
+
+    '
+  invalidation: Close back below 300 on sustained basis = trend damage
+  a_point: 'Post-earnings (after April 29): pullback to 300-320 range for breakout
+    continuation entry. Do NOT chase current extension. Monitor for 2-3 day base formation
+    post-earnings.
+
+    '
+  b_point: Post-earnings hold above 360 with volume = no need to wait, momentum intact
+  signal:
+    composite_score: 1.5
+    firing_factors:
+    - trend_strength
+    trend_strength: 1.0
+    rsi_overbought: -0.465
+    close: 347.81
+    atr_14: 13.82
+    sma_20: 250.85
+    sma_50: 221.57
+  trigger_met: false
+  block_reason: earnings_blackout_until_2026-04-30
+  added_date: '2026-04-26'
+  session: weekend
+  updated_at: '2026-04-26T05:17:49Z'
+- symbol: INTC
+  entry_mode: observation
+  thesis: 'INTC reported Q1 2026 earnings beat + strong guidance (April 22). Stock
+    has surged dramatically — "Intel finally tops 2000 peak" headline. Signal: composite
+    1.5, trend_strength 1.0. But SMA20 at 59.55 vs close 82.54 = +38.6% extension.
+    Post-earnings gap is a catalyst play, but entering into a +38% extension above
+    SMA20 is high risk of mean-reversion chop. Watch for 5-7 day consolidation / pullback
+    to 70-75 range before considering entry.
+
+    '
+  invalidation: Close back below 70 = post-earnings gap-fill risk, avoid
+  a_point: 'Pullback to 70-75 range (partial gap fill) with volume contraction = pullback
+    entry. If no pullback and stock makes new highs from 85+ with volume = breakout
+    re-entry.
+
+    '
+  b_point: Sustained close above 88 = post-earnings breakout confirmed
+  signal:
+    composite_score: 1.5
+    firing_factors:
+    - trend_strength
+    trend_strength: 1.0
+    rsi_overbought: -0.239
+    close: 82.54
+    atr_14: 4.29
+    sma_20: 59.55
+    sma_50: 51.03
+  trigger_met: false
+  block_reason: too_extended_post_earnings_gap
+  added_date: '2026-04-26'
+  session: weekend
+  updated_at: '2026-04-26T05:17:49Z'
+- symbol: AAOI
+  entry_mode: breakout
+  thesis: 'Applied Optoelectronics — 矽光子/光學收發器直接受益AI資料中心互聯需求爆發。 Composite 1.225，trend_strength
+    0.816（Wave 3最強訊號）。SOX rally + 光纖替代銅線 是本季最強敘事之一。SMA20 dist +23.7%，已有幅度但仍在可追範圍。
+    ATR 16.36（佔股價10.1%）= 波動大，需嚴格 sizing。
+
+    '
+  invalidation: 收盤跌破 SMA50（102.85）或跌破 140（ATR stop 下方失守）
+  a_point: '目前 162，回測 145-150（SMA20 + ATR buffer zone）是甜蜜點。 若週一開高繼續守 162 + volume
+    > 20MA，可在 162-168 breakout zone 進。 Stop: 137.63（close - 1.5×ATR）。Target 2R: 211。
+
+    '
+  b_point: 收盤站穩 175 + 成交量放大 = 趨勢加速確認
+  signal:
+    composite_score: 1.225
+    firing_factors:
+    - trend_strength
+    trend_strength: 0.816
+    rsi_overbought: 0.0
+    close: 162.17
+    atr_14: 16.36
+    sma_20: 131.11
+    sma_50: 102.85
+    initial_stop: 137.63
+    target_1r: 186.71
+    target_2r: 211.25
+  sizing:
+    account_equity: 100000
+    per_trade_risk: 1000
+    risk_per_share: 24.54
+    qty: 40
+    position_size_usd: 6487
+    position_pct: 6.5
+  wave: photonics
+  added_date: '2026-04-26'
+  session: weekend
+  updated_at: '2026-04-26T06:15:27Z'
+- symbol: MCHP
+  entry_mode: breakout
+  thesis: 'Microchip Technology — 類比晶片，解決AI資料中心能源與控制瓶頸。 Composite 1.098，trend_strength
+    0.732，ATR僅3.14（佔股價3.5%）= 三組標的中 最緊的止損，sizing最大、R:R最乾淨。「非AI也吃得到」的不對稱性：MCU/analog
+    需求復甦 + AI邊緣計算需求。SMA20 dist +21.8%，有幅度但ATR緊代表波動低。 ⚠️ 注意：MCHP 財年 3/31 結束，Q4 earnings
+    通常在5月初報—若報在 Apr 29前確認 已過財報，否則列入 blackout 觀察。需週一確認財報日期。
+
+    '
+  invalidation: 收盤跌破 SMA20（73.40）或跌破 84（ATR stop）
+  a_point: '目前 89.44。在 87-91 範圍（近 SMA20 breakout extension zone）直接進。 Stop: 84.73（close
+    - 1.5×ATR）。Target 2R: 98.86。 R:R 乾淨：risk 4.71，target dist 9.42。
+
+    '
+  b_point: 收盤站穩 94 + 成交量 = 確認突破
+  signal:
+    composite_score: 1.098
+    firing_factors:
+    - trend_strength
+    trend_strength: 0.732
+    rsi_overbought: -0.233
+    close: 89.44
+    atr_14: 3.14
+    sma_20: 73.4
+    sma_50: 71.22
+    initial_stop: 84.73
+    target_1r: 94.15
+    target_2r: 98.86
+  sizing:
+    account_equity: 100000
+    per_trade_risk: 1000
+    risk_per_share: 4.71
+    qty: 212
+    position_size_usd: 18961
+    position_pct: 19.0
+  wave: analog_semi
+  earnings_check: MCHP Q4 FY2026 expected ~early May — verify before entry
+  added_date: '2026-04-26'
+  session: weekend
+  updated_at: '2026-04-26T06:15:27Z'
+- symbol: ADI
+  entry_mode: breakout
+  thesis: 'Analog Devices — 類比晶片龍頭，資料中心電源管理 + 工業自動化 + 汽車電子。 Composite 0.796，trend_strength
+    0.531，SMA20 dist +14.5%（三檔 analog semi 中 延伸最小）。ADI 營收品質高，毛利率穩定 70%+，比 MCHP 更保守穩健。
+    ⚠️ ADI 財年 Q2 通常4月底結束，earnings 約在5月中報—需週一確認財報日期。
+
+    '
+  invalidation: 收盤跌破 SMA20（349.15）
+  a_point: '目前 399.57。回測 385-390（近 1×ATR 回撤）是較好 R:R 進場點。 直接 breakout 進：399-405 範圍，stop
+    382.70。Target 2R: 433。 R:R = 16.9 風險 vs 33.4 收益。
+
+    '
+  b_point: 收盤站穩 420 = 確認走升
+  signal:
+    composite_score: 0.796
+    firing_factors:
+    - trend_strength
+    trend_strength: 0.531
+    rsi_overbought: -0.059
+    close: 399.57
+    atr_14: 11.25
+    sma_20: 349.15
+    sma_50: 337.54
+    initial_stop: 382.7
+    target_1r: 416.44
+    target_2r: 433.32
+  sizing:
+    account_equity: 100000
+    per_trade_risk: 1000
+    risk_per_share: 16.88
+    qty: 59
+    position_size_usd: 23575
+    position_pct: 23.6
+  wave: analog_semi
+  earnings_check: ADI Q2 FY2026 expected ~mid-May — verify before entry
+  added_date: '2026-04-26'
+  session: weekend
+  updated_at: '2026-04-26T06:15:27Z'
+- symbol: CIEN
+  entry_mode: breakout
+  thesis: 'Ciena — 光纖網路基礎設施，資料中心長距離互聯（DCI）核心設備商。AI資料中心 建設帶動高速光纖鏈路需求（400G/800G/1.6T）。Composite
+    0.781，trend_strength 0.520， SMA20 dist +11.4%（Wave 3中延伸最適中）。ATR 31.02（佔股價6.0%）=
+    波動偏大。 CIEN 財年 Q2 通常1月底，下次財報約6月 = 無近期財報黑暗期風險。
+
+    '
+  invalidation: 收盤跌破 SMA50（396.29）或跌破 474（ATR stop）
+  a_point: '目前 520.80。回測 490-500（SMA20 上方 + 近 ATR buffer）是較佳進場點。 Breakout 進：520-530，stop
+    474.27，Target 2R: 613.86。 R:R = 46.5 風險 vs 93 收益。
+
+    '
+  b_point: 收盤站穩 550 + 成交量 = 確認突破
+  signal:
+    composite_score: 0.781
+    firing_factors:
+    - trend_strength
+    trend_strength: 0.52
+    rsi_overbought: 0.0
+    close: 520.8
+    atr_14: 31.02
+    sma_20: 467.39
+    sma_50: 396.29
+    initial_stop: 474.27
+    target_1r: 567.33
+    target_2r: 613.86
+  sizing:
+    account_equity: 100000
+    per_trade_risk: 1000
+    risk_per_share: 46.53
+    qty: 21
+    position_size_usd: 10937
+    position_pct: 10.9
+  wave: photonics
+  added_date: '2026-04-26'
+  session: weekend
+  updated_at: '2026-04-26T06:15:27Z'
+- symbol: BE
+  entry_mode: breakout
+  thesis: 'Bloom Energy — 固態氧化物燃料電池，以天然氣/氫氣直接發電，可作資料中心基載電源。 Composite 0.829，trend_strength
+    0.552。SMA20 dist +29.7%，延伸幅度偏大，但 AI電力危機主題（微軟/Google/Amazon 急尋基載電力）提供強力敘事支撐。 ATR
+    15.66（佔股價6.8%）= 波動大，需嚴格 sizing。 ⚠️ BE Q1 2026 earnings 通常在5月初報，需週一確認。
+
+    '
+  invalidation: 收盤跌破 SMA20（178.30）或跌破 207（ATR stop 失守）
+  a_point: '目前 231.17，延伸偏大。等回測 210-215（ATR stop buffer 附近）為較優進場。 若週一站穩 230+，以 breakout
+    進 232-240，stop 207.68，Target 2R: 278。
+
+    '
+  b_point: 收盤站穩 250 + 成交量 = 確認多頭結構
+  signal:
+    composite_score: 0.829
+    firing_factors:
+    - trend_strength
+    trend_strength: 0.552
+    rsi_overbought: 0.0
+    close: 231.17
+    atr_14: 15.66
+    sma_20: 178.3
+    sma_50: 163.85
+    initial_stop: 207.68
+    target_1r: 254.66
+    target_2r: 278.15
+  sizing:
+    account_equity: 100000
+    per_trade_risk: 1000
+    risk_per_share: 23.49
+    qty: 42
+    position_size_usd: 9709
+    position_pct: 9.7
+  wave: power_cooling
+  earnings_check: BE Q1 2026 expected ~early May — verify before entry
+  added_date: '2026-04-26'
+  session: weekend
+  updated_at: '2026-04-26T06:15:27Z'
+- symbol: VRT
+  entry_mode: observation
+  thesis: 'Vertiv Holdings — 液冷 + 資料中心電源管理基礎設施龍頭，直接受益AI機架功耗密度 爆增（NVIDIA GB200 NVL72
+    = 120kW/rack）。trend_strength 0.110，未達進場門檻（0.3）。 SMA20 dist +12.9%，趨勢在建立中但動能尚未確認。VRT
+    財報 Q1 2026 通常4月底報 — 若已報（4/24周），需確認結果再評估。 Watch：若 trend_strength 升破 0.3 + composite
+    > 0.5，轉為 breakout entry。
+
+    '
+  invalidation: 跌破 SMA50（268）= 結構破壞
+  a_point: '等待 trend_strength 訊號確認（composite > 0.5）。理想進場：回測 295-300 （SMA20 附近）+ volume
+    收縮後止穩。不追現價 323。
+
+    '
+  b_point: composite > 0.7 + entry_ok=true = 訊號確認，可進
+  signal:
+    composite_score: 0.0
+    firing_factors: []
+    trend_strength: 0.11
+    rsi_overbought: 0.0
+    close: 323.46
+    atr_14: 14.15
+    sma_20: 286.58
+    sma_50: 268.0
+  trigger_met: false
+  block_reason: trend_strength_below_threshold
+  wave: power_cooling
+  added_date: '2026-04-26'
+  session: weekend
+  updated_at: '2026-04-26T06:15:27Z'
+- symbol: CCJ
+  entry_mode: observation
+  thesis: 'Cameco — 鈾礦全球龍頭，核能復興主題（AI數據中心 + 減碳政策）直接受益。 trend_strength 0.0，目前未觸發任何訊號。SMA20
+    dist +5.6%，剛剛站上 SMA20， 趨勢正在形成但動能不足。CEG（Constellation Energy，核電廠運營商）同樣 trend=0。
+    這兩檔是「主題正確但訊號未到」的代表。等待訊號確認再進。
+
+    '
+  invalidation: 跌破 SMA50（114.74）= 趨勢未建立
+  a_point: '等 composite > 0.5 + entry_ok=true。當前 SMA20 距離只有 +5.6% = 訊號可能很快 觸發，設定週監控。理想進場：SMA20
+    附近（115-118）+ 動能確認。
+
+    '
+  b_point: trend_strength > 0.3 + composite > 0.5 = 可進場
+  signal:
+    composite_score: 0.0
+    firing_factors: []
+    trend_strength: 0.0
+    rsi_overbought: 0.0
+    close: 122.15
+    atr_14: 6.02
+    sma_20: 115.64
+    sma_50: 114.74
+  trigger_met: false
+  block_reason: trend_strength_zero
+  wave: power_cooling
+  added_date: '2026-04-26'
+  session: weekend
+  updated_at: '2026-04-26T06:15:27Z'
+- symbol: COHR
+  entry_mode: observation
+  thesis: 'Coherent Corp — 光子/矽光子整合器件（800G transceiver + LiDAR + 半導體元件）。 Composite
+    0.535，trend_strength 0.357，勉強過門檻但分數偏低。SMA20 dist +13.8%， ATR 21.91（6.5%）= 波動大。比
+    AAOI 和 CIEN 更早期、更低 composite，但在 Wave 3 主題中是技術壁壘最高的整合供應商（InP + SiPh + GaAs 全覆蓋）。
+    優先順序低於 AAOI/CIEN，等訊號強化後考慮。
+
+    '
+  invalidation: 跌破 SMA50（269.21）
+  a_point: '等 composite > 0.7 + trend_strength > 0.5。回測 300-310（SMA20 buffer）是更佳 進場位，而非現價
+    336。
+
+    '
+  b_point: composite > 0.8 = 提升為主動進場候選
+  signal:
+    composite_score: 0.535
+    firing_factors:
+    - trend_strength
+    trend_strength: 0.357
+    rsi_overbought: 0.0
+    close: 336.09
+    atr_14: 21.91
+    sma_20: 295.36
+    sma_50: 269.21
+  trigger_met: false
+  block_reason: composite_low_prefer_pullback
+  wave: photonics
+  added_date: '2026-04-26'
+  session: weekend
+  updated_at: '2026-04-26T06:15:27Z'
+- symbol: TXN
+  entry_mode: observation
+  thesis: 'Texas Instruments — 類比晶片最大市值，composite 1.074 / trend_strength 0.716，幾乎與
+    MCHP 並列。 Q1 2026 已報（4/22）確認類比週期回升，無財報黑暗期。唯一問題：SMA20 dist +26.9% 延伸偏大， 比 MCHP (+21.8%)
+    更難進。等回測到 255-265 附近（接近 SMA20）再進場，R:R 更乾淨。 若無回測，285 breakout with volume 也可接受。
+
+    '
+  invalidation: 收盤跌破 SMA20 (218.36) 或跌破 263 (ATR stop)
+  a_point: '回測 255-265（近 SMA20 + 1×ATR buffer）= 甜蜜點。 若無回測：285+ breakout with expanding
+    volume。
+
+    '
+  b_point: 收盤站穩 290 + 成交量 = 趨勢延伸確認
+  signal:
+    composite_score: 1.074
+    firing_factors:
+    - trend_strength
+    trend_strength: 0.716
+    rsi_overbought: -0.286
+    close: 277.14
+    atr_14: 9.4
+    sma_20: 218.36
+    sma_50: 209.65
+    initial_stop: 263.04
+    target_1r: 291.24
+    target_2r: 305.34
+  trigger_met: false
+  block_reason: too_extended_prefer_pullback_to_255_265
+  wave: analog_semi
+  added_date: '2026-04-27'
+  session: premarket
+  updated_at: '2026-04-27T00:25:54Z'
+- symbol: LITE
+  entry_mode: observation
+  thesis: 'Lumentum — 光學元件（EML、VCSEL、泵浦雷射），Wave 3 光子族群中「最近觸發訊號」的標的。 trend_strength
+    0.273，離門檻 0.3 最近，SMA20 dist 僅 +6.3% = 剛剛站上 SMA20。 若訊號觸發，進場點接近 SMA20（最小延伸），是光子組
+    R:R 最乾淨的入場機會。 端看 AAOI/CIEN 主力是否繼續，LITE 跟進通常是主題延伸的第二棒。 注意 3D sensing（Apple VCSEL）是混合風險，需觀察財報時的業務拆分。
+
+    '
+  invalidation: 收盤跌破 SMA50 (734.90) = 趨勢結構破壞
+  a_point: '訊號觸發時（composite > 0.5）進場，進場點在 830-880（SMA20 buffer zone）。 不追現價 881 — 等
+    trend_strength 確認後再動。
+
+    '
+  b_point: composite > 0.7 持續 = 完整訊號確認
+  signal:
+    composite_score: 0.0
+    firing_factors: []
+    trend_strength: 0.273
+    rsi_overbought: 0.0
+    close: 881.64
+    atr_14: 67.66
+    sma_20: 829.74
+    sma_50: 734.9
+    initial_stop: 780.15
+    target_1r: 983.13
+    target_2r: 1084.62
+  trigger_met: false
+  block_reason: trend_strength_below_threshold_0.273
+  wave: photonics
+  added_date: '2026-04-27'
+  session: premarket
+  updated_at: '2026-04-27T00:25:54Z'
+- symbol: OKLO
+  entry_mode: observation
+  thesis: 'Oklo — Sam Altman 支持的小型模組核反應爐（Aurora microreactor），AI資料中心電力直接主題概念股。 OpenAI
+    已簽 500MW LOI（非約束性）。trend_strength 0.193 建立中，SMA20 dist +24.3%。 技術面：SMA50 (59.74)
+    > SMA20 (57.13) = 從下跌趨勢中剛剛突破，動能尚早期。 純概念股無收入，risk cap 設 $500（非 $1000），position
+    減半。 等訊號觸發後，盡量靠近 SMA20 zone（57-65）進。
+
+    '
+  invalidation: 收盤跌破 SMA50 (59.74) = 突破失敗
+  a_point: '訊號觸發（composite > 0.5）後，在 57-65 zone 進場（回測 SMA20）。 不追現價 71，SMA50 > SMA20
+    的結構確認前保持觀察。
+
+    '
+  b_point: SMA20 站穩高於 SMA50 + composite > 0.5 = 趨勢確認可進
+  signal:
+    composite_score: 0.0
+    firing_factors: []
+    trend_strength: 0.193
+    rsi_overbought: 0.0
+    close: 71.0
+    atr_14: 6.27
+    sma_20: 57.13
+    sma_50: 59.74
+    initial_stop: 61.6
+    target_1r: 80.41
+    target_2r: 89.81
+  trigger_met: false
+  block_reason: trend_strength_below_threshold_pre_revenue_concept
+  wave: power_cooling
+  sizing_note: pre-revenue concept — cap risk at $500 (not $1000 standard)
+  added_date: '2026-04-27'
+  session: premarket
+  updated_at: '2026-04-27T00:25:54Z'
+- symbol: CEG
+  entry_mode: observation
+  thesis: 'Constellation Energy — 美國最大核電運營商，Three Mile Island Unit 1 重啟（微軟20年PPA）的執行方。
+    AI資料中心對「24/7無碳基載電力」的需求讓 CEG 成為核電複興最直接的受益者。 trend_strength 0.0，composite 0.0 —
+    訊號未到。SMA20 dist +8.7%，SMA50 > SMA20 = 從下跌趨勢恢復中。 與 CCJ 形成「鈾供應（CCJ）+ 核電運營（CEG）」雙邊觀察組合。
+    任何新的超大規模資料中心 PPA 公告 = 即時催化劑。
+
+    '
+  invalidation: 收盤跌破 SMA50 (299.54) = 復甦失敗
+  a_point: '訊號觸發（trend_strength > 0.3，composite > 0.5）後，在 SMA20 附近（288-298）進場。 等 SMA20
+    站穩高於 SMA50（黃金交叉）為最佳確認。
+
+    '
+  b_point: 新的超大規模 PPA 公告 + composite > 0.5 = 加速進場
+  signal:
+    composite_score: 0.0
+    firing_factors: []
+    trend_strength: 0.0
+    rsi_overbought: 0.0
+    close: 313.53
+    atr_14: 13.01
+    sma_20: 288.38
+    sma_50: 299.54
+    initial_stop: 294.02
+    target_1r: 333.05
+    target_2r: 352.56
+  trigger_met: false
+  block_reason: trend_strength_zero
+  wave: power_cooling
+  added_date: '2026-04-27'
+  session: premarket
+  updated_at: '2026-04-27T00:25:55Z'

@@ -297,6 +297,23 @@ class ReadStore:
                 return record.to_read_result()
             return None
 
+    def get_rss_entry(self, url: str) -> Optional[ReadResult]:
+        """
+        Look up a cached RSS entry by its post URL (across all feeds).
+        No TTL — published article bodies are immutable.
+        """
+        with Session(self.engine) as session:
+            stmt = (
+                select(RssEntryRecord)
+                .where(RssEntryRecord.url == url)
+                .order_by(RssEntryRecord.updated_at.desc())
+            )
+            record = session.exec(stmt).first()
+            if record:
+                logger.debug(f"RSS entry cache hit: {url}")
+                return record.to_read_result()
+            return None
+
     def search_by_url(self, url: str) -> list[ReadRecord]:
         """Find all records matching a URL."""
         with Session(self.engine) as session:

@@ -8,22 +8,42 @@ positions:
       440
     opened_at: '2026-04-21T04:50:43Z'
 orders:
-  - id: mig3189sl000
-    symbol: 3189.TW
-    side: SELL
-    type: STOP_LOSS
-    quantity: 200.0
-    trigger_price: 440.0
-    status: PENDING
-    placed_at: '2026-04-21T04:50:43Z'
-    reason: migrated from legacy ExitOrder
-  - id: mig3189tp000
-    symbol: 3189.TW
-    side: SELL
-    type: TAKE_PROFIT
-    quantity: 200.0
-    trigger_price: 525.0
-    status: PENDING
-    placed_at: '2026-04-21T04:50:43Z'
-    reason: migrated from legacy ExitOrder
-updated_at: '2026-04-21T00:00:00Z'
+- id: mig3189sl000
+  symbol: 3189.TW
+  side: SELL
+  type: STOP_LOSS
+  quantity: 200.0
+  limit_price: null
+  trigger_price: 440.0
+  status: CANCELLED
+  placed_at: '2026-04-21T04:50:43Z'
+  filled_at: null
+  fill_price: null
+  cancelled_at: '2026-04-26T05:11:55Z'
+  cancelled_reason: Stop 440 上移至 490（target reached reassess HOLD；ABF momentum intact；MACD
+    hist expanding）；Fugle 不可用，待週一重設
+  attach_stop_loss: null
+  attach_take_profit: null
+  reason: migrated from legacy ExitOrder
+  strategy: ''
+  tags: []
+- id: mig3189tp000
+  symbol: 3189.TW
+  side: SELL
+  type: TAKE_PROFIT
+  quantity: 200.0
+  limit_price: null
+  trigger_price: 525.0
+  status: CANCELLED
+  placed_at: '2026-04-21T04:50:43Z'
+  filled_at: null
+  fill_price: null
+  cancelled_at: '2026-04-26T05:11:54Z'
+  cancelled_reason: Target 525 已超越（4/24 close 526 = 1.57R）；reassess HOLD，新 target
+    reassess at 600；不自動止盈
+  attach_stop_loss: null
+  attach_take_profit: null
+  reason: migrated from legacy ExitOrder
+  strategy: ''
+  tags: []
+updated_at: '2026-04-26T05:11:55Z'

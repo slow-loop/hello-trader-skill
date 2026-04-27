@@ -1,0 +1,42 @@
+name: momentum
+version: 1.1.0
+description: |
+  Bug-fix iteration over v2: rsi_overbought min_score removed so it works as a
+  composite drag rather than a dead gate (scores always in [-0.5, 0], so
+  min_score=0.3 meant it never contributed in v2).
+
+  Factor rationale:
+    - trend_strength:  IC(5D)=+0.021, IC(20D)=+0.041, n=17300, t=4.5 → reliable
+      broad trend filter; required gate for entry.
+    - rsi_overbought:  IC(1D)=-0.061, n=886 → drag: reduces composite when RSI>75,
+      filters over-extended entries. No min_score so negative scores propagate.
+
+  Changes from v2:
+    - Removed min_score on rsi_overbought (bug fix)
+    - Lowered rsi_overbought weight to 0.8 (drag should be gentle, not blocking)
+
+factors:
+  - id: trend_strength
+    weight: 1.5
+    min_score: 0.3
+    required: true
+  - id: rsi_overbought
+    weight: 0.8
+
+entry:
+  composite_score_min: 0.5
+  must_include: []
+  must_exclude: []
+
+risk:
+  initial_stop_formula: "close - 1.5 * atr_14"
+  target_r: 2.0
+  max_position_pct: 30.0
+  account_risk_pct: 1.0
+
+agent_flow_hint: |
+  1. uv run factor signal --strategy <this yaml> --universe sp500
+  2. Top candidates ranked by composite_score (entry_ok=True)
+  3. Sizing: 1% account risk per trade (stop = close - 1.5*ATR)
+  4. Max 30% single position; stops only move up (trailing)
+  5. Agent overlays regime judgment (VIX, SPX trend) — not encoded here
