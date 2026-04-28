@@ -86,6 +86,15 @@ def lessons_path() -> Path:
     return account_dir() / "lessons.md"
 
 
+def screener_dir() -> Path:
+    return account_dir() / "screener"
+
+
+def screener_snapshot_path(date_str: str, suffix: str | None = None) -> Path:
+    name = f"{date_str}-{suffix}.json" if suffix else f"{date_str}.json"
+    return screener_dir() / name
+
+
 # --- Watchlist (delegates to market_core.watchlist) -----------------
 
 

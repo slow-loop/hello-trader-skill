@@ -17,7 +17,8 @@ from typing import Optional
 
 import dotenv
 
-dotenv.load_dotenv(Path(__file__).resolve().parents[2] / ".env")
+# Load .env from repo root (parents[4] from cli.py).
+dotenv.load_dotenv(Path(__file__).resolve().parents[4] / ".env")
 
 logging.basicConfig(
     level=logging.WARNING,
@@ -209,6 +210,51 @@ def watchlist_delete(
 
 
 @app.command()
+def screener_snapshot(
+    strategy: str = typer.Option("momentum", "--strategy", "-s"),
+    profile: str = typer.Option("tw_equity", "--profile", "-p"),
+    limit: int = typer.Option(30, "--limit", "-n"),
+    enrich: bool = typer.Option(True, "--enrich/--no-enrich"),
+    snapshot_date: Optional[str] = typer.Option(
+        None, "--date", "-d", help="YYYY-MM-DD (defaults to today)"
+    ),
+    suffix: Optional[str] = typer.Option(
+        None, "--suffix", help="e.g. 'postclose' → {date}-postclose.json"
+    ),
+):
+    """Run screener and snapshot to data_root/account/screener/{date}[-suffix].json."""
+    from market_core import MarketConfig, MarketRuntimeConfig, get_market_profile
+    from market_core.screener import run_screener
+
+    target_date = snapshot_date or date.today().isoformat()
+    config = MarketRuntimeConfig(market=MarketConfig(profile=profile))
+    result = run_screener(
+        config,
+        get_market_profile(profile),
+        strategy=strategy,
+        limit=limit,
+        enrich=enrich,
+    )
+    payload = result.model_dump()
+
+    out_path = workspace.screener_snapshot_path(target_date, suffix)
+    out_path.parent.mkdir(parents=True, exist_ok=True)
+    serialized = json.dumps(payload, ensure_ascii=False, indent=2, default=str)
+    out_path.write_text(serialized, encoding="utf-8")
+
+    events_log.append_event(
+        "screener.snapshot",
+        {
+            "path": str(out_path.relative_to(workspace.data_root())),
+            "date": target_date,
+            "strategy": strategy,
+        },
+    )
+
+    _echo({"path": str(out_path), "result": payload})
+
+
+@app.command()
 def doc_add(
     path: Path = typer.Argument(..., help="Research markdown under data/account/research/"),
 ):
@@ -226,23 +272,6 @@ def sweep():
     """Sweep all pending orders against current quotes + bars."""
     triggered = state.sweep()
     _echo([t.model_dump(mode="json") for t in triggered])
-
-
-@app.command()
-def publish(
-    date_arg: Optional[str] = typer.Option(
-        None, "--date", "-d", help="Target date YYYY-MM-DD (default: today)"
-    ),
-):
-    """Render daily publish artifacts (poster.png) from post.yaml + local state."""
-    from tw_trader.publish import render_poster
-
-    try:
-        path = render_poster(date_arg)
-    except Exception as exc:
-        typer.echo(f"publish failed: {exc}", err=True)
-        raise typer.Exit(1)
-    typer.echo(f"wrote {path}")
 
 
 @app.command()

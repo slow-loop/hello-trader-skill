@@ -137,7 +137,7 @@ Markdown（brief / 個股研究）直接 Write，寫完一律 `doc-add`：
 
 ### Phase 1：量化雷達（盤後）
 
-跑 `uv run market screener --strategy momentum > <DATA_ROOT>/account/screener/{YYYY-MM-DD}.json`
+跑 `uv run python -m tw_trader.cli screener-snapshot --strategy momentum`（CLI 自動寫入 `<DATA_ROOT>/account/screener/{today}.json`，stdout 印出絕對路徑與完整結果；盤後補拍可加 `--suffix postclose`）
 
 Screener 自帶技術指標（RSI, ADX, 量比）+ 籌碼（外資/投信連買、融資）：
 - 原始輸出固定寫入 `screener/{date}.json`，brief 只引用 `source` 與 `highlights`
