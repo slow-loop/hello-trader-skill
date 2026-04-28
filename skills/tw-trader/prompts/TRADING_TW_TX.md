@@ -4,8 +4,7 @@
 
 ## 工作目錄
 
-專案根目錄：`/Users/cw/Documents/GitHub/hello-invest/apps/skill-tw-trader`
-所有檔案路徑都相對於此目錄
+見 SKILL.md「工作目錄」章節。`<SKILL_ROOT>` 存 code/config/templates、`<DATA_ROOT>` 存 runtime data。
 
 ## 目標
 
@@ -23,7 +22,7 @@
 - 只能用公開資料
 - 有機會就出手，但不衝動
 
-具體的策略細節不預設，由你在交易過程中自己摸索、檢討、調整，並把可重複使用的心得寫進 `data/account/lessons.md`
+具體的策略細節不預設，由你在交易過程中自己摸索、檢討、調整，並把可重複使用的心得寫進 `<DATA_ROOT>/account/lessons.md`
 
 ### 風控原則
 
@@ -45,18 +44,18 @@
 
 ### Agent 可以直接讀寫的記憶檔
 
-- `data/account/watchlist.yaml`
-- `data/config/technical_config.yaml`
-- `data/config/sources.tw.yaml`
-- `data/account/lessons.md`
-- `data/account/journals/{YYYY-MM-DD}.yaml`
+- `<DATA_ROOT>/account/watchlist.yaml`
+- `<SKILL_ROOT>/config/technical_config.yaml`
+- `<SKILL_ROOT>/config/sources.tw.yaml`
+- `<DATA_ROOT>/account/lessons.md`
+- `<DATA_ROOT>/account/journals/{YYYY-MM-DD}.yaml`
 
 ### 這三類資料的角色不要混
 
-- `data/account/watchlist.yaml`
+- `<DATA_ROOT>/account/watchlist.yaml`
   - 追蹤名單 + thesis + 人工備註
   - 回答的是「我要看什麼」
-- `data/config/technical_config.yaml`
+- `<SKILL_ROOT>/config/technical_config.yaml`
   - 全域共用的 technical analysis 設定
   - 內含 `indicators` 和 `expressions`
   - 回答的是「我要怎麼分析這些標的」
@@ -67,7 +66,7 @@
 - technical config 低頻更新；只有當分析框架或交易方法真的改變時才改
 - 不要把單一標的的臨時觀察寫進 technical config；應該寫在 watchlist 或 journal
 
-### `data/account/watchlist.yaml`
+### `<DATA_ROOT>/account/watchlist.yaml`
 
 格式：
 
@@ -79,7 +78,7 @@
   updated_at: "2026-03-23"
 ```
 
-### `data/account/journals/{YYYY-MM-DD}.yaml`
+### `<DATA_ROOT>/account/journals/{YYYY-MM-DD}.yaml`
 
 每天一個檔案，內容是 list。每次醒來就 append 一筆
 
@@ -114,7 +113,7 @@
 
 ### watchlist 更新原則
 
-- 以下情況應更新 `data/account/watchlist.yaml`：
+- 以下情況應更新 `<DATA_ROOT>/account/watchlist.yaml`：
   - 新增一檔值得持續追蹤的標的
   - 原本 thesis 明顯改變，例如突破、跌破、法人方向反轉、題材失效
   - 因價格過高、波動過大、流動性不足或風控限制，導致雖然有題材但暫時不能交易
@@ -122,7 +121,7 @@
 
 ### lessons 更新原則
 
-- 只有在這次經驗能改變未來決策時，才把內容從 journal 升級寫進 `data/account/lessons.md`
+- 只有在這次經驗能改變未來決策時，才把內容從 journal 升級寫進 `<DATA_ROOT>/account/lessons.md`
 - 下面幾種情況特別值得更新 lessons：
   - 造成實際虧損
   - 造成明顯機會成本
@@ -147,8 +146,8 @@ uv run python -m skill_tw_trader.cli market 2330 2303 2454
 
 - 沒帶 ticker：大盤總覽 + 新聞
 - 帶 ticker：大盤總覽 + 每檔個股的完整分析
-- 技術分析的輸出由 `data/config/technical_config.yaml` 決定
-- 輸出同時存檔至 `data/account/market_snapshots/`
+- 技術分析的輸出由 `<SKILL_ROOT>/config/technical_config.yaml` 決定
+- 輸出同時存檔至 `<DATA_ROOT>/account/market_snapshots/`
 
 ### 帳戶操作
 
@@ -169,8 +168,8 @@ uv run python -m skill_tw_trader.cli set-exit 2330.TW --stop-loss 1600 --take-pr
 uv run python -m skill_tw_trader.cli history --days 7
 
 # 外部新聞掃描（直接讀輸出，不另存 feed）
-uv run web-reader data/config/sources.tw.yaml --tags=tw,macro --format=md
-uv run web-reader data/config/sources.tw.yaml --tags=research --format=md
+uv run web-reader config/sources.tw.yaml --tags=tw,macro --format=md
+uv run web-reader config/sources.tw.yaml --tags=research --format=md
 ```
 
 ## 每次醒來的基本流程
@@ -179,30 +178,30 @@ uv run web-reader data/config/sources.tw.yaml --tags=research --format=md
 
 **步驟**
 
-1. 讀 `data/account/lessons.md`, `data/account/watchlist.yaml`
-2. 讀最近5個交易日的 journals，並確認今天的 journal `data/account/journals/{YYYY-MM-DD}.yaml` 是否存在；如果不存在就建立
-3. 跑 `cli market` 看盤況；如果 headline 不足、主線不清楚、或需要補重大事件脈絡，直接執行 `uv run web-reader data/config/sources.tw.yaml --tags=tw,macro --format=md`
+1. 讀 `<DATA_ROOT>/account/lessons.md`, `<DATA_ROOT>/account/watchlist.yaml`
+2. 讀最近5個交易日的 journals，並確認今天的 journal `<DATA_ROOT>/account/journals/{YYYY-MM-DD}.yaml` 是否存在；如果不存在就建立
+3. 跑 `cli market` 看盤況；如果 headline 不足、主線不清楚、或需要補重大事件脈絡，直接執行 `uv run web-reader config/sources.tw.yaml --tags=tw,macro --format=md`
 4. 結合研究主題形成這次醒來的大盤判斷，並明確說明這個判斷會如何影響操作積極度
 5. 跑 `cli account` 看帳戶
 6. 建立這次醒來的候選 ticker 清單。候選來源只允許以下四種：
    - 目前持倉
-   - `data/account/watchlist.yaml` 中的標的
+   - `<DATA_ROOT>/account/watchlist.yaml` 中的標的
    - **研究主題中所提到的關鍵標的**
    - 當日新聞中符合主題方向（例如 AI、散熱、車用、綠能）的股票
    - 盤面最強、但你能說清楚理由的 1 到 3 檔股票
 7. 至少檢查所有持倉與 watchlist 標的；如有需要，用 `cli market <tickers...>` 查看 ticker 詳細資訊
 8. 決定要不要交易，如果要交易，就呼叫 `cli buy` 或 `cli sell`；如果不交易，也要清楚寫下不動作的理由
-9. 更新今天的 journal `data/account/journals/{YYYY-MM-DD}.yaml`：append 一筆，寫入 actions 和 notes
+9. 更新今天的 journal `<DATA_ROOT>/account/journals/{YYYY-MM-DD}.yaml`：append 一筆，寫入 actions 和 notes
 10. 如果目前是盤後，執行 `uv run python -m skill_tw_trader.cli snapshot`，記錄當日資產快照
-11. 視情況更新 `data/account/watchlist.yaml`
-12. 如果分析框架本身需要調整，再更新 `data/config/technical_config.yaml`
-13. 如果得到可重複使用的教訓，再更新 `data/account/lessons.md`
+11. 視情況更新 `<DATA_ROOT>/account/watchlist.yaml`
+12. 如果分析框架本身需要調整，再更新 `<SKILL_ROOT>/config/technical_config.yaml`
+13. 如果得到可重複使用的教訓，再更新 `<DATA_ROOT>/account/lessons.md`
 
 補充：
 
 - `web-reader` 預設輸出是 JSON；只有在你真的需要結構化欄位時才用 JSON
 - 一般情況請加上 `--format=md`，直接閱讀終端輸出即可
-- 不要為了新聞研究另外建立或更新 `data/feeds/*.yaml`
+- 不要為了新聞研究另外建立或更新 `<DATA_ROOT>/feeds/*.yaml`
 - 新聞研究的正式產出只應該是 journal 或 research
 
 ## 子流程

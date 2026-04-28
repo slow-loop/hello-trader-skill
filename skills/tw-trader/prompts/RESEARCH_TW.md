@@ -24,20 +24,27 @@
 
 ## 檔案
 
-**專案根目錄**：`/Users/cw/Documents/GitHub/hello-trader-skill/skills/tw-trader`
+`<SKILL_ROOT>` / `<DATA_ROOT>` 定義見 SKILL.md「工作目錄」。
 
-- `data/account/lessons.md`: 規則與教訓
-- `data/account/watchlist.yaml`: 追蹤清單與 thesis
-- `data/account/journals/{YYYY-MM-DD}.yaml`: 當日紀錄
-- `data/config/technical_config.yaml`: 技術分析設定
-- `data/config/sources.tw.yaml`: web-reader 來源設定
-- `data/account/research/{YYYY-MM-DD}-tw-{symbol_or_theme}.md`: 個股/主題研究
-- `data/account/research/{YYYY-MM-DD}-tw-brief-{HHMM}.md`: 當日市場簡報（HHMM 由 `doc-add` 自動補）
-- `data/account/research/template/template.md`: 個股研究範本
-- `data/account/research/template/brief.template.md`: 簡報範本
-- `data/account/screener/{YYYY-MM-DD}.json`: screener 原始輸出
+Runtime（讀寫頻繁，存於 `<DATA_ROOT>`）：
+
+- `<DATA_ROOT>/account/lessons.md`: 規則與教訓
+- `<DATA_ROOT>/account/watchlist.yaml`: 追蹤清單與 thesis
+- `<DATA_ROOT>/account/journals/{YYYY-MM-DD}.yaml`: 當日紀錄
+- `<DATA_ROOT>/account/research/{YYYY-MM-DD}-tw-{symbol_or_theme}.md`: 個股/主題研究
+- `<DATA_ROOT>/account/research/{YYYY-MM-DD}-tw-brief-{HHMM}.md`: 當日市場簡報（HHMM 由 `doc-add` 自動補）
+- `<DATA_ROOT>/account/screener/{YYYY-MM-DD}.json`: screener 原始輸出
+
+Static（只讀，存於 `<SKILL_ROOT>`）：
+
+- `<SKILL_ROOT>/config/technical_config.yaml`: 技術分析設定
+- `<SKILL_ROOT>/config/sources.tw.yaml`: web-reader 來源設定
+- `<SKILL_ROOT>/templates/research/template.md`: 個股研究範本
+- `<SKILL_ROOT>/templates/research/brief.template.md`: 簡報範本
 
 ## CLI
+
+所有指令前綴 `cd <SKILL_ROOT> &&`（見 SKILL.md「工作目錄」）。範例省略前綴以保持可讀，實際執行時必須加上。
 
 ```bash
 # 大盤 + 個股行情
@@ -53,15 +60,15 @@ uv run market screener --strategy momentum --no-enrich
 uv run python -m tw_trader.cli account
 uv run python -m tw_trader.cli watchlist
 
-# 情緒 / 新聞
-uv run web-reader data/config/sources.tw.yaml --tags=sentiment
-uv run web-reader data/config/sources.tw.yaml --tags=tw,macro
-uv run web-reader data/config/sources.tw.yaml --tags=research
+# 情緒 / 新聞（config 路徑相對於 <SKILL_ROOT>，cd 後可省略）
+uv run web-reader config/sources.tw.yaml --tags=sentiment
+uv run web-reader config/sources.tw.yaml --tags=tw,macro
+uv run web-reader config/sources.tw.yaml --tags=research
 
 # 更新（agent 專用，透過暫存檔）
 uv run python -m tw_trader.cli watchlist-update --file tmp/update_item.yaml
 uv run python -m tw_trader.cli journal-add --file tmp/journal_entry.yaml
-uv run python -m tw_trader.cli doc-add data/account/research/{filename}.md
+uv run python -m tw_trader.cli doc-add <DATA_ROOT>/account/research/{filename}.md
 ```
 
 Markdown（brief / 個股研究）直接 Write，寫完一律 `doc-add`：
@@ -69,7 +76,7 @@ Markdown（brief / 個股研究）直接 Write，寫完一律 `doc-add`：
 - 個股/主題：`{date}-tw-{symbol_or_theme}.md`，`doc-add` 只補 `created_at`
 - Brief frontmatter：`date` / `session` / `screener_source`（`created_at` 不要手填）
 - 生命週期：`doc-add` 後就算定稿；新情勢另寫 draft 再 `doc-add`
-- `screener_source` 指到 `data/account/screener/{date}.json`；Phase 1 跳過則留空並註明
+- `screener_source` 指到 `<DATA_ROOT>/account/screener/{date}.json`；Phase 1 跳過則留空並註明
 
 ## 資料時間軸對照表
 
@@ -130,7 +137,7 @@ Markdown（brief / 個股研究）直接 Write，寫完一律 `doc-add`：
 
 ### Phase 1：量化雷達（盤後）
 
-跑 `uv run market screener --strategy momentum > data/account/screener/{YYYY-MM-DD}.json`
+跑 `uv run market screener --strategy momentum > <DATA_ROOT>/account/screener/{YYYY-MM-DD}.json`
 
 Screener 自帶技術指標（RSI, ADX, 量比）+ 籌碼（外資/投信連買、融資）：
 - 原始輸出固定寫入 `screener/{date}.json`，brief 只引用 `source` 與 `highlights`
@@ -140,7 +147,7 @@ Screener 自帶技術指標（RSI, ADX, 量比）+ 籌碼（外資/投信連買�
 
 ### Phase 2：散戶情緒
 
-跑 `uv run web-reader data/config/sources.tw.yaml --tags=sentiment`
+跑 `uv run web-reader config/sources.tw.yaml --tags=sentiment`
 
 - 整理：PTT 有沒有 watchlist 以外的新 ticker 被反覆提到？整體偏多/偏空？
 - 高 push 文章（≥30 push）讀原文：`uv run web-reader "<url>" --format=md`
@@ -149,7 +156,7 @@ Screener 自帶技術指標（RSI, ADX, 量比）+ 籌碼（外資/投信連買�
 
 ### Phase 3：新聞與宏觀
 
-跑 `uv run web-reader data/config/sources.tw.yaml --tags=tw,macro`
+跑 `uv run web-reader config/sources.tw.yaml --tags=tw,macro`
 
 - 整理：市場主線、次主線、重要宏觀催化
 - 輔以 `market overview`：驗證新聞敘事是否被真金白銀買單
@@ -185,7 +192,7 @@ Screener 自帶技術指標（RSI, ADX, 量比）+ 籌碼（外資/投信連買�
    - thesis 明顯改變
    - 持倉出現重大催化或風險
 3. **市場簡報（Brief）**：
-   - Write 到 `data/account/research/{date}-tw-brief-draft.md`，結構照 `brief.template.md`
+   - Write 到 `<DATA_ROOT>/account/research/{date}-tw-brief-draft.md`，結構照 `<SKILL_ROOT>/templates/research/brief.template.md`
    - frontmatter 必填 `date` / `session` / `screener_source`
    - **Brief 必含 Regime 區塊**（Phase 0 的判斷 + 一句話描述）
    - 跑 `cli doc-add ...`，rename 成 `brief-{HHMM}` 並補 `created_at`
@@ -195,7 +202,7 @@ Screener 自帶技術指標（RSI, ADX, 量比）+ 籌碼（外資/投信連買�
 
 ### 子流程：個股交易研究
 
-1. 讀 `data/account/research/template/template.md`
+1. 讀 `<SKILL_ROOT>/templates/research/template.md`
 2. 單一主標的為核心，不重做整體市場掃描
 3. 按 template 多輪尋找資料：
    - 新聞：先 `--tags=tw,macro`，再 `--tags=research`（分兩次）

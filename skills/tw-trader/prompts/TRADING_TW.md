@@ -14,19 +14,26 @@
 
 ## 檔案
 
-**專案根目錄**：`/Users/cw/Documents/GitHub/hello-trader-skill/skills/tw-trader`
+`<SKILL_ROOT>` / `<DATA_ROOT>` 定義見 SKILL.md「工作目錄」。
 
-- `data/account/lessons.md`: 規則與教訓
-- `data/account/watchlist.yaml`: 追蹤清單與 thesis
-- `data/account/journals/{YYYY-MM-DD}.yaml`: 當日紀錄
-- `data/account/research/`: 帳戶專屬研究檔
-- `data/account/state/ledger.json`: 帳戶狀態與交易紀錄
-- `data/account/state/equity.json`: 資產快照
-- `data/account/market_snapshots/`: 市場與個股快照
-- `data/config/technical_config.yaml`: 技術分析設定
-- `data/config/sources.tw.yaml`: web-reader 來源設定
+Runtime（讀寫頻繁，存於 `<DATA_ROOT>`）：
+
+- `<DATA_ROOT>/account/lessons.md`: 規則與教訓
+- `<DATA_ROOT>/account/watchlist.yaml`: 追蹤清單與 thesis
+- `<DATA_ROOT>/account/journals/{YYYY-MM-DD}.yaml`: 當日紀錄
+- `<DATA_ROOT>/account/research/`: 帳戶專屬研究檔
+- `<DATA_ROOT>/account/state/ledger.json`: 帳戶狀態與交易紀錄
+- `<DATA_ROOT>/account/state/equity.json`: 資產快照
+- `<DATA_ROOT>/account/market_snapshots/`: 市場與個股快照
+
+Static（只讀，存於 `<SKILL_ROOT>`）：
+
+- `<SKILL_ROOT>/config/technical_config.yaml`: 技術分析設定
+- `<SKILL_ROOT>/config/sources.tw.yaml`: web-reader 來源設定
 
 ## CLI
+
+所有指令前綴 `cd <SKILL_ROOT> &&`（見 SKILL.md「工作目錄」）。範例省略前綴以保持可讀，實際執行時必須加上。
 
 ```bash
 # 大盤 + 個股
@@ -38,10 +45,10 @@ uv run market quote 2330
 uv run python -m tw_trader.cli account
 uv run python -m tw_trader.cli watchlist
 
-# 新聞 / 情緒
-uv run web-reader data/config/sources.tw.yaml --tags=tw,market
-uv run web-reader data/config/sources.tw.yaml --tags=macro
-uv run web-reader data/config/sources.tw.yaml --tags=sentiment
+# 新聞 / 情緒（config 路徑相對於 <SKILL_ROOT>，cd 後可省略）
+uv run web-reader config/sources.tw.yaml --tags=tw,market
+uv run web-reader config/sources.tw.yaml --tags=macro
+uv run web-reader config/sources.tw.yaml --tags=sentiment
 
 # 下單
 uv run python -m tw_trader.cli buy 2330.TW --qty 100 --price 950 --stop-loss 895 --take-profit 1050 --strategy momentum --reason "AI capex 延續"

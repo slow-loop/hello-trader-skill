@@ -36,12 +36,12 @@
 
 直接改。能改的東西包括但不限於：
 
-- `data/account/lessons.md`
-- `data/account/watchlist.yaml`
-- `data/config/technical_config.yaml`
-- `prompts/TRADING.TW.md`
-- `src/` Python code
-- `/Users/cw/Documents/GitHub/hello-invest/libs/web-reader` Python code
+- `<DATA_ROOT>/account/lessons.md`
+- `<DATA_ROOT>/account/watchlist.yaml`
+- `<SKILL_ROOT>/config/technical_config.yaml`
+- `<SKILL_ROOT>/prompts/TRADING_TW.md`
+- `<SKILL_ROOT>/src/` Python code
+- `<SKILL_ROOT>/../../libs/web-reader/` Python code
 
 一次只改你有把握的。不確定的先寫進 `next`，下次再處理
 
@@ -69,7 +69,7 @@
 
 ### lessons 更新原則
 
-- 只有在這次反思中發現能改變未來決策的關鍵經驗時，才提煉成規則並更新 `data/account/lessons.md`
+- 只有在這次反思中發現能改變未來決策的關鍵經驗時，才提煉成規則並更新 `<DATA_ROOT>/account/lessons.md`
 - 以下情況特別值得升級為 lessons：
   - 造成實際重大虧損的盲點
   - 提早賣飛或錯過機會的明顯機會成本

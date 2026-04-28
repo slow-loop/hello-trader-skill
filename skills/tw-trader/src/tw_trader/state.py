@@ -30,6 +30,7 @@ from market_core.broker import (
 from tw_trader.events import append_event
 
 SKILL_ROOT = Path(__file__).resolve().parents[2]
+PROJECT_ROOT = Path(__file__).resolve().parents[4]
 STATE_SUBDIR = "data/account/state"
 SWEEP_TIMEFRAME = "5m"
 # Entry LIMIT orders auto-cancel after this many days. STOP_LOSS/TAKE_PROFIT
@@ -52,12 +53,19 @@ def _order_payload(order: Order) -> dict:
 
 
 def workspace_root() -> Path:
+    """Skill root — holds static config under config/."""
     env = os.getenv("TW_TRADER_ROOT")
     return Path(env).expanduser() if env else SKILL_ROOT
 
 
+def data_root() -> Path:
+    """Runtime data root — holds account/ etc. Defaults to repo root."""
+    env = os.getenv("TW_TRADER_DATA_ROOT")
+    return Path(env).expanduser() if env else PROJECT_ROOT
+
+
 def state_dir() -> Path:
-    return workspace_root() / STATE_SUBDIR
+    return data_root() / STATE_SUBDIR
 
 
 def _paths() -> tuple[Path, Path]:
@@ -65,7 +73,7 @@ def _paths() -> tuple[Path, Path]:
 
 
 def _load_workspace_yaml() -> dict:
-    path = workspace_root() / "data/config/workspace.yaml"
+    path = workspace_root() / "config/workspace.yaml"
     if not path.exists():
         return {}
     return yaml.safe_load(path.read_text(encoding="utf-8")) or {}

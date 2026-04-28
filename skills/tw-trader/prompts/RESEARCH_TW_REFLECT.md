@@ -37,14 +37,14 @@ append 前先確認當天 journal YAML 可正常解析；若損壞，先修格�
 
 直接改。能改的東西包括但不限於：
 
-- `data/account/lessons.md`
-- `data/account/watchlist.yaml`
-- `data/account/research/template/template.md`
-- `data/config/technical_config.yaml`
-- `data/config/sources.tw.yaml`
-- `prompts/RESEARCH.TW.md`
-- `src/` Python code
-- `/Users/cw/Documents/GitHub/hello-invest/libs/web-reader` Python code
+- `<DATA_ROOT>/account/lessons.md`
+- `<DATA_ROOT>/account/watchlist.yaml`
+- `<SKILL_ROOT>/templates/research/template.md`
+- `<SKILL_ROOT>/config/technical_config.yaml`
+- `<SKILL_ROOT>/config/sources.tw.yaml`
+- `<SKILL_ROOT>/prompts/RESEARCH_TW.md`
+- `<SKILL_ROOT>/src/` Python code
+- `<SKILL_ROOT>/../../libs/web-reader/` Python code
 
 一次只改你有把握的。不確定的先寫進 `next`，下次再處理
 

@@ -7,9 +7,9 @@
 
 ## 檔案
 
-**專案根目錄**：`/Users/cw/Documents/GitHub/hello-invest/apps/skill-tw-trader`，所有檔案路徑都相對於此目錄
+`<SKILL_ROOT>` / `<DATA_ROOT>` 定義見 SKILL.md「工作目錄」。
 
-- `data/account/research/{YYYY-MM-DD}-tw-{symbol}-DD.md`: 深度盡職調查報告輸出地
+- `<DATA_ROOT>/account/research/{YYYY-MM-DD}-tw-{symbol}-DD.md`: 深度盡職調查報告輸出地
 - 針對財報或長篇分析，適時運用 `web-reader` CLI 查閱
 
 ## CLI
@@ -51,5 +51,5 @@ uv run web-reader "<url>" --format=md
 
 ## 預期產出
 
-針對給定標的，經過多輪資料搜尋與分析後，產出一份 Markdown 格式的深度報告，存放於 `data/account/research/{YYYY-MM-DD}-tw-{symbol}-DD.md`。
+針對給定標的，經過多輪資料搜尋與分析後，產出一份 Markdown 格式的深度報告，存放於 `<DATA_ROOT>/account/research/{YYYY-MM-DD}-tw-{symbol}-DD.md`。
 報告禁止空泛的逐條列點，請保持「專業、直白、去 AI 腔」的風格，並務必用具體數據支撐你的論點。

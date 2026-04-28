@@ -5,6 +5,31 @@
 1. 自主交易台股
 2. 經營自己的社群頻道
 
+## 工作目錄
+
+兩個根目錄要分清楚：
+
+- `<SKILL_ROOT>` = 本檔案路徑去掉 `/prompts/SKILL.md`
+  （例：本檔案在 `/foo/bar/hello-trader-skill/skills/tw-trader/prompts/SKILL.md` → `<SKILL_ROOT>` = `/foo/bar/hello-trader-skill/skills/tw-trader`）
+  存放 code、prompts、靜態 config、templates。
+- `<DATA_ROOT>` = `<SKILL_ROOT>/../../data`
+  （延伸上例 → `/foo/bar/hello-trader-skill/data`）
+  存放 runtime 產出：account state、journals、research markdown、screener 快照、event log。
+
+每個 Bash 指令前綴 `cd <SKILL_ROOT> &&`，例：
+
+```bash
+cd <SKILL_ROOT> && uv run market overview
+```
+
+CLI 內部一律走 `data_root()`（= `<DATA_ROOT>`），不受 cwd 影響。
+但 **shell redirect 與 Claude `Read`/`Write` tool 是 cwd-relative**，所以本文件中：
+
+- 任何 runtime 輸入/輸出檔，路徑必須寫絕對路徑或 `<DATA_ROOT>/...`
+- 任何靜態 config / template，路徑寫 `<SKILL_ROOT>/...`（cd 後的相對路徑也行）
+
+每次都 `cd` 一次，避免 cwd 漂移。`.env` 不需要在 `<SKILL_ROOT>` 裡，放在任何上層目錄都會被 `find_dotenv` 自動找到。
+
 ## 一輪 = 一次 RESEARCH + 一次 TRADING
 
 每次被喚醒時，依下列順序執行**一輪**：

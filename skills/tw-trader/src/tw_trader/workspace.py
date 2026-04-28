@@ -37,6 +37,7 @@ from market_core.watchlist import (
 from tw_trader.events import append_event
 
 SKILL_ROOT = Path(__file__).resolve().parents[2]
+PROJECT_ROOT = Path(__file__).resolve().parents[4]
 ACCOUNT_SUBDIR = "data/account"
 
 
@@ -54,12 +55,19 @@ class JournalDocument(BaseModel):
 
 
 def workspace_root() -> Path:
+    """Skill root — holds static config under config/."""
     env = os.getenv("TW_TRADER_ROOT")
     return Path(env).expanduser() if env else SKILL_ROOT
 
 
+def data_root() -> Path:
+    """Runtime data root — holds account/, posts/ etc. Defaults to repo root."""
+    env = os.getenv("TW_TRADER_DATA_ROOT")
+    return Path(env).expanduser() if env else PROJECT_ROOT
+
+
 def account_dir() -> Path:
-    return workspace_root() / ACCOUNT_SUBDIR
+    return data_root() / ACCOUNT_SUBDIR
 
 
 def watchlist_path() -> Path:
@@ -105,7 +113,7 @@ def delete_watchlist_item(symbol: str) -> WatchlistConfig:
 
 
 def _load_analysis_settings() -> AnalysisSettings:
-    path = workspace_root() / "data/config/technical_config.yaml"
+    path = workspace_root() / "config/technical_config.yaml"
     if not path.exists():
         return AnalysisSettings()
     raw = yaml.safe_load(path.read_text(encoding="utf-8")) or {}
@@ -115,7 +123,7 @@ def _load_analysis_settings() -> AnalysisSettings:
 
 
 def _market_config() -> MarketRuntimeConfig:
-    path = workspace_root() / "data/config/workspace.yaml"
+    path = workspace_root() / "config/workspace.yaml"
     raw = yaml.safe_load(path.read_text(encoding="utf-8")) if path.exists() else {}
     market = (raw or {}).get("market") or {}
     return MarketRuntimeConfig(
@@ -257,7 +265,7 @@ def add_doc(path: Path) -> dict:
         raw = f"---\n{new_fm}\n---\n\n" + raw
         _write_text_atomic(abs_path, raw)
 
-    rel_path = str(abs_path.relative_to(workspace_root()))
+    rel_path = str(abs_path.relative_to(data_root()))
     payload = {
         "path": rel_path,
         "kind": kind,
