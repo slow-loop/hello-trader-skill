@@ -236,7 +236,9 @@ def _compute_lookback_days(orders: list[Order]) -> int:
             earliest = o.placed_at
     if earliest is None:
         return SWEEP_LOOKBACK_FALLBACK_DAYS
-    age = (datetime.now(timezone.utc) - _parse_iso(earliest)).days + 1
+    # placed_at is canonical UTC ISO-8601 ('...Z') enforced by the model validator.
+    earliest_dt = datetime.fromisoformat(earliest.replace("Z", "+00:00"))
+    age = (datetime.now(timezone.utc) - earliest_dt).days + 1
     return max(SWEEP_LOOKBACK_FALLBACK_DAYS, min(age, SWEEP_LOOKBACK_MAX_DAYS))
 
 
@@ -256,6 +258,11 @@ def _filter_bars_by_pending(orders: list[Order], symbol: str, bars: list[Bar]) -
     are shared; the engine walks chronologically and takes the first crossing,
     so trimming to the earliest placed_at across all pending orders is safe and
     keeps the data payload small.
+
+    Both ``placed_at`` and ``bar_time`` are canonical UTC ISO-8601 with a ``Z``
+    suffix (enforced by the model validator), so direct string comparison is
+    correct — same prefix length, same offset, lexicographic order matches
+    chronological order.
     """
     earliest = None
     for o in orders:
@@ -265,16 +272,7 @@ def _filter_bars_by_pending(orders: list[Order], symbol: str, bars: list[Bar]) -
             earliest = o.placed_at
     if earliest is None:
         return bars
-    cutoff = _parse_iso(earliest)
-    return [b for b in bars if _parse_iso(b.bar_time) >= cutoff]
-
-
-def _parse_iso(value: str) -> datetime:
-    text = value.replace("Z", "+00:00")
-    dt = datetime.fromisoformat(text)
-    if dt.tzinfo is None:
-        dt = dt.replace(tzinfo=timezone.utc)
-    return dt
+    return [b for b in bars if b.bar_time >= earliest]
 
 
 def _profile():

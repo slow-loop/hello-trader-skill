@@ -2,13 +2,58 @@ from __future__ import annotations
 
 import uuid
 from datetime import datetime, timezone
-from typing import Any, Literal
+from typing import Annotated, Any, Literal
 
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, BeforeValidator, Field
 
 
 def utc_now_iso() -> str:
     return datetime.now(timezone.utc).replace(microsecond=0).isoformat().replace("+00:00", "Z")
+
+
+def _normalize_timestamp(value: Any) -> Any:
+    """Coerce a timestamp into canonical UTC ISO-8601 (``YYYY-MM-DDTHH:MM:SSZ``).
+
+    Accepts an ISO-8601 string (with ``Z`` or explicit offset) or a timezone-aware
+    ``datetime``. Naive values are rejected — every timestamp entering a model
+    must carry explicit timezone information. Producers (data adapters, etc.)
+    are responsible for tagging their inputs at the source.
+
+    This is the single point that enforces the model invariant: any timestamp
+    field on any model holds canonical UTC ISO-8601 with a ``Z`` suffix, which
+    makes string-level lexicographic comparison correct across the codebase.
+    """
+    if value is None or value == "":
+        return value
+    if isinstance(value, str):
+        text = value.replace("Z", "+00:00")
+        try:
+            dt = datetime.fromisoformat(text)
+        except ValueError as exc:
+            raise ValueError(f"invalid ISO-8601 timestamp: {value!r}") from exc
+    elif isinstance(value, datetime):
+        dt = value
+    else:
+        raise TypeError(
+            f"timestamp must be str or datetime, got {type(value).__name__}"
+        )
+    if dt.tzinfo is None:
+        raise ValueError(
+            f"naive timestamp {value!r}: provide explicit timezone "
+            "(e.g. '...Z' or '...+08:00'). Tag at the data source, not here."
+        )
+    return (
+        dt.astimezone(timezone.utc)
+        .replace(microsecond=0)
+        .isoformat()
+        .replace("+00:00", "Z")
+    )
+
+
+# Use ``Timestamp`` for required timestamp fields and ``OptionalTimestamp``
+# for nullable ones. Empty strings on optional fields pass through unchanged.
+Timestamp = Annotated[str, BeforeValidator(_normalize_timestamp)]
+OptionalTimestamp = Annotated[str | None, BeforeValidator(_normalize_timestamp)]
 
 
 def new_order_id() -> str:
@@ -64,7 +109,7 @@ class Quote(BaseModel):
     name: str | None = None
     price: float
     source: str
-    timestamp: str = Field(default_factory=utc_now_iso)
+    timestamp: Timestamp = Field(default_factory=utc_now_iso)
     open: float | None = None
     high: float | None = None
     low: float | None = None
@@ -80,7 +125,7 @@ class Quote(BaseModel):
 class Bar(BaseModel):
     symbol: str
     market_profile: str
-    bar_time: str
+    bar_time: Timestamp
     open: float
     high: float
     low: float
@@ -114,7 +159,7 @@ class Position(BaseModel):
     quantity: float
     avg_price: float
     reason: str = ""
-    opened_at: str = Field(default_factory=utc_now_iso)
+    opened_at: Timestamp = Field(default_factory=utc_now_iso)
 
 
 OrderType = Literal["MARKET", "LIMIT", "STOP_LOSS", "TAKE_PROFIT"]
@@ -136,10 +181,10 @@ class Order(BaseModel):
     limit_price: float | None = None
     trigger_price: float | None = None
     status: OrderStatus = "PENDING"
-    placed_at: str = Field(default_factory=utc_now_iso)
-    filled_at: str | None = None
+    placed_at: Timestamp = Field(default_factory=utc_now_iso)
+    filled_at: OptionalTimestamp = None
     fill_price: float | None = None
-    cancelled_at: str | None = None
+    cancelled_at: OptionalTimestamp = None
     cancelled_reason: str | None = None
     # Entry orders may carry attached exit levels — created as separate orders on fill.
     attach_stop_loss: float | None = None
@@ -154,7 +199,7 @@ class TradingState(BaseModel):
     realized_pnl: float = 0.0
     positions: dict[str, Position] = Field(default_factory=dict)
     orders: list[Order] = Field(default_factory=list)
-    updated_at: str = Field(default_factory=utc_now_iso)
+    updated_at: Timestamp = Field(default_factory=utc_now_iso)
 
 
 class TradeRecord(BaseModel):
@@ -162,7 +207,7 @@ class TradeRecord(BaseModel):
     symbol: str
     quantity: float
     price: float
-    executed_at: str = Field(default_factory=utc_now_iso)
+    executed_at: Timestamp = Field(default_factory=utc_now_iso)
     fee: float = 0.0
     reason: str = ""
     strategy: str = ""
@@ -225,7 +270,7 @@ class WatchlistEvaluation(BaseModel):
     invalidation_results: list[WatchlistConditionResult] = Field(default_factory=list)
     context_snapshot: dict[str, Any] = Field(default_factory=dict)
     relative_performance: RelativePerformance | None = None
-    evaluated_at: str = Field(default_factory=utc_now_iso)
+    evaluated_at: Timestamp = Field(default_factory=utc_now_iso)
     error: str | None = None
 
 
@@ -252,14 +297,15 @@ class ScreenerResult(BaseModel):
 class ScreenerResponse(BaseModel):
     strategy: str
     market_profile: str
-    generated_at: str = Field(default_factory=utc_now_iso)
+    generated_at: Timestamp = Field(default_factory=utc_now_iso)
+    # Trading-day date string (e.g. "2026-04-21"), not a UTC timestamp.
     as_of: str | None = None
     items: list[ScreenerResult] = Field(default_factory=list)
 
 
 class MarketOverview(BaseModel):
     workspace_id: str = ""
-    timestamp: str = Field(default_factory=utc_now_iso)
+    timestamp: Timestamp = Field(default_factory=utc_now_iso)
     market_profile: str
     session: str
     is_open: bool

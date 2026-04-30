@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 from datetime import datetime, timedelta, timezone
+from zoneinfo import ZoneInfo
 import json
 import logging
 import os
@@ -124,7 +125,7 @@ def get_bars(
         Bar(
             symbol=normalized,
             market_profile=profile.id,
-            bar_time=pd.to_datetime(row[date_col]).to_pydatetime().isoformat(),
+            bar_time=_bar_time_to_iso(pd.to_datetime(row[date_col]).to_pydatetime(), profile),
             open=float(row["open"]),
             high=float(row["high"]),
             low=float(row["low"]),
@@ -285,6 +286,34 @@ FUGLE_TIMEFRAME_MAP = {
 }
 
 
+def _bar_time_to_iso(value: object, profile: MarketProfile) -> str:
+    """Tag a bar timestamp from a data adapter with the market's timezone.
+
+    Both Fugle (TW local) and yfinance (returns naive after ``to_pydatetime()``
+    when the original was tz-aware in the exchange's tz) hand us values that
+    may not carry an explicit offset. Treat naive inputs as the market's local
+    time, then convert to canonical UTC. The model validator rejects naive
+    values, so this conversion has to happen here at the source boundary.
+    """
+    if isinstance(value, datetime):
+        dt = value
+    else:
+        text = str(value).replace("Z", "+00:00")
+        try:
+            dt = datetime.fromisoformat(text)
+        except ValueError:
+            # Fallback for pandas timestamp string forms (e.g. "2026-04-29 09:00:00+08:00").
+            dt = pd.to_datetime(value).to_pydatetime()
+    if dt.tzinfo is None:
+        dt = dt.replace(tzinfo=ZoneInfo(profile.timezone))
+    return (
+        dt.astimezone(timezone.utc)
+        .replace(microsecond=0)
+        .isoformat()
+        .replace("+00:00", "Z")
+    )
+
+
 def _try_fugle_bars(
     symbol: str,
     profile: MarketProfile,
@@ -319,7 +348,7 @@ def _try_fugle_bars(
         Bar(
             symbol=symbol,
             market_profile=profile.id,
-            bar_time=row["date"],
+            bar_time=_bar_time_to_iso(row["date"], profile),
             open=float(row["open"]),
             high=float(row["high"]),
             low=float(row["low"]),
@@ -528,11 +557,12 @@ def _twse_taiex_benchmark_metrics(
         return None
 
     rows = sorted(rows, key=lambda r: str(r.get("date", "")))
+    tw_profile = get_market_profile("tw_equity")
     bars = [
         Bar(
             symbol="^TWII",
             market_profile="tw_equity",
-            bar_time=row["date"],
+            bar_time=_bar_time_to_iso(row["date"], tw_profile),
             open=float(row["open"]),
             high=float(row["high"]),
             low=float(row["low"]),
