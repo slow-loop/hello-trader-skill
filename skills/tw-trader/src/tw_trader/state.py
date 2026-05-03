@@ -28,6 +28,7 @@ from market_core.broker import (
 )
 
 from tw_trader.events import append_event
+from tw_trader.workspace import sync_watchlist_with_positions
 
 SKILL_ROOT = Path(__file__).resolve().parents[2]
 PROJECT_ROOT = Path(__file__).resolve().parents[4]
@@ -131,6 +132,7 @@ def place_order(request: OrderRequest) -> tuple[Order, list[TradeRecord]]:
     triggered = _sweep_state(state, profile)
     save(state)
     _persist_trades(triggered)
+    sync_watchlist_with_positions(set(state.positions.keys()))
     return order, triggered
 
 
@@ -196,6 +198,7 @@ def sweep() -> list[TradeRecord]:
     triggered = _sweep_state(state, profile)
     save(state)
     _persist_trades(triggered)
+    sync_watchlist_with_positions(set(state.positions.keys()))
     return triggered
 
 

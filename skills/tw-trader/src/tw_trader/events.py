@@ -17,16 +17,18 @@ from pathlib import Path
 from typing import Any, Iterable
 
 SKILL_ROOT = Path(__file__).resolve().parents[2]
+PROJECT_ROOT = Path(__file__).resolve().parents[4]
 EVENTS_SUBPATH = "data/account/events.jsonl"
 
 
-def workspace_root() -> Path:
-    env = os.getenv("TW_TRADER_ROOT")
-    return Path(env).expanduser() if env else SKILL_ROOT
+def data_root() -> Path:
+    """Runtime data root — defaults to repo root."""
+    env = os.getenv("TW_TRADER_DATA_ROOT")
+    return Path(env).expanduser() if env else PROJECT_ROOT
 
 
 def events_path() -> Path:
-    return workspace_root() / EVENTS_SUBPATH
+    return data_root() / EVENTS_SUBPATH
 
 
 def append_event(type: str, payload: dict[str, Any]) -> dict[str, Any]:

@@ -6,8 +6,8 @@ readme = "README.md"
 requires-python = ">=3.13"
 dependencies = [
     "nanobot-ai>=0.1.4.post6",
-    "web-reader[mcp]",
+    "web-reader",
 ]
 
 [tool.uv.sources]
-web-reader = { path = "../libs/web-reader", editable = true }
+web-reader = { git = "https://github.com/w121211/web-reader.git", tag = "v0.1.0" }

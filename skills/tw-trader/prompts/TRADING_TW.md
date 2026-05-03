@@ -2,132 +2,135 @@
 
 ## 任務
 
-根據 thesis、regime、風控，執行買進 / 賣出 / 持倉調整。每次 flow 啟動先讀 RESEARCH phase 0 的 regime 判斷。
+把 Research 的結論翻譯成市場上的單子。流程的核心是：研究結論（A 點 / stop / mode）成為 limit + stop 掛單，由 sweep 偵測成交。
 
 ## 投資模型
 
-台股主題式動能交易者。核心：
+### Regime（大盤狀態，決定能不能新進場）
 
-1. **先判 regime，再看個股**。regime = 不允許新進場時，只做持倉管理
-2. **三種進場模式**：Breakout（突破新高）、Pullback（回測均線）、Catalyst（事件驅動）。每個候選標 mode，stop 與 target 依個股技術面訂
-3. **不抄底、不追弱勢、進場條件未達不硬做**
+由 RESEARCH Phase 0 判定，依 `benchmark_metrics.dist_to_sma20_pct` 與 `adx_14`：
+
+| Regime | 條件 | 動作 |
+|--------|------|------|
+| A 弱勢 | dist < +5% 或 ADX < 20 | 不掛新單，只做清理 + 持倉管理 |
+| B 中等 | dist 5-8% 且 ADX 20-25 | 正常掛單，sizing 1% risk |
+| C Melt-up | dist > +6% 且 ADX > 25 + 族群共振 | 掛單，sizing 0.5% risk + stop 1 ATR |
+
+### Entry mode（個股進場方式，決定 A 點怎麼訂）
+
+由 Research 在 watchlist thesis 中標註：
+
+- **Breakout**：突破新高 / 前壓力 + 放量。A 點 = 突破價或回測突破點
+- **Pullback**：強勢後回測均線量縮。A 點 = 均線或前支撐區
+- **Catalyst**：事件驅動（法說、財報、研報、法規）。A 點 = 事件當日 / 隔日支撐
+
+### Sizing
+
+```
+單筆風險額 = 帳戶淨值 × Regime sizing factor (A: 0 / B: 1% / C: 0.5%)
+股數 = floor(風險額 / (進場價 - stop))
+```
+
+集中度上限：單檔 ≤ 30% 帳戶；同族群 ≤ 40%；同主線 ≤ 60%。
+
+### Watchlist status 三態
+
+由 Research 維護 `watch` / `ready` 切換；`hold` 由 sweep 自動同步：
+
+- `watch`：觀察中，thesis 在累積。Trading **不動**
+- `ready`：執行就緒（A 點 / stop / mode 都明確）。Trading **掛 limit + stop**
+- `hold`：已持倉。Trading **做持倉管理**
 
 ## 檔案
 
 `<SKILL_ROOT>` / `<DATA_ROOT>` 定義見 SKILL.md「工作目錄」。
 
-Runtime（讀寫頻繁，存於 `<DATA_ROOT>`）：
-
-- `<DATA_ROOT>/account/lessons.md`: 規則與教訓
-- `<DATA_ROOT>/account/watchlist.yaml`: 追蹤清單與 thesis
-- `<DATA_ROOT>/account/journals/{YYYY-MM-DD}.yaml`: 當日紀錄
-- `<DATA_ROOT>/account/research/`: 帳戶專屬研究檔
-- `<DATA_ROOT>/account/state/ledger.json`: 帳戶狀態與交易紀錄
-- `<DATA_ROOT>/account/state/equity.json`: 資產快照
-- `<DATA_ROOT>/account/market_snapshots/`: 市場與個股快照
-
-Static（只讀，存於 `<SKILL_ROOT>`）：
-
-- `<SKILL_ROOT>/config/technical_config.yaml`: 技術分析設定
-- `<SKILL_ROOT>/config/sources.tw.yaml`: web-reader 來源設定
+Runtime（讀寫，存於 `<DATA_ROOT>`）：
+- `account/lessons.md`、`account/watchlist.yaml`、`account/journals/{date}.yaml`
+- `account/state/state.yaml`、`account/state/trades.json`
 
 ## CLI
 
-所有指令前綴 `cd <SKILL_ROOT> &&`（見 SKILL.md「工作目錄」）。範例省略前綴以保持可讀，實際執行時必須加上。
+所有指令前綴 `cd <SKILL_ROOT> &&`（見 SKILL.md「工作目錄」）。
 
 ```bash
-# 大盤 + 個股
-uv run market overview
-uv run market analysis 2330
-uv run market quote 2330
-
-# 帳戶 / watchlist
 uv run python -m tw_trader.cli account
 uv run python -m tw_trader.cli watchlist
-
-# 新聞 / 情緒（config 路徑相對於 <SKILL_ROOT>，cd 後可省略）
-uv run web-reader config/sources.tw.yaml --tags=tw,market
-uv run web-reader config/sources.tw.yaml --tags=macro
-uv run web-reader config/sources.tw.yaml --tags=sentiment
-
-# 下單
-uv run python -m tw_trader.cli buy 2330.TW --qty 100 --price 950 --stop-loss 895 --take-profit 1050 --strategy momentum --reason "AI capex 延續"
-uv run python -m tw_trader.cli sell 2330.TW --qty 100 --price 980 --reason "觸及止盈目標"
-
-# Journal（agent 專用，透過暫存檔）
+uv run python -m tw_trader.cli sweep
+uv run python -m tw_trader.cli buy <SYM> <QTY> --limit <P> --stop-loss <S> --reason "..." --strategy <mode>
+uv run python -m tw_trader.cli cancel <ORDER_ID>
+uv run python -m tw_trader.cli sell <SYM> <QTY> --reason "..."
 uv run python -m tw_trader.cli journal-add --file tmp/journal_entry.yaml
 ```
 
 ## 流程
 
-### Step 1：讀上下文 + 確認 Regime
+### Step 1：Pre-flight
 
-- 讀 `lessons.md`、`watchlist.yaml`、近 3 日 `journals/*.yaml`
-- 讀當日 RESEARCH journal 的 regime 判斷（`允許新進場` / `只做持倉管理`）
-- 跑 `cli account`、`cli watchlist`（watchlist 已含 trigger/invalidation 評估）
-- 若上一輪 RESEARCH 未跑（跨日第一次）→ 跑 `market overview`，從 `benchmark_metrics.dist_to_sma20_pct`（正 = 允許新進場，負 = 只做持倉管理）自行做 regime 判斷並寫進當輪 journal
+- 讀 `lessons.md`、近 3 日 `journals/*.yaml`
+- 跑 `cli sweep`（**每個交易日必跑**，即使 RESEARCH 整輪 SKIP）
+- 跑 `cli account` 取 cash / positions / pending
+- 跑 `cli watchlist` 取 thesis + 即時 analysis
+- 從當日 RESEARCH journal 取 Regime；若無，跑 `market overview` 自判
 
-### Step 2：持倉管理
+### Step 2：清理（Invalidation）
 
-逐一檢視持倉：
+對所有持倉 + pending 單檢查：
 
-**停損觸發**
-- 觸及 stop → 立即 `sell`，不改規則
-- Thesis 失效（watchlist invalidation 觸發**且為盤後** / 重大利空）→ 立即 `sell`
+- watchlist invalidation 觸發**且為盤後** → `cli sell`（持倉）/ `cli cancel`（pending）
+- thesis 重大失效（族群崩、催化劑反轉、重大利空）→ 同上
+- Research 已將某 symbol 從 `ready` 改成 `watch` 或 delete → `cli cancel` 該 pending 單
+- A 點被 Research 更新（新 A 點 ≠ 掛單價）→ `cli cancel`（Step 4 重掛）
 
-**浮盈管理**
-- **Stop 只上移不下移**。觸發 stop 一定執行。
-- 浮盈顯著時（例如 > 兩倍初始風險距離），改用 10MA 或結構支撐當 trailing stop
-- **Target 是 reassess 點，不是自動出場**：到 target 重跑 thesis，動能仍在 → 續抱、調高 target；動能鈍化（RSI 背離、量縮、族群轉弱）→ 出 1/2，剩下套 trailing
+### Step 3：持倉管理
 
-**加碼（Pyramid，預設保守）**
-- 只在原部位已浮盈顯著、stop 已上移到成本以上後考慮
-- 加碼點：Pullback 到均線量縮守穩（不追突破加碼）
-- 加碼 sizing：≤ 原部位 50%
+對 `status=hold` 部位：
+- 浮盈 > 2R → trailing 改 10MA / 結構支撐；stop 只上移
+- 到 target → 重跑 thesis；動能仍在 → 續抱、調 target；動能鈍化 → 出 1/2 + trailing
+- Stop 觸發已由 sweep 處理，這裡只確認 PnL 與後續動作
 
-### Step 3：新進場評估
+### Step 4：掛單
 
-**前提**：Step 1 regime = `允許新進場`。否則直接跳到 Step 4。
+**前提**：Regime ≠ A。
 
-對每個 `trigger_met=true` 候選：
+對 `status=ready` 的標的，逐檔處理：
 
-**1. 確認 entry_mode**（從 watchlist thesis 讀取或當輪判斷）
-- **Breakout**：突破新高 + 放量 + 趨勢強。次日開盤或當日突破後回測不破時進場
-- **Pullback**：前 5 日強勢後回測均線量縮。回測日收紅且量縮時進場
-- **Catalyst**：事件驅動（法說、財報、研報點名、法規）。事件確認當日進場
+1. **跳過條件**（記錄 skip_reason）：
+   - 已在 pending 清單（symbol 已掛單）
+   - 違反集中度上限（單檔 / 族群 / 主線）
+   - invalidation 已觸發
+2. **取參數**（從 watchlist 讀，**不重新判斷**）：
+   - 進場價 = thesis 寫的 A 點區間中位
+   - Stop = thesis 寫的 stop 價
+   - Mode = thesis 寫的 entry_mode
+3. **Sizing**：依 Regime 計算股數；超集中度 → 反推降規模或 skip
+4. **下單**：
 
-**2. 個股技術面訂 stop / target**
-- 跑 `cli watchlist` 或 `market analysis <symbol>` 取最新支撐/壓力/均線/ATR
-- **Initial stop**：結構低點或 -1 ATR，取較深者（避免過緊被洗）
-- **Target**：前高或前壓力區（first target，是 reassess 點，不是 ceiling）
-
-**3. Sizing**
+```bash
+cli buy <SYM> <QTY> --limit <A點中位> --stop-loss <stop> \
+  --reason "<mode + thesis 重點 + sizing rationale>" \
+  --strategy <mode>
 ```
-單筆風險額 = 帳戶淨值 × 1%
-股數 = floor(單筆風險額 / (進場價 - initial stop))
-```
 
-上限：單檔 ≤ 30% 淨值。超過 → 按上限反推降規模。
+`attach_stop_loss` 會在成交時自動掛上，不需要分兩步。
+sweep 偵測成交後，`watchlist.status` 自動 `ready → hold`。
 
-**4. 執行**
-`cli buy <symbol> --qty <N> --price <P> --stop-loss <S> --take-profit <T> --strategy <mode> --reason "<regime + mode + 觸發條件>"`
+### Step 5：紀錄
 
-### Step 4：紀錄
+寫入 `tmp/journal_entry_{date}.yaml` → `cli journal-add --file ...`：
 
-生成 `JournalEntry`，寫入 `tmp/journal_entry_{date}.yaml`，執行 `cli journal-add --file ...`。
+- **下單 / 取消 / 賣出**：每筆寫 reason
+- **Skip 簡表**：symbol + 一句 skip_reason（regime / 集中度 / invalidation / 重複）
 
-必含欄位：
-- 每筆 trade：`mode`（breakout/pullback/catalyst）+ `sizing_rationale`
-- 每個 skip 的候選：`skip_reason`（regime / R:R / invalidation / 進場條件未達）
+### Step 6：盤後回顧
 
-### Step 5：盤後回顧
-
-若為盤後時段，執行 `prompts/TRADING_TW_REFLECT.md`（盤中略過）。
+盤後執行 `prompts/TRADING_TW_REFLECT.md`（盤中跳過）。
 
 ## 原則 / 紀律
 
-1. **Invalidation 只在收盤後執行**。盤中跌破 invalidation 門檻 = 觀察，不改 watchlist
-2. **Stop 只上移不下移**
-3. **單檔上限 30%**
-4. **Skip 不是失敗**。符合 skip 條件的 trade 不做才是紀律
-5. **嚴禁直接寫入結構化 YAML**：`watchlist.yaml` / `journals/*.yaml` 必須透過 `tmp/` + CLI
+1. **Trading 不重新做研究**：A 點 / stop / target 從 watchlist 讀，要改是 Research 的事
+2. **Invalidation 只在盤後執行**：盤中跌破 invalidation = 觀察，不動單；除非催化劑性失效
+3. **Stop 只上移不下移**
+4. **Step 1（sweep）每個交易日必跑**，即使 RESEARCH 跳過
+5. **掛單不等於進場**：sweep 成交才是進場；掛單期間 thesis 失效 → cancel 即可
+6. **嚴禁直接寫入結構化 YAML**：`watchlist.yaml` / `journals/*.yaml` 必須透過 `tmp/` + CLI

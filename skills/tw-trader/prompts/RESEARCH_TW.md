@@ -182,13 +182,27 @@ Screener 自帶技術指標（RSI, ADX, 量比）+ 籌碼（外資/投信連買�
 
 ### Phase 5：Watchlist 更新 & 個股研究 & Journal
 
+**Watchlist status 三態**：
+- `watch`：觀察中（thesis 已有但尚未確認執行）。Trading 不動。
+- `ready`：執行就緒（A 點明確、stop 明確、entry mode 確定、sizing 可算）。Trading 下次跑會掛 limit。
+- `hold`：已持倉。狀態由 sweep 自動同步（成交時 ready → hold；出場時 hold → watch）。
+
 1. **更新 Watchlist**：
    - 新增/修改寫入 `tmp/watchlist_update_{symbol}.yaml`，執行 `cli watchlist-update --file ...`
    - **新增項目 thesis 內須註明 `entry_mode: breakout | pullback | catalyst`**
-   - 移除則在 journal 記錄，未來維護時清除
+   - 移除直接 `cli watchlist-delete`，並在 journal 記錄原因
+   - **`watch → ready` 升級條件**（全部滿足才升）：
+     - thesis 完整（核心論述 + 成立 / 失效條件清楚）
+     - A 點是具體價位區間（如「75-78」），不是模糊描述
+     - stop 是具體價位（不是「跌破均線再說」）
+     - entry_mode 已標註
+     - 催化劑已落地或族群已共振（不是「等明天看看」）
+     - **regime 是否允許新進場由 Trading 在執行時判斷，這裡不卡**
+   - **降級**：若 `ready` 標的的 thesis 部分動搖（A 點仍合理但需重評）→ 降回 `watch`；thesis 失效 → 直接 delete
 2. **個股交易研究**：以下情況派 sub-agent 跑子流程：
    - 新標的加入 watchlist
-   - 從 `watch` 升 `hold`
+   - 從 `watch` 升 `ready`（執行前的最後確認）
+   - 從 `ready` / `watch` 升 `hold` 由 sweep 自動處理，**不需要新研究**
    - thesis 明顯改變
    - 持倉出現重大催化或風險
 3. **市場簡報（Brief）**：

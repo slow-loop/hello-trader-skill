@@ -561,3 +561,41 @@
   added_date: '2026-04-27'
   session: premarket
   updated_at: '2026-04-27T00:25:55Z'
+- symbol: TSEM
+  entry_mode: breakout
+  thesis: 'Tower Semiconductor — AI Wave 3 矽光子代工稀缺標的。NVIDIA 1.6T SiPho 合作（2026/02）
+    驗證技術定位；SiPho 收入 2025 YoY +115%，70% 產能預訂至 2028。汽車/工業 50%+ 收入 提供下行保護（非AI也吃得到）。目前
+    SMA20 dist 僅 +0.6% = 整個 watchlist 最緊的 base， composite 0.986 = 訊號在 SMA20 breakout
+    點觸發。代工廠定位 = AAOI/CIEN 的上游 picks-and-shovels，Wave 3 全棧覆蓋的必要組件。
+
+    '
+  invalidation: 收盤跌破 SMA20 (202.21) = 催化劑尚未建立持續動能；或跌破 182.45 (ATR stop)
+  a_point: '現價 203-208（SMA20 突破確認點）直接進場。 SMA20 (202.21) 是支撐，守穩即可建倉。
+
+    '
+  b_point: 收盤站穩 220 + 成交量擴大 = 趨勢加速確認，補倉
+  signal:
+    composite_score: 0.986
+    firing_factors:
+    - trend_strength
+    trend_strength: 0.657
+    rsi_overbought: 0.0
+    close: 203.5
+    atr_14: 14.03
+    sma_20: 202.21
+    sma_50: 163.23
+    initial_stop: 182.45
+    target_1r: 224.55
+    target_2r: 245.6
+  sizing:
+    account_equity: 100000
+    per_trade_risk: 1000
+    risk_per_share: 21.05
+    qty: 47
+    position_size_usd: 9565
+    position_pct: 9.6
+  wave: photonics
+  earnings_check: Q1 2026 = 2026-05-13 盤前。封窗 May 10。最後進場日 May 8。
+  added_date: '2026-04-27'
+  session: premarket
+  updated_at: '2026-04-27T14:09:17Z'

@@ -21,7 +21,7 @@ Not a broker SaaS. Not a cloud backend. A **local agent toolkit**.
 2. **Git is the sync / history / audit layer.** No custom event store needed.
 3. **Libs are stateless, CLIs are thin, agent is the orchestrator.**
 4. **Backend is optional.** Single-user needs none. Teams can opt in.
-5. **Every external data source is its own lib/CLI the agent calls directly** (symmetric with `web-reader`).
+5. **Every external data source is its own lib/CLI the agent calls directly** (symmetric with `web-reader`, which lives in [its own repo](https://github.com/w121211/web-reader)).
 
 ---
 
@@ -30,8 +30,8 @@ Not a broker SaaS. Not a cloud backend. A **local agent toolkit**.
 ```
 hello-trader-skill/
 ├── libs/                        pip-installable, reusable (in-tree)
-│   ├── market-core/             market data + TA + screener + paper-trading runtime
-│   └── web-reader/              URL → clean text, used by agents directly
+│   └── market-core/             market data + TA + screener + paper-trading runtime
+│                                (web-reader: pulled from github.com/w121211/web-reader)
 │
 ├── skills/                      Claude Code skills
 │   ├── tw-trader/               TW equity, local YAML state, main skill
@@ -76,9 +76,11 @@ Single source for anything about the market. Lib + `market` CLI.
 
 Stateful pieces are confined to `store.py`. Engine is testable without I/O.
 
-### `libs/web-reader`
+### `web-reader` (external)
 
-Already exists. URL in, clean text out. Agent calls directly. No changes.
+URL in, clean text out. Agent calls directly. Lives in its own repo at
+[github.com/w121211/web-reader](https://github.com/w121211/web-reader); skills
+depend on it via `git+https://...@v0.1.0` in their `pyproject.toml`.
 
 ### `skills/tw-trader`
 
@@ -136,6 +138,11 @@ Two PRs, sequential:
 - `market-core` and `web-reader` copied from `hello-note/libs/` into `libs/`
 - Consumers (`backend2`, `scripts`, `skills/tw-trader`) updated to local paths
 - Canonical home is now this repo; external copies become stale
+
+**PR 1b — Extract `web-reader` to its own repo** ✅ done 2026-05-02
+- `web-reader` moved out to [github.com/w121211/web-reader](https://github.com/w121211/web-reader)
+- Consumers depend on it via `git+...@v0.1.0` in `pyproject.toml`
+- `libs/web-reader/` removed from this repo
 
 **PR 2 — Absorb screener + paper-trading into `market-core`**
 - Move `backend2/src/backend2/screener.py` → `libs/market-core/src/market_core/screener/`

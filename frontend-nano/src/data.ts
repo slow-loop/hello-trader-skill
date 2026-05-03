@@ -1,36 +1,36 @@
 import yaml from 'js-yaml'
 
-const journalRaw = import.meta.glob('/../skills/tw-trader/data/account/journals/*.yaml', {
+const journalRaw = import.meta.glob('/../data/account/journals/*.yaml', {
   query: '?raw',
   import: 'default',
   eager: true,
 }) as Record<string, string>
 
-const postsRaw = import.meta.glob('/../skills/tw-trader/data/posts/*.yaml', {
+const postsRaw = import.meta.glob('/../data/posts/*.yaml', {
   query: '?raw',
   import: 'default',
   eager: true,
 }) as Record<string, string>
 
-const researchRaw = import.meta.glob('/../skills/tw-trader/data/account/research/*.md', {
+const researchRaw = import.meta.glob('/../data/account/research/*.md', {
   query: '?raw',
   import: 'default',
   eager: true,
 }) as Record<string, string>
 
-const watchlistRaw = import.meta.glob('/../skills/tw-trader/data/account/watchlist.yaml', {
+const watchlistRaw = import.meta.glob('/../data/account/watchlist.yaml', {
   query: '?raw',
   import: 'default',
   eager: true,
 }) as Record<string, string>
 
-const lessonsRaw = import.meta.glob('/../skills/tw-trader/data/account/lessons.md', {
+const lessonsRaw = import.meta.glob('/../data/account/lessons.md', {
   query: '?raw',
   import: 'default',
   eager: true,
 }) as Record<string, string>
 
-const tradesRaw = import.meta.glob('/../skills/tw-trader/data/account/state/trades.yaml', {
+const tradesRaw = import.meta.glob('/../data/account/state/trades.yaml', {
   query: '?raw',
   import: 'default',
   eager: true,

@@ -44,41 +44,41 @@ run_rsync() {
   local rel="$1"
   shift
   mkdir -p "$DEST/$rel"
-  rsync -a --delete-excluded "${COMMON_EXCLUDES[@]}" "$@" \
+  rsync -a --delete --delete-excluded "${COMMON_EXCLUDES[@]}" "$@" \
     "$SRC/$rel/" "$DEST/$rel/"
   echo "  ✓ $rel"
 }
 
-# 1) libs/web-reader  (full, minus secrets/cache)
-run_rsync "libs/web-reader"
-
-# 2) libs/market-core (full)
+# 1) libs/market-core (full)
+#    Note: web-reader is no longer in this repo — pulled from
+#    github.com/w121211/web-reader via pyproject.toml.
 run_rsync "libs/market-core"
 
-# 3) skills/tw-trader — code + prompts + config + templates ONLY.
-#    All real account data (journals, research, screener, state, posts,
-#    publish, watchlist, lessons, events) is excluded.
-run_rsync "skills/tw-trader" \
-  --exclude='data/account/journals/' \
-  --exclude='data/account/screener/' \
-  --exclude='data/account/state/' \
-  --exclude='data/account/events.jsonl' \
-  --exclude='data/account/lessons.md' \
-  --exclude='data/account/watchlist.yaml' \
-  --exclude='data/posts/' \
-  --exclude='data/publish/' \
-  --include='data/account/research/template/***' \
-  --include='data/account/research/' \
-  --exclude='data/account/research/*' \
-  --include='data/account/trading-cards/template/***' \
-  --include='data/account/trading-cards/' \
-  --exclude='data/account/trading-cards/*'
+# 2) skills/tw-trader — code + prompts + static config only.
+#    Runtime state lives at repo-root data/, not under the skill anymore.
+run_rsync "skills/tw-trader"
+
+# 3) data/ — keep templates only; everything else is private runtime state.
+run_rsync "data" \
+  --exclude='account/journals/' \
+  --exclude='account/screener/' \
+  --exclude='account/state/' \
+  --exclude='account/events.jsonl' \
+  --exclude='account/lessons.md' \
+  --exclude='account/watchlist.yaml' \
+  --exclude='posts/' \
+  --include='account/research/template/***' \
+  --include='account/research/' \
+  --exclude='account/research/*' \
+  --include='account/trading-cards/template/***' \
+  --include='account/trading-cards/' \
+  --exclude='account/trading-cards/*'
 
 # 4) frontend-nano (full minus build artefacts)
 run_rsync "frontend-nano"
 
 # 5) Top-level files
-for f in README.md LICENSE .gitignore; do
+for f in README.md README.zh-TW.md LICENSE .gitignore .env.example; do
   if [[ -f "$SRC/$f" ]]; then
     cp "$SRC/$f" "$DEST/$f"
     echo "  ✓ $f"

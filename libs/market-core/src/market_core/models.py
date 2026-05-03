@@ -190,7 +190,7 @@ class OrderRequest(BaseModel):
 class WatchlistItem(BaseModel):
     symbol: str
     thesis: str = ""
-    status: Literal["watch", "hold", "archived"] = "watch"
+    status: Literal["watch", "ready", "hold"] = "watch"
     notes: str = ""
     trigger: str = ""
     invalidation: str = ""

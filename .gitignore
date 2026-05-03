@@ -145,6 +145,9 @@ dist
 *.cache*
 *.config*
 
+# web-reader local cache (per-cwd SQLite store)
+.web-reader/
+
 
 .DS_Store
 tmp/

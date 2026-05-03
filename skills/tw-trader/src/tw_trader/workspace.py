@@ -115,6 +115,30 @@ def upsert_watchlist_item(item: WatchlistItem) -> WatchlistConfig:
     return result
 
 
+def sync_watchlist_with_positions(held_symbols: set[str]) -> list[dict]:
+    """Reconcile watchlist status with current positions.
+
+    held_symbols: set of symbols currently held (any format, .TW suffix tolerated).
+    Returns list of {symbol, from, to} for each status change.
+    """
+    held_norm = {s.removesuffix(".TW") for s in held_symbols}
+    watchlist = load_watchlist()
+    changes: list[dict] = []
+    for item in watchlist.items:
+        sym_norm = item.symbol.removesuffix(".TW")
+        if sym_norm in held_norm and item.status != "hold":
+            changes.append({"symbol": item.symbol, "from": item.status, "to": "hold"})
+            item.status = "hold"
+        elif sym_norm not in held_norm and item.status == "hold":
+            changes.append({"symbol": item.symbol, "from": "hold", "to": "watch"})
+            item.status = "watch"
+    if changes:
+        save_watchlist(watchlist)
+        for change in changes:
+            append_event("watchlist.status_sync", change)
+    return changes
+
+
 def delete_watchlist_item(symbol: str) -> WatchlistConfig:
     result = _delete_watchlist_item(watchlist_path(), symbol)
     append_event("watchlist.delete", {"symbol": symbol})
