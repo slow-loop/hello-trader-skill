@@ -286,14 +286,33 @@ def _fill_sell(state: TradingState, profile: MarketProfile, order: Order, price:
     )
 
 
+def _weekdays_since(placed: datetime, now: datetime) -> int:
+    """Count weekdays (Mon–Fri) strictly between placed.date() and now.date().
+
+    The day of placement is excluded so an order placed post-close on Thursday
+    gets its first evaluation opportunity on Friday, not zero days later.
+    """
+    start = placed.date() + timedelta(days=1)
+    end = now.date()
+    if end <= start:
+        return 0
+    count = 0
+    current = start
+    while current < end:
+        if current.weekday() < 5:  # 0=Mon … 4=Fri
+            count += 1
+        current += timedelta(days=1)
+    return count
+
+
 def _expire_limit_orders(state: TradingState, after_days: int) -> None:
-    cutoff = datetime.now(timezone.utc) - timedelta(days=after_days)
+    now = datetime.now(timezone.utc)
     for order in state.orders:
         if order.status != "PENDING" or order.type != "LIMIT":
             continue
         placed = datetime.fromisoformat(order.placed_at.replace("Z", "+00:00"))
-        if placed < cutoff:
-            _mark_cancelled(order, f"expired after {after_days}d")
+        if _weekdays_since(placed, now) >= after_days:
+            _mark_cancelled(order, f"expired after {after_days} trading days")
 
 
 def _cancel_remaining_exit_orders(state: TradingState, symbol: str, *, except_id: str) -> None:

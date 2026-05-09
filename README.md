@@ -81,7 +81,7 @@ data/account/
 ├── research/      # per-symbol Markdown research docs
 ├── screener/      # daily screener snapshots
 ├── watchlist.yaml
-└── lessons.md
+└── strategy.md
 ```
 
 Templates for new research docs / trading cards live under `data/account/*/template/`. Override the data location with `TW_TRADER_DATA_ROOT=/path/to/dir`.

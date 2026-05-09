@@ -5,7 +5,7 @@
 # 一天可能多次 trading run（盤前/盤中/盤後），所以檔名帶 run 編號。
 #
 # 規則：
-#   - watchlist_eval 的 conditions 與 watchlist.yaml 的 trigger_conditions 對齊
+#   - watchlist_eval 的 momentum_signals_summary 摘要 analysis.triggers 內容
 #   - decisions 的 action 固定為 BUY | SELL | SKIP | HOLD | SET_EXIT
 #   - observations 的 kind 固定為 ALERT | NOTE
 
@@ -26,31 +26,27 @@ market:
     dealer: "+118 億"
   judgement: "收盤創歷史新高，但台指期夜盤閃崩 600 點，明日開低壓力大"
 
-# ── Section 2: Watchlist Evaluation ───────────────────────
-# 對應 `cli watchlist` 的 evaluation 結果
+# ── Section 2: Watchlist Judgment ─────────────────────────
+# Agent 對 watchlist 上每檔 status=watch 的標的整合判斷的結果。
+# 沒有預計算的 boolean gate——這裡是 agent 看 analysis report 後的綜合評估。
 watchlist_eval:
   - symbol: "2330"
     name: "台積電"
     close: 2085
     change_pct: 0.48
-    trigger_met: false
-    conditions:
-      - {label: "SMA20", met: true}
-      - {label: "MACD", met: true}
-      - {label: "Vol 1.5x", met: false}
+    invalidation_active: false
+    momentum_signals_summary: "SMA20 ✓、MACD ✓、Vol 1.5x ✗（量縮）"
     risk: "量比 1.22x 未達、相對弱勢、夜盤閃崩"
+    judgment: defer
 
   - symbol: "3189"
     name: "景碩"
     close: 383.5
     change_pct: 3.37
-    trigger_met: true
-    conditions:
-      - {label: "SMA20", met: true}
-      - {label: "MACD", met: true}
-      - {label: "Vol 1.5x", met: true}
-      - {label: "ADX>25", met: true}
+    invalidation_active: false
+    momentum_signals_summary: "SMA20 ✓、MACD ✓、Vol 1.5x ✓、ADX>25 ✓"
     risk: "ATR 7.2% 高波動、夜盤閃崩待消化"
+    judgment: enter
 
 # ── Section 3: Trading Decisions ──────────────────────────
 decisions:
@@ -69,8 +65,8 @@ decisions:
   - symbol: "2330"
     name: "台積電"
     action: SKIP
-    reason: "Trigger 未全達（量比 1.22x < 1.5x），法說日相對弱勢"
-    next: "等待量能回升至 1.5x"
+    reason: "量比 1.22x 量縮、法說日相對弱勢、夜盤閃崩 — agent judgment defer"
+    next: "下一輪重評；若量能回升 + 大盤站穩再考慮"
 
 # ── Section 4: Key Observations ───────────────────────────
 observations:

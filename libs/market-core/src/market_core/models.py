@@ -190,14 +190,11 @@ class OrderRequest(BaseModel):
 class WatchlistItem(BaseModel):
     symbol: str
     thesis: str = ""
-    status: Literal["watch", "ready", "hold"] = "watch"
+    status: Literal["watch", "hold"] = "watch"
     notes: str = ""
-    trigger: str = ""
-    invalidation: str = ""
-    trigger_conditions: list[str] = Field(default_factory=list)
-    invalidation_conditions: list[str] = Field(default_factory=list)
-    trigger_price: float | None = None
-    invalidation_price: float | None = None
+    trigger: str = ""           # free-text description (entry framing)
+    invalidation: str = ""      # free-text description (thesis death)
+    invalidation_signals: list[str] = Field(default_factory=list)
     updated_at: str = ""
 
 
@@ -219,10 +216,8 @@ class RelativePerformance(BaseModel):
 
 
 class WatchlistEvaluation(BaseModel):
-    trigger_met: bool = False
-    invalidation_met: bool = False
-    trigger_results: list[WatchlistConditionResult] = Field(default_factory=list)
-    invalidation_results: list[WatchlistConditionResult] = Field(default_factory=list)
+    invalidation_active: bool = False
+    invalidation_signal_results: list[WatchlistConditionResult] = Field(default_factory=list)
     context_snapshot: dict[str, Any] = Field(default_factory=dict)
     relative_performance: RelativePerformance | None = None
     evaluated_at: str = Field(default_factory=utc_now_iso)

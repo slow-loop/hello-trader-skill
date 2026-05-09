@@ -3,7 +3,7 @@ name = "market-core"
 version = "0.1.0"
 description = "Reusable market data and technical analysis core."
 readme = "README.md"
-requires-python = ">=3.13"
+requires-python = ">=3.13,<3.14"
 dependencies = [
     "feedparser>=6.0",
     "fugle-marketdata>=2.4.1",
@@ -22,6 +22,7 @@ dependencies = [
 [project.optional-dependencies]
 dev = ["pytest>=8.0"]
 tw = ["finmind>=1.9.6"]
+chart = ["mplfinance>=0.12"]
 backtest = [
     "alphalens-reloaded>=0.4.5",
     "vectorbt>=0.26",

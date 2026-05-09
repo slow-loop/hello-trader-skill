@@ -162,8 +162,8 @@ def test_limit_expires_after_configured_days():
             stop_loss=550.0, reason="test",
         ),
     )
-    # Backdate placed_at beyond the expiry window.
-    order.placed_at = (datetime.now(timezone.utc) - timedelta(days=5)).isoformat().replace("+00:00", "Z")
+    # Backdate placed_at beyond the expiry window (7 cal days → ≥5 weekdays, well above threshold=3).
+    order.placed_at = (datetime.now(timezone.utc) - timedelta(days=7)).isoformat().replace("+00:00", "Z")
 
     trades = evaluate_orders(
         state, TW, {"2330.TW": _quote("2330.TW", 600.0)}, {},
@@ -192,6 +192,44 @@ def test_limit_within_expiry_window_still_fills():
     )
     assert len(trades) == 1
     assert order.status == "FILLED"
+
+
+def test_limit_placed_thursday_post_close_survives_weekend():
+    """Order placed after Thursday close should not expire over the weekend.
+
+    Regression for LIMIT_EXPIRY_DAYS counting calendar days instead of
+    trading days: a 3-day calendar window would fire on Sunday and cancel
+    the order before Monday's first trading opportunity.
+    """
+    from datetime import datetime, timedelta, timezone
+
+    state = _state()
+    order = place_order(
+        state,
+        TW,
+        OrderRequest(
+            symbol="2330.TW", side="BUY", type="LIMIT", quantity=1000, limit_price=580.0,
+            stop_loss=550.0, reason="test",
+        ),
+    )
+    # Simulate: placed Thursday 17:40 TWN = Thursday 09:40 UTC
+    # Evaluated Sunday 21:00 TWN = Sunday 13:00 UTC → 3 calendar days later
+    # but only 1 weekday (Friday) has passed → should NOT expire with after_days=3
+    thursday_post_close = datetime(2026, 5, 7, 9, 40, tzinfo=timezone.utc)   # Thu
+    sunday_evening      = datetime(2026, 5, 10, 13, 0, tzinfo=timezone.utc)  # Sun
+    order.placed_at = thursday_post_close.isoformat().replace("+00:00", "Z")
+
+    from unittest.mock import patch
+    with patch("market_core.broker.engine.datetime") as mock_dt:
+        mock_dt.now.return_value = sunday_evening
+        mock_dt.fromisoformat = datetime.fromisoformat
+        trades = evaluate_orders(
+            state, TW, {"2330.TW": _quote("2330.TW", 600.0)}, {},
+            expire_limit_after_days=3,
+        )
+
+    assert order.status == "PENDING", "order must survive over the weekend"
+    assert trades == []
 
 
 def test_stop_loss_does_not_expire():

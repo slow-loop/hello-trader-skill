@@ -1,6 +1,22 @@
-"""Watchlist evaluation — runs trigger / invalidation conditions against
-fresh market data. Stateless; takes a list of items and returns evaluated
-items. No I/O — caller handles loading/saving via watchlist.store.
+"""Watchlist evaluation — runs invalidation_signals against fresh market
+data. Stateless; takes a list of items and returns evaluated items. No
+I/O — caller handles loading/saving via watchlist.store.
+
+Design note:
+  - There is **no** entry/attention signal evaluated here. By design,
+    deciding when to enter is an agent judgment call (see TRADING_TW.md),
+    not a pre-computed boolean. The agent integrates thesis, regime,
+    catalyst freshness, relative strength, concentration, etc. — that
+    integration is the value-add of using an LLM agent over a Python
+    rule engine.
+  - Invalidation IS evaluated automatically. Pre-set kill conditions
+    are the "automatic safety net" half of trading; entries are the
+    "discretionary judgment" half. Asymmetric on purpose.
+
+Naming convention:
+  - invalidation_signals (item)              — kill expressions
+  - invalidation_signal_results (eval)       — per-expression results
+  - invalidation_active (eval)               — true when any kill expr is true
 """
 
 from __future__ import annotations
@@ -63,7 +79,7 @@ def evaluate_watchlist_item(
     try:
         snapshot = analyze_symbol(item.symbol, config, profile)
         evaluated.analysis = _build_analysis_report(snapshot)
-        if not _has_rules(item):
+        if not _has_invalidation_rules(item):
             return evaluated
 
         market_session = session or get_market_session(profile)
@@ -82,13 +98,13 @@ def evaluate_watchlist_item(
                 context["excess_vs_benchmark_pct"] = relative.excess_vs_benchmark_pct
 
         evaluation = WatchlistEvaluation(
-            trigger_results=_build_trigger_results(item, context),
-            invalidation_results=_build_invalidation_results(item, context),
+            invalidation_signal_results=_build_invalidation_signal_results(item, context),
             context_snapshot=_build_snapshot(context),
             relative_performance=relative,
         )
-        evaluation.trigger_met = _resolve_trigger_state(item, evaluation.trigger_results, context)
-        evaluation.invalidation_met = _resolve_invalidation_state(item, evaluation.invalidation_results, context)
+        evaluation.invalidation_active = _resolve_invalidation_active(
+            item, evaluation.invalidation_signal_results, context
+        )
     except Exception as exc:
         evaluation = WatchlistEvaluation(error=str(exc))
 
@@ -132,13 +148,8 @@ def _build_relative_performance(
     )
 
 
-def _has_rules(item: WatchlistItem) -> bool:
-    return bool(
-        item.trigger_conditions
-        or item.invalidation_conditions
-        or item.trigger_price is not None
-        or item.invalidation_price is not None
-    )
+def _has_invalidation_rules(item: WatchlistItem) -> bool:
+    return bool(item.invalidation_signals)
 
 
 def _get_live_quote(
@@ -168,68 +179,19 @@ def _evaluate_conditions(
     return results
 
 
-def _build_trigger_results(
+def _build_invalidation_signal_results(
     item: WatchlistItem,
     context: dict[str, bool | int | float | str | None],
 ) -> list[WatchlistConditionResult]:
-    if item.trigger_conditions:
-        return _evaluate_conditions(item.trigger_conditions, context)
-    if item.trigger_price is None:
-        return []
-    price = context.get("price")
-    if not isinstance(price, (int, float)):
-        return [WatchlistConditionResult(expr=f"price >= {item.trigger_price}", error="price unavailable")]
-    return [
-        WatchlistConditionResult(
-            expr=f"price >= {item.trigger_price}",
-            result=float(price) >= float(item.trigger_price),
-        )
-    ]
+    return _evaluate_conditions(item.invalidation_signals, context) if item.invalidation_signals else []
 
 
-def _build_invalidation_results(
-    item: WatchlistItem,
-    context: dict[str, bool | int | float | str | None],
-) -> list[WatchlistConditionResult]:
-    if item.invalidation_conditions:
-        return _evaluate_conditions(item.invalidation_conditions, context)
-    if item.invalidation_price is None:
-        return []
-    price = context.get("price")
-    if not isinstance(price, (int, float)):
-        return [WatchlistConditionResult(expr=f"price <= {item.invalidation_price}", error="price unavailable")]
-    return [
-        WatchlistConditionResult(
-            expr=f"price <= {item.invalidation_price}",
-            result=float(price) <= float(item.invalidation_price),
-        )
-    ]
-
-
-def _resolve_trigger_state(
+def _resolve_invalidation_active(
     item: WatchlistItem,
     results: list[WatchlistConditionResult],
     context: dict[str, bool | int | float | str | None],
 ) -> bool:
-    if item.trigger_conditions:
-        return all(result.result is True for result in results)
-    if item.trigger_price is None:
-        return False
-    price = context.get("price")
-    return bool(isinstance(price, (int, float)) and float(price) >= float(item.trigger_price))
-
-
-def _resolve_invalidation_state(
-    item: WatchlistItem,
-    results: list[WatchlistConditionResult],
-    context: dict[str, bool | int | float | str | None],
-) -> bool:
-    if item.invalidation_conditions:
-        return any(result.result is True for result in results)
-    if item.invalidation_price is None:
-        return False
-    price = context.get("price")
-    return bool(isinstance(price, (int, float)) and float(price) <= float(item.invalidation_price))
+    return bool(item.invalidation_signals) and any(result.result is True for result in results)
 
 
 def _build_snapshot(context: dict[str, bool | int | float | str | None]) -> dict[str, object]:

@@ -36,7 +36,7 @@
 
 直接改。能改的東西包括但不限於：
 
-- `<DATA_ROOT>/account/lessons.md`
+- `<DATA_ROOT>/account/strategy.md`
 - `<DATA_ROOT>/account/watchlist.yaml`
 - `<SKILL_ROOT>/config/technical_config.yaml`
 - `<SKILL_ROOT>/prompts/TRADING_TW.md`
@@ -67,10 +67,10 @@
 - 改了什麼就記什麼，不要多寫
 - 不需要每次都有問題；沒問題就寫「無」
 
-### lessons 更新原則
+### strategy 更新原則
 
-- 只有在這次反思中發現能改變未來決策的關鍵經驗時，才提煉成規則並更新 `<DATA_ROOT>/account/lessons.md`
-- 以下情況特別值得升級為 lessons：
+- 只有在這次反思中發現能改變未來決策的關鍵經驗時，才提煉成規則並更新 `<DATA_ROOT>/account/strategy.md`
+- 以下情況特別值得升級為 strategy：
   - 造成實際重大虧損的盲點
   - 提早賣飛或錯過機會的明顯機會成本
   - 跨越多筆交易反覆出現的紀律偏離或失誤

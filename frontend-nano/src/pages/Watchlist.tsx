@@ -21,6 +21,14 @@ export default function Watchlist() {
             {w.thesis && <p className="text-sm text-neutral-800 mb-2"><span className="font-bold">Thesis:</span> {w.thesis}</p>}
             {w.trigger && <p className="text-sm text-neutral-700"><span className="font-bold">Trigger:</span> {w.trigger}</p>}
             {w.invalidation && <p className="text-sm text-neutral-700"><span className="font-bold">Invalidation:</span> {w.invalidation}</p>}
+            {w.invalidation_signals && w.invalidation_signals.length > 0 && (
+              <div className="mt-2">
+                <div className="text-xs font-bold uppercase text-neutral-500 mb-1">Invalidation Signals</div>
+                <ul className="list-disc pl-5 text-sm text-neutral-700">
+                  {w.invalidation_signals.map((signal) => <li key={signal} className="font-mono">{signal}</li>)}
+                </ul>
+              </div>
+            )}
           </article>
         ))}
       </div>

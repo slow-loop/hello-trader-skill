@@ -4,16 +4,21 @@
 
 台股每日研究主流程：Regime 判斷 → 量化選股 → 情緒掃描 → 新聞宏觀 → 交叉比對 → watchlist 維護。
 
-每次 flow 啟動**先做 Regime 判斷**。盤中 flow 輕量（只跑 Phase 0），盤後跑完整 Phase 0-5。
+每次 flow 啟動**先做 Regime 判斷**。
 
 ## 節奏 Cadence
 
 | 時段 | 做什麼 |
 |---|---|
-| 盤前 | Phase 0 完整版：Regime + 預檢 + 隔夜新聞、設 pending 單 |
+| 盤前 | Phase 0 + **2 + 3**（+ 必要時 4/5）：Regime + 預檢 + 隔夜情緒/新聞 + 設 pending 單。**唯一跳過的是 Phase 1 Screener**（資料 T-1，盤前無意義） |
 | 盤中（至多 1 次） | Phase 0 + 持倉 thesis 健檢 + pending 狀態；不跑 Phase 1-5 |
 | 盤後 | Phase 0-5 完整流程 |
 | 週末 | 每檔 watchlist thesis review |
+
+**盤前限制**：
+- Phase 1 Screener 跳過（T-1 資料，重跑等於昨晚結果）
+- 不加入**全新**標的（來不及完整研究）；已有標的的 thesis 更新可做
+- 未在 watchlist 的新進場不執行（等盤後完整研究後再判斷）
 
 **盤中禁做**：
 - Phase 1 Screener（資料是 T-1）
@@ -28,7 +33,7 @@
 
 Runtime（讀寫頻繁，存於 `<DATA_ROOT>`）：
 
-- `<DATA_ROOT>/account/lessons.md`: 規則與教訓
+- `<DATA_ROOT>/account/strategy.md`: 規則與教訓
 - `<DATA_ROOT>/account/watchlist.yaml`: 追蹤清單與 thesis
 - `<DATA_ROOT>/account/journals/{YYYY-MM-DD}.yaml`: 當日紀錄
 - `<DATA_ROOT>/account/research/{YYYY-MM-DD}-tw-{symbol_or_theme}.md`: 個股/主題研究
@@ -51,6 +56,11 @@ Static（只讀，存於 `<SKILL_ROOT>`）：
 uv run market overview
 uv run market analysis 2330
 uv run market quote 2330
+
+# K 線圖（個股研究 / thesis 重評時用）
+uv run market chart 2330 --bars 60          # PNG，預設含 BB + RSI + MACD + ADX，Read 路徑後直接看圖
+uv run market chart 2330 --bars 60 --indicators none  # 只看乾淨 K 棒
+uv run market candles 2330 --bars 60        # OHLC JSON，需要算具體數值時用
 
 # 量化雷達（盤後才跑）
 uv run market screener --strategy momentum
@@ -99,14 +109,15 @@ Markdown（brief / 個股研究）直接 Write，寫完一律 `doc-add`：
 - 預設交易研究，不做 deep research
 - 不要只貼資料，要做明確判斷
 - **新增 watchlist 時同步建立研究文件**，不要事後補
-- **研究強制更新觸發**：現價相對 thesis 基準 >10%，或 thesis 關鍵條件失效
+- **不設 A 點，不寫進場訊號**：本 skill 是動量交易，進場是 TRADING 端 agent judgment，整合 thesis / regime / catalyst / 相對強弱 / 集中度當下做決策，不預先寫死訊號。
+- **Research 只寫 thesis + invalidation_signals + stop**：thesis 描述「為什麼是這檔」與催化劑日曆；invalidation_signals 寫具體可執行的死亡條件（自動觸發出場）；stop 是風控價位。其他都交給 TRADING agent 在當下判斷。
 - **嚴禁直接讀寫結構化 YAML**：`watchlist.yaml` / `journals/*.yaml` 必須透過 `tmp/` + CLI；markdown 可直接 Write，寫完 re-read 確認可解析
 
 ## 主流程
 
 ### Phase 0：讀上下文 + Regime + 預檢
 
-**讀**：`lessons.md`、`watchlist.yaml`、近 3 日 journal、`cli account`、`cli watchlist`（同時讀 `brief.template.md` 作為 Phase 5 參考）
+**讀**：`strategy.md`、`watchlist.yaml`、近 3 日 journal、`cli account`、`cli watchlist`（同時讀 `brief.template.md` 作為 Phase 5 參考）
 
 **Regime 判斷**：跑 `uv run market overview`。
 
@@ -116,20 +127,16 @@ Markdown（brief / 個股研究）直接 Write，寫完一律 `doc-add`：
 - `adx_14`：趨勢強度
 - `dist_to_sma20_pct`：今日收盤距 20MA 的百分比（正 = 站上，負 = 跌破）
 
-寫入 journal.notes（一段話 + 一個判定）：
+寫入 journal.notes：
 - TWII 現價、`dist_to_sma20_pct`、`adx_14`、當日漲跌幅
-- 一句話描述情勢（例：「站上 20MA +8.9%，ADX 26，連三日強勢多頭」）
-- 判定：**`允許新進場` / `只做持倉管理`**
-  - `dist_to_sma20_pct` > 0（TWII 在 20MA 上）→ 允許新進場
-  - `dist_to_sma20_pct` < 0（TWII 跌破 20MA）→ 只做持倉管理
-  - 跌破 60MA → 只做持倉管理 + 考慮減碼
+- Regime 判定（`range` / `uptrend` / `melt_up`，依 strategy.md Regime 表）+ 一句話描述（例：「`melt_up`，站上 20MA +8.9%，ADX 26，連三日強勢多頭」）
 - 與前一輪比較：變化 / 無變化 / 明顯惡化（自由敘述）
 
 **預檢**：對每個 watchlist 標的：
-- 現價相對 thesis 基準 >10% → 強制重跑個股研究
-- `evaluation.invalidation_met=true` **且為盤後** → 本輪移除
-- `evaluation.invalidation_met=true` **但為盤中** → 標記「待盤後確認」，**不移除**
-- `evaluation.trigger_met=true` → 高優先進場候選（交棒 Trading）
+- 現價相對 thesis 寫入時的基準價 >10% → 強制重跑個股研究（thesis 已 stale）
+- `evaluation.invalidation_active=true` **且為盤後** → 本輪移除
+- `evaluation.invalidation_active=true` **但為盤中** → 標記「待盤後確認」，**不移除**
+- 其他狀況交棒 Trading 做整合 judgment（沒有預計算的進場 gate）
 
 **盤中分支**：盤中 flow 到此結束，寫 journal（簡短 entry 記 regime + 預檢），交棒 `TRADING_TW.md`。
 
@@ -162,49 +169,41 @@ Screener 自帶技術指標（RSI, ADX, 量比）+ 籌碼（外資/投信連買�
 - 輔以 `market overview`：驗證新聞敘事是否被真金白銀買單
 - 記下結論，不和 Phase 2 混
 
-### Phase 4：交叉比對 + 進場模式分類
+### Phase 4：交叉比對
 
-三方資料交叉比對後，將候選**分到三個進場模式**（觀念分類，具體數字進場條件由 Trading phase 用個股技術面自己訂）：
+三方資料（Phase 1 量化、Phase 2 PTT、Phase 3 新聞）交叉比對：
 
-- **Breakout**：訊號是「突破新高 + 放量 + 趨勢強」——screener 上榜新面孔 + 籌碼連買 + 新聞催化
-- **Pullback**：訊號是「前 5 日強勢後回測均線量縮」——thesis 已成立、在等 A 點的 watchlist 老面孔
-- **Catalyst**：訊號是「具體事件驅動」——法說、財報、研報點名、法規。事件發生當下進場，不等回測
-
-**交叉比對判定**：
-- **三方共振**（screener + PTT + news）→ 最高優先，做個股研究，標 mode
+- **三方共振**（screener + PTT + news）→ 最高優先，做個股研究
 - **雙重確認**（screener + news，或 screener + PTT）→ 加 watchlist，視情況做個股研究
 - **有故事但動能未到**（news + PTT，screener 未上榜）→ watchlist 觀察
 - **screener only** → 可能假訊號，journal 記一筆不加 watchlist
 - **單一來源** → 跳過
 - **Phase 1 跳過（非盤後）** → 不得僅憑 Phase 2/3 加入 watchlist，最多 journal observation
 
-**若 Phase 0 regime = `只做持倉管理`** → 本輪不新增 watchlist，只做既有 thesis review。
+**若 Phase 0 regime = `range`** → 本輪不新增 watchlist，只做既有 thesis review。
 
 ### Phase 5：Watchlist 更新 & 個股研究 & Journal
 
-**Watchlist status 三態**：
-- `watch`：觀察中（thesis 已有但尚未確認執行）。Trading 不動。
-- `ready`：執行就緒（A 點明確、stop 明確、entry mode 確定、sizing 可算）。Trading 下次跑會掛 limit。
-- `hold`：已持倉。狀態由 sweep 自動同步（成交時 ready → hold；出場時 hold → watch）。
+**Watchlist status 兩態**：
+- `watch`：thesis 累積中。Trading 每輪掃整個 watchlist，對每檔做 judgment。
+- `hold`：已持倉。狀態由 sweep 自動同步（成交時 watch → hold；出場時 hold → watch）。
+
+沒有 `ready` 狀態，沒有預計算的進場 gate。Trading 端 agent 直接掃所有 watch 標的，整合 analysis report、thesis、regime、相對強弱、集中度等做進場判斷。
 
 1. **更新 Watchlist**：
    - 新增/修改寫入 `tmp/watchlist_update_{symbol}.yaml`，執行 `cli watchlist-update --file ...`
-   - **新增項目 thesis 內須註明 `entry_mode: breakout | pullback | catalyst`**
    - 移除直接 `cli watchlist-delete`，並在 journal 記錄原因
-   - **`watch → ready` 升級條件**（全部滿足才升）：
-     - thesis 完整（核心論述 + 成立 / 失效條件清楚）
-     - A 點是具體價位區間（如「75-78」），不是模糊描述
-     - stop 是具體價位（不是「跌破均線再說」）
-     - entry_mode 已標註
-     - 催化劑已落地或族群已共振（不是「等明天看看」）
-     - **regime 是否允許新進場由 Trading 在執行時判斷，這裡不卡**
-   - **降級**：若 `ready` 標的的 thesis 部分動搖（A 點仍合理但需重評）→ 降回 `watch`；thesis 失效 → 直接 delete
+   - **`invalidation_signals` 寫作原則**：
+     - 必須是具體可執行的數值表達式或 `technical_config.yaml` 已定義的 expression 名稱（如 `close < 2100`、`price_below_sma_50 and macd_histogram_negative`）
+     - 任一表達式達 → `invalidation_active=true` → 自動觸發 Trading 端清理
+     - 寫的時候問自己：「這個條件達成時，我絕對要殺掉這個 thesis 嗎？」是 yes 才寫
+     - 不寫進場訊號——進場是 agent 當下判斷，不是預設規則
+   - **降級邏輯**：thesis 動搖 → 改 notes 註明「降級觀察」；thesis 失效 → 直接 delete
 2. **個股交易研究**：以下情況派 sub-agent 跑子流程：
    - 新標的加入 watchlist
-   - 從 `watch` 升 `ready`（執行前的最後確認）
-   - 從 `ready` / `watch` 升 `hold` 由 sweep 自動處理，**不需要新研究**
-   - thesis 明顯改變
+   - thesis 明顯改變（>10% 強制更新或關鍵條件變化）
    - 持倉出現重大催化或風險
+   - 從 `watch` → `hold` 由 sweep 自動處理，**不需要新研究**
 3. **市場簡報（Brief）**：
    - Write 到 `<DATA_ROOT>/account/research/{date}-tw-brief-draft.md`，結構照 `<SKILL_ROOT>/templates/research/brief.template.md`
    - frontmatter 必填 `date` / `session` / `screener_source`
@@ -224,7 +223,7 @@ Screener 自帶技術指標（RSI, ADX, 量比）+ 籌碼（外資/投信連買�
    - 優先 1 個月內資料
    - 至少比較 3-5 檔同族群/同題材
    - 主標不是最佳 → 結論指出更值得追蹤的股票
-4. **thesis 必含 entry_mode 與 A 點定義**（A 點 = 進場甜蜜點，B 點 = 驗證點）
+4. **thesis 必含**：核心論述、`invalidation_signals`（thesis 死亡訊號）、stop（風控價位）、催化劑日曆。**不含 A 點，不含進場訊號**——進場由 TRADING agent 整合判斷，當下用市場價執行。
 5. 建立研究檔：`{date}-tw-{symbol}.md` 或 `{date}-tw-{theme}.md`
 6. 發佈：`cli doc-add ...`
 

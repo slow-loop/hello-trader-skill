@@ -1,6 +1,6 @@
 """Local workspace files for tw-trader.
 
-Handles journal / lessons YAML I/O plus the watchlist path. Watchlist
+Handles journal / strategy markdown I/O plus the watchlist path. Watchlist
 content lives in market_core.watchlist; this module only owns the path
 helpers and the non-market tw-trader artifacts. Briefs are plain
 markdown under data/account/research/ (no dedicated helpers).
@@ -82,8 +82,13 @@ def journal_path(date_str: str) -> Path:
     return journals_dir() / f"{date_str}.yaml"
 
 
+def strategy_path() -> Path:
+    return account_dir() / "strategy.md"
+
+
 def lessons_path() -> Path:
-    return account_dir() / "lessons.md"
+    """Backward-compatible alias for older CLI callers."""
+    return strategy_path()
 
 
 def screener_dir() -> Path:
@@ -215,19 +220,29 @@ def list_journals(limit: int = 5) -> list[dict]:
     return summaries
 
 
-# --- Lessons -------------------------------------------------------
+# --- Strategy ------------------------------------------------------
 
 
-def load_lessons() -> str:
-    path = lessons_path()
+def load_strategy() -> str:
+    path = strategy_path()
     if not path.exists():
         return ""
     return path.read_text(encoding="utf-8")
 
 
+def save_strategy(content: str) -> None:
+    _write_text_atomic(strategy_path(), content)
+    append_event("strategy.set", {"length": len(content)})
+
+
+def load_lessons() -> str:
+    """Backward-compatible alias for older CLI callers."""
+    return load_strategy()
+
+
 def save_lessons(content: str) -> None:
-    _write_text_atomic(lessons_path(), content)
-    append_event("lessons.set", {"length": len(content)})
+    """Backward-compatible alias for older CLI callers."""
+    save_strategy(content)
 
 
 # --- Research docs ------------------------------------------------

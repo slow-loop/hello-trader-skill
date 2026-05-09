@@ -1,7 +1,7 @@
 """tw-trader CLI — local-first. No backend required.
 
 Reads/writes YAML under data/account/ via tw_trader.state (paper trading)
-and tw_trader.workspace (journal/lessons/watchlist). Briefs are plain
+and tw_trader.workspace (journal/strategy/watchlist). Briefs are plain
 markdown under data/account/research/ — agents write them directly.
 Market data comes from the sibling `market` CLI (market_core).
 """
@@ -140,17 +140,17 @@ def journal_add(
 
 
 @app.command()
-def lessons():
-    """Show lessons markdown."""
-    typer.echo(workspace.load_lessons())
+def strategy():
+    """Show strategy markdown."""
+    typer.echo(workspace.load_strategy())
 
 
 @app.command()
-def lessons_set(
+def strategy_set(
     content: Optional[str] = typer.Option(None, "--content", help="Replacement markdown content"),
     file: Optional[Path] = typer.Option(None, "--file", help="Read replacement markdown from file"),
 ):
-    """Replace lessons markdown."""
+    """Replace strategy markdown."""
     if (content is None) == (file is None):
         typer.echo("Provide exactly one of --content or --file.", err=True)
         raise typer.Exit(1)
@@ -160,8 +160,33 @@ def lessons_set(
         except OSError as exc:
             typer.echo(f"Unable to read {file}: {exc}", err=True)
             raise typer.Exit(1) from exc
-    workspace.save_lessons(content or "")
-    typer.echo(f"Updated lessons ({len(content or '')} chars).")
+    workspace.save_strategy(content or "")
+    typer.echo(f"Updated strategy ({len(content or '')} chars).")
+
+
+@app.command()
+def lessons():
+    """Show strategy markdown (legacy alias)."""
+    typer.echo(workspace.load_strategy())
+
+
+@app.command()
+def lessons_set(
+    content: Optional[str] = typer.Option(None, "--content", help="Replacement markdown content"),
+    file: Optional[Path] = typer.Option(None, "--file", help="Read replacement markdown from file"),
+):
+    """Replace strategy markdown (legacy alias)."""
+    if (content is None) == (file is None):
+        typer.echo("Provide exactly one of --content or --file.", err=True)
+        raise typer.Exit(1)
+    if file is not None:
+        try:
+            content = file.read_text(encoding="utf-8")
+        except OSError as exc:
+            typer.echo(f"Unable to read {file}: {exc}", err=True)
+            raise typer.Exit(1) from exc
+    workspace.save_strategy(content or "")
+    typer.echo(f"Updated strategy ({len(content or '')} chars).")
 
 
 @app.command()

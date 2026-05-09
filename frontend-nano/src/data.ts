@@ -24,7 +24,7 @@ const watchlistRaw = import.meta.glob('/../data/account/watchlist.yaml', {
   eager: true,
 }) as Record<string, string>
 
-const lessonsRaw = import.meta.glob('/../data/account/lessons.md', {
+const strategyRaw = import.meta.glob('/../data/account/strategy.md', {
   query: '?raw',
   import: 'default',
   eager: true,
@@ -60,8 +60,7 @@ export type WatchlistItem = {
   notes?: string
   trigger?: string
   invalidation?: string
-  trigger_conditions?: string[]
-  invalidation_conditions?: string[]
+  invalidation_signals?: string[]
   catalyst_notes?: string
   updated_at?: string
 }
@@ -160,7 +159,7 @@ export const watchlist: WatchlistItem[] = (() => {
   return (yaml.load(first) as WatchlistItem[]) ?? []
 })()
 
-export const lessons: string = Object.values(lessonsRaw)[0] ?? ''
+export const strategy: string = Object.values(strategyRaw)[0] ?? ''
 
 export type Trade = {
   action: 'BUY' | 'SELL' | string

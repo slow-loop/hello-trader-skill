@@ -22,7 +22,7 @@
 - 只能用公開資料
 - 有機會就出手，但不衝動
 
-具體的策略細節不預設，由你在交易過程中自己摸索、檢討、調整，並把可重複使用的心得寫進 `<DATA_ROOT>/account/lessons.md`
+具體的策略細節不預設，由你在交易過程中自己摸索、檢討、調整，並把可重複使用的心得寫進 `<DATA_ROOT>/account/strategy.md`
 
 ### 風控原則
 
@@ -47,7 +47,7 @@
 - `<DATA_ROOT>/account/watchlist.yaml`
 - `<SKILL_ROOT>/config/technical_config.yaml`
 - `<SKILL_ROOT>/config/sources.tw.yaml`
-- `<DATA_ROOT>/account/lessons.md`
+- `<DATA_ROOT>/account/strategy.md`
 - `<DATA_ROOT>/account/journals/{YYYY-MM-DD}.yaml`
 
 ### 這三類資料的角色不要混
@@ -119,10 +119,10 @@
   - 因價格過高、波動過大、流動性不足或風控限制，導致雖然有題材但暫時不能交易
 - 如果只是日內雜訊、沒有改變追蹤理由，可以不更新
 
-### lessons 更新原則
+### strategy 更新原則
 
-- 只有在這次經驗能改變未來決策時，才把內容從 journal 升級寫進 `<DATA_ROOT>/account/lessons.md`
-- 下面幾種情況特別值得更新 lessons：
+- 只有在這次經驗能改變未來決策時，才把內容從 journal 升級寫進 `<DATA_ROOT>/account/strategy.md`
+- 下面幾種情況特別值得更新 strategy：
   - 造成實際虧損
   - 造成明顯機會成本
   - 同樣錯誤重複出現
@@ -178,7 +178,7 @@ uv run web-reader config/sources.tw.yaml --tags=research --format=md
 
 **步驟**
 
-1. 讀 `<DATA_ROOT>/account/lessons.md`, `<DATA_ROOT>/account/watchlist.yaml`
+1. 讀 `<DATA_ROOT>/account/strategy.md`, `<DATA_ROOT>/account/watchlist.yaml`
 2. 讀最近5個交易日的 journals，並確認今天的 journal `<DATA_ROOT>/account/journals/{YYYY-MM-DD}.yaml` 是否存在；如果不存在就建立
 3. 跑 `cli market` 看盤況；如果 headline 不足、主線不清楚、或需要補重大事件脈絡，直接執行 `uv run web-reader config/sources.tw.yaml --tags=tw,macro --format=md`
 4. 結合研究主題形成這次醒來的大盤判斷，並明確說明這個判斷會如何影響操作積極度
@@ -195,7 +195,7 @@ uv run web-reader config/sources.tw.yaml --tags=research --format=md
 10. 如果目前是盤後，執行 `uv run python -m skill_tw_trader.cli snapshot`，記錄當日資產快照
 11. 視情況更新 `<DATA_ROOT>/account/watchlist.yaml`
 12. 如果分析框架本身需要調整，再更新 `<SKILL_ROOT>/config/technical_config.yaml`
-13. 如果得到可重複使用的教訓，再更新 `<DATA_ROOT>/account/lessons.md`
+13. 如果得到可重複使用的教訓，再更新 `<DATA_ROOT>/account/strategy.md`
 
 補充：
 

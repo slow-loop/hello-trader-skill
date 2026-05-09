@@ -303,20 +303,8 @@ def _try_fugle_bars(
     end = datetime.now(timezone.utc)
     start = end - timedelta(days=lookback_days)
 
-    data = client.stock.historical.candles(**{
-        "symbol": stock_id,
-        "timeframe": tf,
-        "from": start.strftime("%Y-%m-%d"),
-        "to": end.strftime("%Y-%m-%d"),
-        "fields": "open,high,low,close,volume,turnover,change",
-    })
-    if not data:
-        return None
-
-    # API returns {"data": [...], "symbol": ..., ...}
-    rows = data["data"] if isinstance(data, dict) else data
-    return [
-        Bar(
+    def _make_bar(row: dict) -> Bar:
+        return Bar(
             symbol=symbol,
             market_profile=profile.id,
             bar_time=row["date"],
@@ -327,8 +315,45 @@ def _try_fugle_bars(
             volume=_safe_int(row.get("volume")),
             source="fugle",
         )
-        for row in rows
-    ]
+
+    if tf == "D":
+        data = client.stock.historical.candles(**{
+            "symbol": stock_id,
+            "timeframe": "D",
+            "from": start.strftime("%Y-%m-%d"),
+            "to": end.strftime("%Y-%m-%d"),
+            "fields": "open,high,low,close,volume,turnover,change",
+        })
+        if not data:
+            return None
+        rows = data["data"] if isinstance(data, dict) else data
+        return [_make_bar(r) for r in rows] or None
+
+    # Sub-day timeframe: Fugle historical API only supports daily candles.
+    # Combine historical daily bars (past context) with today's intraday candles.
+    bars: list[Bar] = []
+
+    try:
+        data = client.stock.historical.candles(**{
+            "symbol": stock_id,
+            "timeframe": "D",
+            "from": start.strftime("%Y-%m-%d"),
+            "to": end.strftime("%Y-%m-%d"),
+            "fields": "open,high,low,close,volume,turnover,change",
+        })
+        rows = (data["data"] if isinstance(data, dict) else data) or []
+        bars.extend(_make_bar(r) for r in rows)
+    except Exception:
+        pass
+
+    try:
+        intraday = client.stock.intraday.candles(symbol=stock_id, timeframe=tf)
+        intraday_rows = (intraday.get("data", intraday) if isinstance(intraday, dict) else intraday) or []
+        bars.extend(_make_bar(r) for r in intraday_rows)
+    except Exception:
+        pass
+
+    return bars or None
 
 
 def _try_fugle_quote(symbol: str, profile: MarketProfile) -> Quote | None:

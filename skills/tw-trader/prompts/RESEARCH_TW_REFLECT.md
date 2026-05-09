@@ -37,7 +37,7 @@ append 前先確認當天 journal YAML 可正常解析；若損壞，先修格�
 
 直接改。能改的東西包括但不限於：
 
-- `<DATA_ROOT>/account/lessons.md`
+- `<DATA_ROOT>/account/strategy.md`
 - `<DATA_ROOT>/account/watchlist.yaml`
 - `<SKILL_ROOT>/templates/research/template.md`
 - `<SKILL_ROOT>/config/technical_config.yaml`
