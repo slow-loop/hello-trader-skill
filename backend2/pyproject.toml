@@ -4,7 +4,7 @@ version = "0.1.0"
 description = "Add your description here"
 readme = "README.md"
 authors = [
-    { name = "WcW", email = "1754835+w121211@users.noreply.github.com" }
+    { name = "hello-trader-skill contributors" }
 ]
 requires-python = ">=3.13"
 dependencies = [

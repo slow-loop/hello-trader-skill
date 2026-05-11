@@ -10,6 +10,6 @@
   "calmar": 3.0696103954245446,
   "turnover": 0.031001589825119236,
   "num_trades": 39,
-  "report": "/Users/cc/Documents/GitHub/hello-trader-skill/skills/strategy-lab/data/experiments/2026-04-25_momentum_v3/strategy_bt_momentum.md",
+  "report": "strategy_bt_momentum.md",
   "git_hash": "b87c4fc"
 }

@@ -153,6 +153,13 @@ dist
 tmp/
 
 .nanobot-workspace
+.claude/
+
+# Runtime databases
+*.sqlite
+*.sqlite-shm
+*.sqlite-wal
+*.db
 skills/lana-copycat/data
 
 # Runtime data — written by skills, never committed
