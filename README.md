@@ -1,18 +1,27 @@
-# nano-trader-skills
+# hello-trader-skill
 
 **English** | [繁體中文](README.zh-TW.md)
 
-Local-first toolkit for running an autonomous Taiwan-stock trading agent with Claude. No server, no database — everything is plain YAML and Markdown on disk.
+Local-first autonomous trading agent for Taiwan stocks, powered by Claude. No server, no database — all state lives as plain YAML and Markdown on disk.
 
-Three loosely-coupled pieces:
+## What it does
+
+An AI agent runs a daily **Research + Trading** routine:
+
+1. **Research** — fetches market data, reads news, updates the watchlist, generates per-symbol research docs
+2. **Trading** — reviews open positions, evaluates watchlist entries, places or adjusts paper orders
+
+Everything is stored in `data/account/` as human-readable files. The frontend viewer lets you browse the account state without touching the CLI.
+
+## Three loosely-coupled pieces
 
 | Folder | What it is |
 |---|---|
-| [`skills/tw-trader/`](skills/tw-trader) | Claude skill: SKILL.md prompts + Python CLI for paper trading, journals, watchlist, research docs |
-| [`libs/market-core/`](libs/market-core) | Quotes, OHLCV bars, technical indicators, symbol snapshots ([README](libs/market-core/README.md)) |
-| [`frontend-nano/`](frontend-nano) | Minimal Vite + React viewer for the trader's local YAML/Markdown store |
+| [`skills/tw-trader/`](skills/tw-trader) | The agent: `SKILL.md` prompts + Python CLI for paper trading, journals, watchlist, research docs |
+| [`libs/market-core/`](libs/market-core) | Quotes, OHLCV bars, technical indicators, symbol snapshots |
+| [`frontend-nano/`](frontend-nano) | Minimal Vite + React viewer for the local YAML/Markdown store |
 
-`web-reader` (async URL → clean text, used by the skills) lives in its own repo: [w121211/web-reader](https://github.com/w121211/web-reader).
+[`web-reader`](https://github.com/w121211/web-reader) (async URL → clean text) is a separate dependency pulled from GitHub.
 
 ## Architecture
 
@@ -29,84 +38,105 @@ Three loosely-coupled pieces:
                                              │ depends on
                                   ┌──────────┴──────────┐
                                   ▼                     ▼
-                          ┌──────────────┐      ┌──────────────────────┐
-                          │ market-core  │      │ web-reader (github)  │
-                          │ quotes / TA  │      │ URL → text           │
-                          └──────────────┘      └──────────────────────┘
+                          ┌──────────────┐   ┌─────────────────────┐
+                          │ market-core  │   │ web-reader (GitHub) │
+                          │ quotes / TA  │   │ URL → clean text    │
+                          └──────────────┘   └─────────────────────┘
 ```
 
-Runtime state (account, journals, research) lives at repo-root [`data/`](data) — separated from the skill code so the skill stays read-only and one repo can host multiple skills writing into the same data dir.
+Runtime state (account, journals, research docs) lives under `data/` — separated from skill code so the skill stays read-only and multiple skills can share one data directory.
 
-## Quickstart
+## Prerequisites
 
-Requires **Python 3.13**, [**uv**](https://docs.astral.sh/uv/), and **Node 20+**.
+- **Python 3.13** + [**uv**](https://docs.astral.sh/uv/)
+- **Node 20+** (frontend only)
+- **Claude Code** — the agent is driven by Claude via `SKILL.md`
+- API keys: Fugle (Taiwan quotes), FinMind (historical data); others optional — see `.env.example`
+
+## Setup
 
 ```bash
-git clone https://github.com/<you>/nano-trader-skills.git
-cd nano-trader-skills
+git clone https://github.com/<you>/hello-trader-skill.git
+cd hello-trader-skill
 
-cp .env.example .env            # add FUGLE_API_KEY, FINMIND_API_KEY, ...
-cd skills/tw-trader && uv sync  # installs tw-trader + market-core (web-reader pulled from GitHub)
-
-uv run tw-trader account        # show paper account
-uv run tw-trader watchlist      # show watchlist
+cp .env.example .env          # fill in FUGLE_API_KEY, FINMIND_API_KEY at minimum
+cd skills/tw-trader
+uv sync                       # installs tw-trader + market-core + web-reader
 ```
 
-Frontend viewer:
+Verify:
 
 ```bash
-cd frontend-nano
-npm install && npm run dev      # http://localhost:5173
+uv run tw-trader account      # should show empty paper account
+uv run market overview        # should show market snapshot
 ```
 
-Drive the agent from Claude Code by pointing it at [`skills/tw-trader/prompts/SKILL.md`](skills/tw-trader/prompts/SKILL.md). Each turn runs one Research pass and one Trading pass.
+## Running the daily routine
 
-## tw-trader CLI
+Open [`skills/tw-trader/prompts/SKILL.md`](skills/tw-trader/prompts/SKILL.md) in Claude Code and let the agent run. One session = one Research pass + one Trading pass.
+
+For autonomous daily runs, use a foreground scheduler (reference: the `kol-watch` pattern from [hello-note](https://github.com/w121211/hello-note)) — no cron or launchd required.
+
+## CLI reference
 
 ```bash
-uv run tw-trader account                       # portfolio status
-uv run tw-trader buy 2330 1000 --limit 600     # paper buy
-uv run tw-trader sell 2330 1000                # paper sell (market)
-uv run tw-trader sweep                         # match pending orders to quotes
-uv run tw-trader journal                       # today's journal
-uv run tw-trader doc-add data/account/research/2026-04-26-tw-2330.md
+# Account
+uv run tw-trader account                        # portfolio + cash summary
+uv run tw-trader journal                        # today's journal
+
+# Orders (paper trading only)
+uv run tw-trader buy  2330 1000 --limit 600     # limit buy
+uv run tw-trader sell 2330 500                  # market sell
+uv run tw-trader sweep                          # match pending orders against latest quotes
+
+# Research
+uv run tw-trader watchlist                      # show watchlist
+uv run tw-trader screener-snapshot              # run screener, save snapshot
+
+# Market data (market-core)
+uv run market overview                          # market regime snapshot
+uv run market quote 2330                        # single symbol quote
+uv run market chart 2330 --period 3mo           # OHLCV chart
 ```
 
-State lives in `data/account/` at repo root:
+Override the data root:
+
+```bash
+TW_TRADER_DATA_ROOT=/your/path uv run tw-trader account
+```
+
+## Data layout
 
 ```
 data/account/
-├── state/         # account, positions, orders, trades
-├── journals/      # daily YAML journals
-├── research/      # per-symbol Markdown research docs
-├── screener/      # daily screener snapshots
+├── state/          # account, positions, orders, trades (YAML)
+├── journals/       # daily journals (YAML)
+├── research/       # per-symbol Markdown research docs
+├── screener/       # daily screener snapshots
 ├── watchlist.yaml
 └── strategy.md
 ```
 
-Templates for new research docs / trading cards live under `data/account/*/template/`. Override the data location with `TW_TRADER_DATA_ROOT=/path/to/dir`.
+Templates for new documents live under `data/account/*/template/`.
 
-## Standalone use
-
-`market-core` has no Taiwan-specific assumptions in its core; use it on its own:
+## Frontend viewer
 
 ```bash
-python -c "from market_core import analyze_symbol, MarketRuntimeConfig, MarketConfig; \
-  print(analyze_symbol('AAPL', MarketRuntimeConfig(market=MarketConfig(profile='us_equity'))).quote.price)"
+cd frontend-nano
+npm install && npm run dev    # http://localhost:5173
 ```
-
-`web-reader` is its own repo — see [github.com/w121211/web-reader](https://github.com/w121211/web-reader).
 
 ## Repo layout
 
 ```
 .
-├── skills/tw-trader/      Trading skill (prompts + Python CLI)
+├── skills/
+│   └── tw-trader/        Trading agent (prompts + Python CLI)
 ├── libs/
-│   └── market-core/       Market data + technical analysis
-├── frontend-nano/         React viewer
-├── data/                  Runtime state (account, journals, posts)
-├── .env.example           Single shared env file for the whole monorepo
+│   └── market-core/      Market data + technical analysis
+├── frontend-nano/        React viewer
+├── data/                 Runtime state (gitignored)
+├── .env.example
 └── README.md
 ```
 
