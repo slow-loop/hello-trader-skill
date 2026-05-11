@@ -66,9 +66,12 @@ hello-trader-skill 本身就是公開版，不另開 repo。以下是讓 repo �
 
 | 項目 | 難度 | 說明 |
 |---|---|---|
-| `.claude/` 加入 `.gitignore` | 簡單 | worktrees 目錄不該進 repo |
+| ~~`.claude/` 加入 `.gitignore`~~ | ✅ | commit `eb5b577` |
+| ~~SQLite/DB 檔案移出 git track~~ | ✅ | commit `eb5b577` |
+| ~~strategy-lab result.json 絕對路徑~~ | ✅ | commit `eb5b577` |
+| ~~xlsx binary 移出 git track~~ | ✅ | commit `d1e6c90` |
 | `uv install` 乾淨環境驗證 | 中 | 確認外部使用者能跑起來；`web-reader` 依賴 GitHub tag 需測試 |
-| `.env.example` | 簡單 | 列出所有需要的 env vars，不含真實值 |
+| `.env.example` 補 required / optional 標示 | 簡單 | 現有版本已有列表，補一行說明即可 |
 | CONTRIBUTING.md | 簡單 | 選項性，若要吸引外部貢獻再補 |
 
 **設計決策（已定）**
