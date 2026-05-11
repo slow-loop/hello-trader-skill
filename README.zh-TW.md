@@ -21,7 +21,7 @@ AI agent 每天跑一輪 **Research + Trading** 例行作業：
 | [`libs/market-core/`](libs/market-core) | 報價、OHLCV K 棒、技術指標、個股快照 |
 | [`frontend-nano/`](frontend-nano) | 極簡 Vite + React viewer，瀏覽本地 YAML/Markdown |
 
-[`web-reader`](https://github.com/w121211/web-reader)（非同步 URL → 乾淨文字）是獨立的依賴，從 GitHub 拉取。
+[`hello-wagreader`](https://github.com/w121211/hello-wagreader)（非同步 URL → 乾淨文字）是獨立的依賴，從 GitHub 拉取。
 
 ## 架構
 
@@ -39,7 +39,7 @@ AI agent 每天跑一輪 **Research + Trading** 例行作業：
                                   ┌──────────┴──────────┐
                                   ▼                     ▼
                           ┌──────────────┐   ┌──────────────────────┐
-                          │ market-core  │   │ web-reader (GitHub)  │
+                          │ market-core  │   │ hello-wagreader      │
                           │ 報價 / 技術指標│   │ URL → 乾淨文字       │
                           └──────────────┘   └──────────────────────┘
 ```
@@ -61,7 +61,7 @@ cd hello-trader-skill
 
 cp .env.example .env          # 至少填入 FUGLE_API_KEY、FINMIND_API_KEY
 cd skills/tw-trader
-uv sync                       # 一次安裝 tw-trader + market-core + web-reader
+uv sync                       # 一次安裝 tw-trader + market-core + hello-wagreader
 ```
 
 確認安裝成功：
