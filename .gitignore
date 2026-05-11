@@ -164,3 +164,6 @@ skills/lana-copycat/data
 
 # Runtime data — written by skills, never committed
 /data/
+# Binary data files
+*.xlsx
+*.xls
