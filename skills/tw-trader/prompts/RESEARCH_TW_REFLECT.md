@@ -44,7 +44,7 @@ append 前先確認當天 journal YAML 可正常解析；若損壞，先修格�
 - `<SKILL_ROOT>/config/sources.tw.yaml`
 - `<SKILL_ROOT>/prompts/RESEARCH_TW.md`
 - `<SKILL_ROOT>/src/` Python code
-- `web-reader` Python code lives at https://github.com/w121211/hello-wagreader (clone separately if you need to read it)
+- `web-reader` Python code lives at https://github.com/w121211/hello-web-reader (clone separately if you need to read it)
 
 一次只改你有把握的。不確定的先寫進 `next`，下次再處理
 

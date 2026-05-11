@@ -21,7 +21,7 @@ Everything is stored in `data/account/` as human-readable files. The frontend vi
 | [`libs/market-core/`](libs/market-core) | Quotes, OHLCV bars, technical indicators, symbol snapshots |
 | [`frontend-nano/`](frontend-nano) | Minimal Vite + React viewer for the local YAML/Markdown store |
 
-[`hello-wagreader`](https://github.com/w121211/hello-wagreader) (async URL → clean text) is a separate dependency pulled from GitHub.
+[`hello-web-reader`](https://github.com/w121211/hello-web-reader) (async URL → clean text) is a separate dependency pulled from GitHub.
 
 ## Architecture
 
@@ -39,7 +39,7 @@ Everything is stored in `data/account/` as human-readable files. The frontend vi
                                   ┌──────────┴──────────┐
                                   ▼                     ▼
                           ┌──────────────┐   ┌─────────────────────┐
-                          │ market-core  │   │ hello-wagreader       │
+                          │ market-core  │   │ hello-web-reader       │
                           │ quotes / TA  │   │ URL → clean text    │
                           └──────────────┘   └─────────────────────┘
 ```
@@ -61,7 +61,7 @@ cd hello-trader-skill
 
 cp .env.example .env          # fill in FUGLE_API_KEY, FINMIND_API_KEY at minimum
 cd skills/tw-trader
-uv sync                       # installs tw-trader + market-core + hello-wagreader
+uv sync                       # installs tw-trader + market-core + hello-web-reader
 ```
 
 Verify:
