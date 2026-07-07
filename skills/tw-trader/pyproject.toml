@@ -29,5 +29,5 @@ build-backend = "setuptools.build_meta"
 where = ["src"]
 
 [tool.uv.sources]
-web-reader = { git = "https://github.com/w121211/hello-web-reader.git", tag = "v0.1.0" }
+web-reader = { git = "https://github.com/w121211/hello-web-reader.git", branch = "main" }
 market-core = { path = "../../libs/market-core", editable = true }

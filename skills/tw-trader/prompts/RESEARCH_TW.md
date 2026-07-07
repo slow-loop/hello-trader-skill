@@ -138,6 +138,15 @@ Markdown（brief / 個股研究）直接 Write，寫完一律 `doc-add`：
 - `evaluation.invalidation_active=true` **但為盤中** → 標記「待盤後確認」，**不移除**
 - 其他狀況交棒 Trading 做整合 judgment（沒有預計算的進場 gate）
 
+**補跑前日盤後（盤前專用）**：
+盤前 Phase 0 完成 Regime + 預檢後，在交棒 Trading 之前，先確認：
+- 讀前一交易日的 journal，看是否有 `session: post_close` 的 research entry
+- **若無**（即前日盤後流程缺席）→ 立即補執行：
+  1. `uv run python -m tw_trader.cli screener-snapshot --strategy momentum --suffix postclose`（補拍前日盤後 screener）
+  2. 對所有 watchlist 標的重跑偏離度檢查（已在本輪預檢完成則跳過）
+- 這個補跑步驟是 **Phase 0 的一部分**，不算盤前 Phase 1（不違反「Phase 1 盤前跳過」規則）
+- 補跑完成後，journal notes 加一條「前日盤後補跑：screener 已執行」或「前日盤後已完成，跳過補跑」
+
 **盤中分支**：盤中 flow 到此結束，寫 journal（簡短 entry 記 regime + 預檢），交棒 `TRADING_TW.md`。
 
 以下 Phase 1-5 僅在盤後或 regime 明顯惡化時執行。

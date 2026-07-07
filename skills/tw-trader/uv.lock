@@ -2213,7 +2213,7 @@ requires-dist = [
     { name = "python-dotenv", specifier = ">=1.0" },
     { name = "pyyaml", specifier = ">=6.0" },
     { name = "typer", specifier = ">=0.15.0" },
-    { name = "web-reader", git = "https://github.com/w121211/web-reader.git?tag=v0.1.0" },
+    { name = "web-reader", git = "https://github.com/w121211/hello-web-reader.git?branch=main" },
 ]
 provides-extras = ["chart"]
 
@@ -2308,7 +2308,7 @@ wheels = [
 [[package]]
 name = "web-reader"
 version = "0.1.0"
-source = { git = "https://github.com/w121211/web-reader.git?tag=v0.1.0#137f65e500440d022334f0200edc7d536896cbbe" }
+source = { git = "https://github.com/w121211/hello-web-reader.git?branch=main#5d8e5bc8ded33b9b4cf708b86e5ced26da9a8985" }
 dependencies = [
     { name = "beautifulsoup4" },
     { name = "feedparser" },

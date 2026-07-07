@@ -163,7 +163,7 @@ tmp/
 skills/lana-copycat/data
 
 # Runtime data — written by skills, never committed
-/data/
+**/data/
 # Binary data files
 *.xlsx
 *.xls

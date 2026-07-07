@@ -7,19 +7,20 @@ description: "個股或題材深度研究技能，整合華爾街投研標準與
 
 負責針對單一「個股」或「主題（題材）」，自主進行多輪資料查證，並產出符合「華爾街投研標準」的深度基本面與交易研究報告
 
-## MCP Tools
+## CLI 工具
 
-- `mcp_web_reader_read_url`:
-  - 讀取單一 URL 或 pseudo-URL
+`cd <SKILL_ROOT>`（tw-trader skill 根目錄）後執行 `uv run web-reader`：
+
+- 讀取單一 URL 或 pseudo-URL：`uv run web-reader "<url_or_pseudo_url>" --format=md`
   - 支援網站與格式：
   - Standard Web: `https://example.com/news/article-1`
   - Google News (`gnews://`): `gnews://NVDA?period=30d&max=10`
-  - Substack: `https://investmenttalk.substack.com/p/market-update`
-  - Reddit: `https://www.reddit.com/r/stocks/comments/abc/nvda_analysis`
   - PTT: `https://www.ptt.cc/bbs/Stock/M.123456789.A.ABC.html`
   - CNYES: `https://news.cnyes.com/news/id/54321`
   - RSS / Atom / JSON: `https://example.com/feed.xml`
-  - YouTube: `https://www.youtube.com/watch?v=dQw4w9WgXcQ`
+- 讀取 config 檔（依 tags 篩選來源）：`uv run web-reader <path/to/sources.yaml> --tags=research`
+
+**已知限制**：Reddit 來源目前會 403 失敗——Reddit 已封鎖匿名 `.json` API，這是平台端的變化，不是工具故障。目前沒有零配置解法；需要登入態才能讀 Reddit 時，改用 OpenCLI（`opencli reddit ...`，複用已登入的 Chrome session）。Substack、YouTube 單篇深讀目前也不在這個 CLI 的來源清單內，需要時用 `WebFetch` 補。
 
 ## 規則
 
@@ -37,10 +38,11 @@ description: "個股或題材深度研究技能，整合華爾街投研標準與
 
 ### Step 2: 資料收集 (Data Gathering)
 進行有限輪次的搜尋與深度閱讀，收集足夠資訊後就開始撰寫：
-1. 先呼叫 `mcp_web_reader_read_url("gnews://{symbol_or_topic}?period=30d&max=8")`，快速取得近期相關新聞
-2. 若主題適合台股或半導體供應鏈脈絡，呼叫 `mcp_web_reader_read_config` 讀取 `/Users/cw/Documents/GitHub/hello-trader-skill/skills/tw-trader/data/config/sources.tw.yaml`
-3. 從摘要中挑 3 到 6 個最關鍵的 URL，再用 `mcp_web_reader_read_url` 讀全文，而不是只看摘要
+1. 先執行 `uv run web-reader "gnews://{symbol_or_topic}?period=30d&max=8" --format=md`，快速取得近期相關新聞
+2. 若主題適合台股或半導體供應鏈脈絡，執行 `uv run web-reader <SKILL_ROOT_of_tw-trader>/config/sources.tw.yaml --tags=research`（或 `tw,market` / `sentiment` / `macro`，視題目而定）
+3. 從摘要中挑 3 到 6 個最關鍵的 URL，再用 `uv run web-reader "<url>" --format=md` 讀全文，而不是只看摘要
 4. 最多追加 1 輪更細的 query 或 URL 閱讀；若資訊仍不完整，就在報告中明說缺口，而不是無限搜索
+5. 若需要 CLI 沒有的來源（Substack 單篇、YouTube 逐字稿、Reddit 等），改用 `WebFetch` 或 `WebSearch` 補齊，並在報告中標明來源類型
 
 ### Step 3: 撰寫研究報告 (Drafting)
 根據收集到的數據，依照 `wall-street-framework.md` 的架構，直接回覆 Markdown 報告
