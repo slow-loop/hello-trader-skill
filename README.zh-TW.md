@@ -2,28 +2,40 @@
 
 [English](README.md) | **繁體中文**
 
-用 Claude 驅動的台股自主交易 agent，local-first 架構。沒有 server、沒有資料庫——所有狀態都是磁碟上的 YAML 和 Markdown。
+一個 local-first、由 Claude 驅動的交易與研究 agent monorepo。預設沒有 server、沒有
+資料庫——多數 skill 的狀態都是磁碟上的純 YAML 和 Markdown，由 Claude Code 的
+`SKILL.md` prompt 驅動。
 
-## 它做什麼
+## 👉 從這裡開始：polymarket-scan
 
-AI agent 每天跑一輪 **Research + Trading** 例行作業：
+第一次看這個 repo？[`skills/polymarket-scan/`](skills/polymarket-scan) 是最容易
+單獨試跑的 skill——一個只讀掃描器，找 Polymarket 上定價落後的單場對戰盤，不需要
+任何 API key。設定與 CLI 用法見它的 [README](skills/polymarket-scan/README.zh-TW.md)
+（也有[英文版](skills/polymarket-scan/README.md)）。
 
-1. **Research** — 抓行情、讀新聞、更新監察清單、產出個股研究文件
-2. **Trading** — 檢視現有部位、評估監察清單、掛單或調整委託
+## 這個 repo 裡的 skill
 
-所有東西存在 `data/account/` 裡，純文字可以直接讀。前端 viewer 讓你不碰 CLI 就能瀏覽帳戶狀態。
+| Skill | 是什麼 | 狀態 |
+|---|---|---|
+| [`polymarket-scan`](skills/polymarket-scan) | 只讀掃描器，找 Polymarket 單場對戰盤的定價落後機會 | 運作中，不需 API key |
+| [`tw-trader`](skills/tw-trader) | 台股紙交易 agent——每日 Research + Trading 例行作業 | 主力 skill |
+| [`tw-trader-cloud`](skills/tw-trader-cloud) | 跟 `tw-trader` 一樣，但狀態同步到 cloud backend 而非本地檔案 | 實驗性 |
+| [`us-trader`](skills/us-trader) | 美股交易 agent，交易 `strategy-lab` 產出的訊號 | 運作中 |
+| [`strategy-lab`](skills/strategy-lab) | 離線 factor 研究、回測，並將策略 promote 給 `us-trader` | 運作中 |
+| [`lana-copycat`](skills/lana-copycat) | 加密貨幣合約複製交易 agent（Binance Futures testnet） | 僅測試網 |
+| [`wallstreet-research`](skills/wallstreet-research) | 單一個股或主題的深度研究報告產生器 | 運作中 |
 
-## 三個鬆耦合元件
+每個 skill 都有自己的 README，包含設定與 CLI 細節。各 skill 共用兩個函式庫：
 
 | 資料夾 | 是什麼 |
 |---|---|
-| [`skills/tw-trader/`](skills/tw-trader) | Agent 本體：`SKILL.md` prompts + Python CLI，負責紙交易、日誌、監察清單、研究文件 |
 | [`libs/market-core/`](libs/market-core) | 報價、OHLCV K 棒、技術指標、個股快照 |
-| [`frontend-nano/`](frontend-nano) | 極簡 Vite + React viewer，瀏覽本地 YAML/Markdown |
+| [`frontend-nano/`](frontend-nano) | 極簡 Vite + React viewer，瀏覽 `tw-trader` 的本地 YAML/Markdown 資料 |
 
-[`hello-web-reader`](https://github.com/w121211/hello-web-reader)（非同步 URL → 乾淨文字）是獨立的依賴，從 GitHub 拉取。
+[`hello-web-reader`](https://github.com/w121211/hello-web-reader)（非同步 URL → 乾淨文字）是
+獨立的依賴，從 GitHub 拉取，被多個 skill 使用（`tw-trader`、`wallstreet-research`）。
 
-## 架構
+## 架構（tw-trader）
 
 ```
 ┌──────────────────┐  讀取 YAML   ┌──────────────────────┐
@@ -44,98 +56,48 @@ AI agent 每天跑一輪 **Research + Trading** 例行作業：
                           └──────────────┘   └──────────────────────┘
 ```
 
-Runtime 狀態（帳戶、日誌、研究文件）放在 `data/` 下，與 skill code 分離——skill 維持唯讀，多個 skill 也能共用同一個 data 目錄。
+其他 skill 大致遵循相同模式（由 Claude 透過 `SKILL.md` 驅動、runtime 狀態與 skill
+code 分離），但各自維護自己的 `data/` 目錄——各自的結構請見該 skill 的 README。
 
 ## 前置需求
 
 - **Python 3.13** + [**uv**](https://docs.astral.sh/uv/)
-- **Node 20+**（前端才需要）
-- **Claude Code** — agent 由 Claude 透過 `SKILL.md` 驅動
-- API 金鑰：Fugle（台股報價）、FinMind（歷史資料）；其他選用——詳見 `.env.example`
+- **Node 20+**（只有 `frontend-nano` 需要）
+- **Claude Code** — 多數 agent 由 Claude 透過 `SKILL.md` prompt 驅動
+- API 金鑰依 skill 而異——見根目錄 `.env.example` 與各 skill 的 README
+  （`polymarket-scan` 不需要任何金鑰；`tw-trader` 需要 Fugle + FinMind；
+  `lana-copycat` 需要 Binance Futures testnet 金鑰）
 
 ## 安裝
 
 ```bash
 git clone https://github.com/<你的帳號>/hello-trader-skill.git
 cd hello-trader-skill
+cp .env.example .env    # 填入你要跑的 skill 所需的金鑰
 
-cp .env.example .env          # 至少填入 FUGLE_API_KEY、FINMIND_API_KEY
-cd skills/tw-trader
-uv sync                       # 一次安裝 tw-trader + market-core + hello-web-reader
+cd skills/<skill-name>  # 例如 skills/tw-trader、skills/polymarket-scan
+uv sync                 # 有 pyproject.toml 的 skill；polymarket-scan 純 stdlib 不需要
 ```
 
-確認安裝成功：
-
-```bash
-uv run tw-trader account      # 應該顯示空的紙交易帳戶
-uv run market overview        # 應該顯示大盤快照
-```
-
-## 跑每日例行作業
-
-在 Claude Code 裡開啟 [`skills/tw-trader/prompts/SKILL.md`](skills/tw-trader/prompts/SKILL.md)，讓 agent 執行。一次 session = 一輪 Research + 一輪 Trading。
-
-如果要每天自動執行，使用前景 scheduler（參考 [hello-note](https://github.com/w121211/hello-note) 的 `kol-watch` 模式）——不需要 cron 或 launchd。
-
-## CLI 指令
-
-```bash
-# 帳戶
-uv run tw-trader account                        # 部位 + 現金摘要
-uv run tw-trader journal                        # 今日日誌
-
-# 委託（紙交易）
-uv run tw-trader buy  2330 1000 --limit 600     # 限價買單
-uv run tw-trader sell 2330 500                  # 市價賣單
-uv run tw-trader sweep                          # 用最新報價撮合掛單
-
-# 研究
-uv run tw-trader watchlist                      # 看監察清單
-uv run tw-trader screener-snapshot              # 跑選股器，存快照
-
-# 行情（market-core）
-uv run market overview                          # 大盤趨勢快照
-uv run market quote 2330                        # 單股報價
-uv run market chart 2330 --period 3mo           # OHLCV K 棒圖
-```
-
-覆蓋資料目錄：
-
-```bash
-TW_TRADER_DATA_ROOT=/your/path uv run tw-trader account
-```
-
-## 資料目錄結構
-
-```
-data/account/
-├── state/          # 帳戶、部位、委託、成交（YAML）
-├── journals/       # 每日日誌（YAML）
-├── research/       # 個股 Markdown 研究文件
-├── screener/       # 每日選股快照
-├── watchlist.yaml
-└── strategy.md
-```
-
-新文件的範本放在 `data/account/*/template/`。
-
-## 前端 viewer
-
-```bash
-cd frontend-nano
-npm install && npm run dev    # http://localhost:5173
-```
+接著在 Claude Code 裡開啟該 skill 的 `prompts/SKILL.md`（或 `SKILL.md`）讓 agent
+執行，或依該 skill 的 README 直接呼叫它的 CLI / script。
 
 ## Repo 結構
 
 ```
 .
 ├── skills/
-│   └── tw-trader/        交易 agent（prompts + Python CLI）
+│   ├── polymarket-scan/   Polymarket 對戰盤掃描器（只讀，stdlib）
+│   ├── tw-trader/         台股紙交易 agent（prompts + Python CLI）
+│   ├── tw-trader-cloud/   tw-trader 的 cloud backend 版本
+│   ├── us-trader/         美股交易 agent
+│   ├── strategy-lab/      離線 factor 研究 + 回測 + promote
+│   ├── lana-copycat/      加密貨幣合約複製交易 agent（testnet）
+│   └── wallstreet-research/  單一個股/主題深度研究
 ├── libs/
-│   └── market-core/      行情資料 + 技術分析
-├── frontend-nano/        React viewer
-├── data/                 Runtime 狀態（已加入 .gitignore）
+│   └── market-core/       行情資料 + 技術分析（共用）
+├── frontend-nano/         React viewer（tw-trader 的資料庫）
+├── data/                  Runtime 狀態（已加入 .gitignore）
 ├── .env.example
 └── README.md
 ```
