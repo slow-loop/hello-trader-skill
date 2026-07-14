@@ -11,7 +11,7 @@
 
 ## 專案根目錄
 
-`/Users/cw/Documents/GitHub/hello-trader-skill/skills/tw-trader-cloud`
+本 skill 目錄 `skills/tw-trader-cloud/`（相對於 repo root）。
 所有檔案路徑都相對於此目錄。
 
 ## 核心原則

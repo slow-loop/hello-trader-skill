@@ -6,6 +6,11 @@ A monorepo of local-first, Claude-driven trading and research agents. No
 server, no database by default — most skills keep all state as plain YAML and
 Markdown on disk, and are driven by a Claude Code `SKILL.md` prompt.
 
+> **This is research/paper-trading tooling, not investment advice.** Every
+> skill defaults to a paper account or testnet. A few (`lana-copycat`) document
+> how to switch to real funds/live keys — that's an explicit, opt-in step you
+> take in your own config, never the default.
+
 ## 👉 Start here: polymarket-scan
 
 New to this repo? [`skills/polymarket-scan/`](skills/polymarket-scan) is the
@@ -34,8 +39,19 @@ common libraries:
 | [`libs/market-core/`](libs/market-core) | Quotes, OHLCV bars, technical indicators, symbol snapshots |
 | [`frontend-nano/`](frontend-nano) | Minimal Vite + React viewer for `tw-trader`'s local YAML/Markdown store |
 
-[`hello-web-reader`](https://github.com/w121211/hello-web-reader) (async URL → clean text) is a separate
+[`hello-web-reader`](https://github.com/slow-loop/hello-web-reader) (async URL → clean text) is a separate
 dependency pulled from GitHub, used by several skills (`tw-trader`, `wallstreet-research`).
+
+A few other top-level folders that aren't skills or libs:
+
+| Folder | What it is | Status |
+|---|---|---|
+| [`backend2/`](backend2) | Original FastAPI backend for `tw-trader` (screener, runtime, DB) | Deprecated — being folded into `market-core`/`tw-trader`, see [doc/ARCHITECTURE.md](doc/ARCHITECTURE.md) |
+| [`backend3/`](backend3) | Cloud storage backend for `tw-trader-cloud` | Optional — only needed if you run `tw-trader-cloud`; not required for single-user local use |
+| [`scripts/`](scripts) | Runs skills through the `nanobot-ai` package instead of Claude Code directly | Optional, see [scripts/README.md](scripts/README.md) |
+
+See [doc/ARCHITECTURE.md](doc/ARCHITECTURE.md) for the full design rationale and
+migration plan.
 
 ## Architecture (tw-trader)
 
@@ -100,6 +116,10 @@ the agent run, or invoke its CLI/scripts directly per its README.
 ├── libs/
 │   └── market-core/       Market data + technical analysis (shared)
 ├── frontend-nano/         React viewer (tw-trader's data store)
+├── backend2/              Deprecated — being folded into market-core/tw-trader
+├── backend3/              Optional cloud backend for tw-trader-cloud
+├── scripts/               Optional nanobot-based skill runner
+├── doc/ARCHITECTURE.md    Design rationale + migration plan
 ├── data/                  Runtime state (gitignored)
 ├── .env.example
 └── README.md

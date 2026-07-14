@@ -1,0 +1,5 @@
+# Runtime account data — never commit, keep only the research template.
+data/accounts/*/
+!data/accounts/*/research/
+data/accounts/*/research/*
+!data/accounts/*/research/template/

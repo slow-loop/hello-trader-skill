@@ -30,7 +30,7 @@ cattrade gsheet 11 榜都是量化分數，agent 判讀沒加值。整個 loop�
 cattrade 管道不需要 agent —— 只有 Square 管道才該喚醒 agent。
 
 ```bash
-cd /Users/cw/Documents/GitHub/hello-trader-skill/skills/lana-copycat
+cd skills/lana-copycat  # repo root
 uv run lana positions
 ```
 

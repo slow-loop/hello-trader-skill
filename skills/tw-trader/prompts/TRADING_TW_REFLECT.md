@@ -41,7 +41,7 @@
 - `<SKILL_ROOT>/config/technical_config.yaml`
 - `<SKILL_ROOT>/prompts/TRADING_TW.md`
 - `<SKILL_ROOT>/src/` Python code
-- `web-reader` Python code lives at https://github.com/w121211/hello-web-reader (clone separately if you need to read it)
+- `web-reader` Python code lives at https://github.com/slow-loop/hello-web-reader (clone separately if you need to read it)
 
 一次只改你有把握的。不確定的先寫進 `next`，下次再處理
 

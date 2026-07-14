@@ -12,7 +12,7 @@
 
 `<SKILL_ROOT>` / `<DATA_ROOT>` 定義見 `SKILL.md`「工作目錄」。
 
-- `<SERENITY_SKILL_ROOT>`：serenity-skill 所在路徑（例：`/Users/cc/Documents/GitHub/serenity-skill`），用於任務 A。若找不到，向使用者詢問路徑，或跳過任務 A 並在報告中註明原因。
+- `<SERENITY_SKILL_ROOT>`：serenity-skill 所在路徑（例：`../serenity-skill`，一個獨立 repo），用於任務 A。若找不到，向使用者詢問路徑，或跳過任務 A 並在報告中註明原因。
 - `<DATA_ROOT>/account/research/{YYYY-MM-DD}-tw-{symbol_or_theme}-full.md`：整合報告輸出地。
 - 各子任務可先各自產出中間檔案（同資料夾，檔名加任務代號後綴），方便追溯，非必要。
 

@@ -132,7 +132,7 @@ def ensure_backend_healthy(backend_url: str) -> None:
     except urllib.error.URLError as exc:
         raise SystemExit(
             "Backend healthcheck failed. Start backend2 first, for example:\n"
-            "  cd /Users/cw/Documents/GitHub/hello-trader-skill/backend2\n"
+            "  cd backend2  # repo root\n"
             "  uv run uvicorn backend2.main:app --reload\n"
             f"Health URL: {health_url}\n"
             f"Original error: {exc}"
@@ -148,7 +148,7 @@ def load_nanobot_class():
         raise SystemExit(
             "Unable to import nanobot.\n"
             "Install it in the current environment first, for example:\n"
-            "  uv pip install -e /Users/cw/Documents/GitHub/nanobot\n"
+            "  uv pip install -e ../nanobot  # path to your local nanobot checkout\n"
             f"Original error: {exc}"
         ) from exc
 

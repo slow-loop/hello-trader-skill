@@ -13,7 +13,7 @@
 
 ## 專案與檔案
 
-**專案根目錄**：`/Users/cw/Documents/GitHub/hello-trader-skill/skills/tw-trader-cloud`
+**專案根目錄**：本 skill 目錄 `skills/tw-trader-cloud/`（相對於 repo root）
 所有路徑相對於此目錄。
 
 - `data/account/lessons.md`：可重複使用的規則與教訓
@@ -31,7 +31,7 @@
 
 ### Step 0：確認 backend3
 
-若 `tw me` 失敗 → 到 `/Users/cw/Documents/GitHub/hello-trader-skill/backend3` 跑 `uv run backend3`
+若 `tw me` 失敗 → 到 repo root 的 `backend3/` 跑 `uv run backend3`
 
 ### Step 1：同步上下文
 

@@ -209,9 +209,9 @@ def _load_cattrade_ctx(cfg: dict) -> tuple[str, dict]:
     """Return (sheet_id, merged_cattrade_cfg) or exit."""
     from .signals.cattrade import DEFAULT_CATTRADE_CFG
     cattrade_cfg = cfg.get("cattrade", {})
-    sheet_id = cattrade_cfg.get("sheet_id")
+    sheet_id = os.environ.get("CATTRADE_SHEET_ID") or cattrade_cfg.get("sheet_id")
     if not sheet_id:
-        console.print("[red]cattrade.sheet_id missing in config.yaml[/]")
+        console.print("[red]cattrade.sheet_id missing — set CATTRADE_SHEET_ID in .env or config.yaml[/]")
         raise typer.Exit(1)
     return sheet_id, {**DEFAULT_CATTRADE_CFG, **cattrade_cfg}
 

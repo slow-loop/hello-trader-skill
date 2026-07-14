@@ -18,7 +18,7 @@ signals:
 # Cattrade is an independent pipeline (not merged with Square).
 # Run via `lana cattrade`; scoring logic below is self-contained.
 cattrade:
-  sheet_id: "1k16nGFCE7oBXrEqvTpHSA2Z5530GM_kou-wiWklTsfY"
+  sheet_id: ""                      # set CATTRADE_SHEET_ID in .env instead — see .env.example
   fetch_timeout_sec: 15
   # v2: signals from 排行榜快照 (综合分 + 结构标签). Every symbol always has a score.
   veto:

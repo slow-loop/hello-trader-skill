@@ -3,8 +3,8 @@
 這個目錄提供一套較安全的 `nanobot` 開發方式：
 
 - `nanobot` workspace 不直接用 repo root
-- workspace 放在 repo 內的 [`.nanobot-workspace`](/Users/cw/Documents/GitHub/hello-trader-skill/.nanobot-workspace)
-- workspace 的 `skills/` 是 symlink 到 repo 的 [skills](/Users/cw/Documents/GitHub/hello-trader-skill/skills)
+- workspace 放在 repo 內的 [`.nanobot-workspace`](../.nanobot-workspace)
+- workspace 的 `skills/` 是 symlink 到 repo 的 [skills](../skills)
 - `nanobot` 不需要開通用 shell，改接 `web-reader` package 內建的通用 MCP server
 
 ## 結構
@@ -33,10 +33,10 @@ hello-trader-skill/
 
 ## Workspace 行為
 
-[run_nanobot.py](/Users/cw/Documents/GitHub/hello-trader-skill/scripts/run_nanobot.py) 預設會使用：
+[run_nanobot.py](run_nanobot.py) 預設會使用：
 
 ```text
-/Users/cw/Documents/GitHub/hello-trader-skill/.nanobot-workspace
+<repo-root>/.nanobot-workspace
 ```
 
 啟動時會自動確保這些內容存在：
@@ -64,7 +64,7 @@ hello-trader-skill/
 
 台股 trader workflow 應透過 `read_config` 指向本 repo 的來源設定：
 
-- config: `/Users/cw/Documents/GitHub/hello-trader-skill/skills/tw-trader/data/config/sources.tw.yaml`
+- config: `skills/tw-trader/data/config/sources.tw.yaml`
 - sentiment tags: `sentiment`
 - macro tags: `tw,macro`
 - research tags: `research`
@@ -74,7 +74,7 @@ hello-trader-skill/
 在 `scripts/` 目錄同步依賴：
 
 ```bash
-cd /Users/cw/Documents/GitHub/hello-trader-skill/scripts
+cd scripts  # repo root
 uv sync
 ```
 
@@ -83,7 +83,7 @@ uv sync
 `run_nanobot.py` 現在會依序尋找：
 
 1. `--config` 指定的路徑
-2. workspace 內的 [`.nanobot-workspace/config.json`](/Users/cw/Documents/GitHub/hello-trader-skill/.nanobot-workspace/config.json)
+2. workspace 內的 [`.nanobot-workspace/config.json`](../.nanobot-workspace/config.json)
 3. `~/.nanobot/config.json`
 
 第一次執行時，workspace 內若還沒有 `config.json`，會自動建立一份預設設定：
@@ -100,7 +100,7 @@ uv sync
         "args": [
           "run",
           "--project",
-          "/Users/cw/Documents/GitHub/hello-trader-skill/scripts",
+          "<repo-root>/scripts",
           "web-reader-mcp"
         ],
         "enabledTools": [
@@ -122,7 +122,7 @@ uv sync
 直接跑：
 
 ```bash
-cd /Users/cw/Documents/GitHub/hello-trader-skill/scripts
+cd scripts  # repo root
 uv run python run_nanobot.py --message "用 wallstreet-research 做台積電研究"
 ```
 
@@ -130,7 +130,7 @@ uv run python run_nanobot.py --message "用 wallstreet-research 做台積電研�
 
 ```bash
 uv run python run_nanobot.py \
-  --workspace /Users/cw/Documents/GitHub/hello-trader-skill/.nanobot-workspace \
+  --workspace ../.nanobot-workspace \
   --message "用 wallstreet-research 做台積電研究"
 ```
 
@@ -138,13 +138,13 @@ uv run python run_nanobot.py \
 
 ```bash
 uv run python run_nanobot.py \
-  --config /Users/cw/Documents/GitHub/hello-trader-skill/.nanobot-workspace/config.json \
+  --config ../.nanobot-workspace/config.json \
   --message "用 wallstreet-research 做台積電研究"
 ```
 
 ## Skill 使用方式
 
-[wallstreet-research](/Users/cw/Documents/GitHub/hello-trader-skill/skills/wallstreet-research/SKILL.md) 應優先使用通用 MCP tools：
+[wallstreet-research](../skills/wallstreet-research/SKILL.md) 應優先使用通用 MCP tools：
 
 - `read_url`
 - `read_config`

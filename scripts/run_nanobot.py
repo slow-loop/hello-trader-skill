@@ -1,7 +1,7 @@
 """Run nanobot with the repo-local workspace and MCP setup.
 
 Usage:
-    cd /Users/cw/Documents/GitHub/hello-trader-skill
+    cd hello-trader-skill  # repo root
     uv run --project scripts python scripts/run_nanobot.py
 """
 

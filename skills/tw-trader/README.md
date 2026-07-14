@@ -9,7 +9,7 @@ keeps all state as YAML/Markdown on disk — no server, no database.
 2. **Trading** — reviews open positions, evaluates watchlist entries, places or adjusts paper orders
 
 Depends on [`libs/market-core`](../../libs/market-core) (quotes, OHLCV, indicators) and
-[`hello-web-reader`](https://github.com/w121211/hello-web-reader) (URL → clean text, pulled from GitHub).
+[`hello-web-reader`](https://github.com/slow-loop/hello-web-reader) (URL → clean text, pulled from GitHub).
 
 ## Prerequisites
 
@@ -36,9 +36,6 @@ uv run market overview        # should show market snapshot
 
 Open [`prompts/SKILL.md`](prompts/SKILL.md) in Claude Code and let the agent run.
 One session = one Research pass + one Trading pass.
-
-For autonomous daily runs, use a foreground scheduler (reference: the `kol-watch` pattern
-from [hello-note](https://github.com/w121211/hello-note)) — no cron or launchd required.
 
 ## CLI reference
 

@@ -6,6 +6,10 @@
 資料庫——多數 skill 的狀態都是磁碟上的純 YAML 和 Markdown，由 Claude Code 的
 `SKILL.md` prompt 驅動。
 
+> **這是研究／紙上交易工具，不是投資建議。** 每個 skill 預設都是 paper account
+> 或 testnet。少數 skill（`lana-copycat`）文件裡有寫怎麼切換成真實資金／正式
+> API key——那是你自己在 config 裡明確選擇的動作，不是預設行為。
+
 ## 👉 從這裡開始：polymarket-scan
 
 第一次看這個 repo？[`skills/polymarket-scan/`](skills/polymarket-scan) 是最容易
@@ -32,8 +36,18 @@
 | [`libs/market-core/`](libs/market-core) | 報價、OHLCV K 棒、技術指標、個股快照 |
 | [`frontend-nano/`](frontend-nano) | 極簡 Vite + React viewer，瀏覽 `tw-trader` 的本地 YAML/Markdown 資料 |
 
-[`hello-web-reader`](https://github.com/w121211/hello-web-reader)（非同步 URL → 乾淨文字）是
+[`hello-web-reader`](https://github.com/slow-loop/hello-web-reader)（非同步 URL → 乾淨文字）是
 獨立的依賴，從 GitHub 拉取，被多個 skill 使用（`tw-trader`、`wallstreet-research`）。
+
+還有幾個不是 skill 或 lib 的根目錄資料夾：
+
+| 資料夾 | 是什麼 | 狀態 |
+|---|---|---|
+| [`backend2/`](backend2) | `tw-trader` 原本的 FastAPI backend（screener、runtime、DB） | 已棄用——正在併入 `market-core`/`tw-trader`，見 [doc/ARCHITECTURE.md](doc/ARCHITECTURE.md) |
+| [`backend3/`](backend3) | `tw-trader-cloud` 用的雲端儲存 backend | 選用——只有跑 `tw-trader-cloud` 才需要，單機使用不需要 |
+| [`scripts/`](scripts) | 用 `nanobot-ai` 套件而非 Claude Code 直接跑 skill | 選用，見 [scripts/README.md](scripts/README.md) |
+
+完整的設計理念與遷移計畫見 [doc/ARCHITECTURE.md](doc/ARCHITECTURE.md)。
 
 ## 架構（tw-trader）
 
@@ -97,6 +111,10 @@ uv sync                 # 有 pyproject.toml 的 skill；polymarket-scan 純 std
 ├── libs/
 │   └── market-core/       行情資料 + 技術分析（共用）
 ├── frontend-nano/         React viewer（tw-trader 的資料庫）
+├── backend2/              已棄用——正在併入 market-core/tw-trader
+├── backend3/              tw-trader-cloud 用的選用雲端 backend
+├── scripts/               選用的 nanobot skill runner
+├── doc/ARCHITECTURE.md    設計理念 + 遷移計畫
 ├── data/                  Runtime 狀態（已加入 .gitignore）
 ├── .env.example
 └── README.md

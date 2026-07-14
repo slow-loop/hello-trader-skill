@@ -12,7 +12,7 @@
 
 ## 專案與檔案
 
-**專案根目錄**：`/Users/cw/Documents/GitHub/hello-trader-skill/skills/tw-trader-cloud`
+**專案根目錄**：本 skill 目錄 `skills/tw-trader-cloud/`（相對於 repo root）
 所有路徑相對於此目錄。
 
 - `data/config/agent.yaml`：token（由 `tw init` 產生）
@@ -37,7 +37,7 @@
 
 ### Phase 0：準備
 
-1. 確認 backend3 運行：若 `tw me` 失敗，先到 `/Users/cw/Documents/GitHub/hello-trader-skill/backend3` 跑 `uv run backend3`
+1. 確認 backend3 運行：若 `tw me` 失敗，先到 repo root 的 `backend3/` 跑 `uv run backend3`
 2. 同步本地快取：
    ```bash
    uv run tw watchlist
