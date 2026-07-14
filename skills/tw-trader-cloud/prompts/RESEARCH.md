@@ -28,16 +28,16 @@
 - 預設先做交易研究，不做全面 deep research
 - 不是每次都要更新正式個股研究
 - 不要只貼資料，要做明確判斷
-- **新增 watchlist 時同步建立研究文件**（送交個股交易研究子流程），不要事後幾天才補
-- **研究文件強制更新觸發條件**：個股現價相對前次研究的基準價格移動 >10%，或 thesis 的成立/失效條件對應的關鍵技術指標（支撐/壓力/籌碼）已不適用 → 強制重跑個股交易研究
+- **新增 watchlist 時同步建立研究檔案**（送交個股交易研究子流程），不要事後幾天才補
+- **研究檔案強制更新觸發條件**：個股現價相對前次研究的基準價格移動 >10%，或 thesis 的成立/失效條件對應的關鍵技術指標（支撐/壓力/籌碼）已不適用 → 強制重跑個股交易研究
 - **嚴禁直接寫 YAML 結構化檔**：`watchlist.yaml`、`journals/*.yaml` 只能透過 `tw` CLI flat flags 寫入
-- 文件檔（`lessons.md`、`research/*.md`、`research/*-market-scan-*.yaml`）可以直接 Write，寫完必帶一次 `tw docs-add <path>` 推雲端
+- 檔案檔（`lessons.md`、`research/*.md`、`research/*-market-scan-*.yaml`）可以直接 Write，寫完必帶一次 `tw docs-add <path>` 推雲端
 
 ## 主流程
 
 ### Phase 0：準備
 
-1. 確認 backend3 運行：若 `tw me` 失敗，先到 repo root 的 `backend3/` 跑 `uv run backend3`
+1. 確認 backend3 執行：若 `tw me` 失敗，先到 repo root 的 `backend3/` 跑 `uv run backend3`
 2. 同步本地快取：
    ```bash
    uv run tw watchlist
@@ -52,7 +52,7 @@
    - (c) trigger 條件已觸發？→ 標注為高優先進場候選
    - 不完成預檢，不進行 Phase 1
 
-### Phase 1：量化雷達（數據先行，鎖定名單）
+### Phase 1：量化雷達（資料先行，鎖定名單）
 
 跑外部 screener（例：backend2 或其他量化源），記錄上榜名單與技術/籌碼指標。
 產出 `data/account/research/{date}-market-scan-{HHMM}.yaml` 的 Phase 1 區段。

@@ -7,7 +7,7 @@
 `SKILL.md` prompt 驅動。
 
 > **這是研究／紙上交易工具，不是投資建議。** 每個 skill 預設都是 paper account
-> 或 testnet。少數 skill（`lana-copycat`）文件裡有寫怎麼切換成真實資金／正式
+> 或 testnet。少數 skill（`lana-copycat`）檔案裡有寫怎麼切換成真實資金／正式
 > API key——那是你自己在 config 裡明確選擇的動作，不是預設行為。
 
 ## 👉 從這裡開始：polymarket-scan

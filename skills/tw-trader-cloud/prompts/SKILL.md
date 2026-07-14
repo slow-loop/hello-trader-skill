@@ -20,7 +20,7 @@
 - 所有狀態 (journal、doc、watchlist、operation、trade) 都用 `tw` CLI 寫入；**agent 永遠不直接 POST backend**
 - 短期記憶 = `journals`（時間索引、薄、inline body）；長期知識 = `docs`（path-based、版本化）
 - **結構化資料（watchlist / journal / operation / trade）**：agent 只透過 CLI flat flags 寫入，**不碰 YAML 檔**
-- **文件（lessons / research / market-scan）**：agent 直接 Write 到 `data/account/` 對應路徑，再 `tw docs-add` 推到 backend
+- **檔案（lessons / research / market-scan）**：agent 直接 Write 到 `data/account/` 對應路徑，再 `tw docs-add` 推到 backend
 
 ## 本地檔案結構（backend 的投影）
 
@@ -78,7 +78,7 @@ uv run tw account                                                # account + pos
 uv run tw events --limit 20 [--types operation.executed,trade.recorded]
 ```
 
-### Docs（文件）
+### Docs（檔案）
 ```bash
 # 寫入：agent 先 Write 檔案到 data/account/，再 push 到 backend
 uv run tw docs-add data/account/lessons.md

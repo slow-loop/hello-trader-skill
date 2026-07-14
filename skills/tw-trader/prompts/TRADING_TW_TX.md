@@ -136,7 +136,7 @@
 ### 市場資訊
 
 ```bash
-# 全局總覽（大盤狀態 + 新聞 headlines）
+# 全域總覽（大盤狀態 + 新聞 headlines）
 uv run python -m skill_tw_trader.cli market
 
 # 個股分析（indicator values + expressions + 籌碼 + 相關新聞）

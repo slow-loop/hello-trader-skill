@@ -1,6 +1,6 @@
 # Lana-copycat 策略與設計
 
-這份文件記錄 `lana-copycat` skill 的交易策略、管道拆分邏輯、autonomous loop 的設計，以及推導過程中的關鍵決策。
+這份檔案記錄 `lana-copycat` skill 的交易策略、管道拆分邏輯、autonomous loop 的設計，以及推導過程中的關鍵決策。
 
 ## 0. 起點：Lana 原版策略
 
@@ -29,13 +29,13 @@ Lana 自己說「90% 運氣 + 特定行情」。熊市 / 沒 MM 打窩時會連�
 | 雜訊 | 高（垃圾幣種、灌水、假熱度） | 低（已經量化打過分） |
 | Agent 加值 | **高** —— 過濾垃圾、判熱度真假 | **零** —— 全數字，agent 判讀沒加值 |
 | Alpha 來源 | 散戶情緒尚未反映在盤面 | 大戶結構訊號（Pattern B）早於 gainers 榜 |
-| 運行方式 | Agent 每次喚醒手動跑 | **cron 純程式自動 loop** |
+| 執行方式 | Agent 每次喚醒手動跑 | **cron 純程式自動 loop** |
 
 **關鍵 insight**：cattrade 候選通常還沒出現在 Binance 24h gainers 榜上 —— 這正是它的 alpha。兩套都命中的幣訊號最強，但單套命中也可進場。
 
 ### 為什麼 cattrade 不需要 agent？
 
-用戶原話：「用分數直接算 score 跟 agent 判 conviction 沒差別」。
+使用者原話：「用分數直接算 score 跟 agent 判 conviction 沒差別」。
 
 推導過程：
 1. cattrade sheet 的每個欄位都是結構化數字（量排名、結構強度、大戶集中度、量 Z 分數…）
@@ -55,7 +55,7 @@ Agent 在 cattrade 管道的**真正價值**在 loop 外：
 |---|---|---|
 | **A** | Early momentum（15m/1h 異動 + multi_volume 同向上） | +20 score |
 | **B** | **大户领先做多** —— structure 形態 + 強度 > 10 | **主要進場訊號**（+40 base + strength） |
-| **C** | 假突破（5m 衝高但 1h 沒跟上 + 短時衝擊占比高） | **Veto**（不進場） |
+| **C** | 假突破（5m 衝高但 1h 沒跟上 + 短時衝擊佔比高） | **Veto**（不進場） |
 | **D** | 大户领先做空 / 主动买领先空 | **立即全倉平**（持倉期間出現） |
 | **E** | Pumped —— 1d + 1w 都在前 3 名 | **Veto**（不進場） / 持倉期間出現 → **全倉平** |
 
@@ -104,11 +104,11 @@ Veto 條件：
 推導過程，刪掉了幾個不好的做法：
 
 **❌ 原始提案：PnL × signal_health 16 格 lookup table**
-用戶：「你這樣不就其實可以直接寫 code 了？」
+使用者：「你這樣不就其實可以直接寫 code 了？」
 問題：過度工程，本質是在用表格模擬一個連續函數。
 
 **❌ 中間提案：agent 每 tick 判 conviction 分**
-用戶：「跟直接看來源數據算 score 有啥區別？」
+使用者：「跟直接看來源資料算 score 有啥區別？」
 問題：agent 判讀一個純數字會議題，只是徒增 latency 和隨機性。
 
 **✅ 最終：conviction = current_score / entry_score**
@@ -135,7 +135,7 @@ Veto 條件：
 
 ### 為什麼要 journal？
 
-conviction 公式需要 **entry score**，Binance API 不會記這個。journal 是 audit trail + 狀態存儲：
+conviction 公式需要 **entry score**，Binance API 不會記這個。journal 是 audit trail + 狀態儲存：
 
 - `open` event：記 cattrade 分數 + patterns + oi + entry_price + qty
 - `partial_close` event：記 close qty + mark price + conviction + reason
@@ -210,6 +210,6 @@ uv run lana cattrade daemon --interval 300 --no-dry-run
 1. **合併訊號 → 拆成兩套**：一開始想把 cattrade scores 乘以權重塞進 Square scoring 的第四個維度。拆開之後清爽非常多，且避免「因為 cattrade 分高所以 Square 沒熱度也進場」這種奇怪交集。
 2. **Agent driven loop → cron 純程式**：最初想做 agent 每 N 分鐘喚醒判 conviction。砍掉是因為資料純結構化，agent 沒加值。
 3. **PnL lookup table → conviction 比值**：16 格 if/else 被砍成一個 `/` 運算。
-4. **「tick」/「rebalance」→「run」**：命名被用戶拒了兩輪，最後 `run` 通過。
+4. **「tick」/「rebalance」→「run」**：命名被使用者拒了兩輪，最後 `run` 通過。
 5. **closePosition=True 的 algoId 陷阱**：Binance 條件單回傳 `algoId` 不是 `orderId`，直接 `.get("orderId")` 會 KeyError。
 6. **quantityPrecision**：`_calc_quantity` 寫死 round(qty, 3) 會被 ATUSDT（精度 0）踩爆。現在從 `futures_exchange_info()` 查+cache。

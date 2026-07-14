@@ -25,8 +25,8 @@ export default function Ticker() {
       )}
 
       <section>
-        <h2 className="text-sm font-bold uppercase text-neutral-600 mb-2">研究文件</h2>
-        {docs.length === 0 && <p className="text-neutral-500 text-sm">尚無研究文件。</p>}
+        <h2 className="text-sm font-bold uppercase text-neutral-600 mb-2">研究檔案</h2>
+        {docs.length === 0 && <p className="text-neutral-500 text-sm">尚無研究檔案。</p>}
         <ul className="space-y-1 text-sm">
           {docs.map((d) => (
             <li key={d.filename}>

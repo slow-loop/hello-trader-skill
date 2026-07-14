@@ -108,7 +108,7 @@ Markdown（brief / 個股研究）直接 Write，寫完一律 `doc-add`：
 - **催化劑日曆**：研究必須列下一個驗證點（法說、營收、展覽、研報發布日）
 - 預設交易研究，不做 deep research
 - 不要只貼資料，要做明確判斷
-- **新增 watchlist 時同步建立研究文件**，不要事後補
+- **新增 watchlist 時同步建立研究檔案**，不要事後補
 - **不設 A 點，不寫進場訊號**：本 skill 是動量交易，進場是 TRADING 端 agent judgment，整合 thesis / regime / catalyst / 相對強弱 / 集中度當下做決策，不預先寫死訊號。
 - **Research 只寫 thesis + invalidation_signals + stop**：thesis 描述「為什麼是這檔」與催化劑日曆；invalidation_signals 寫具體可執行的死亡條件（自動觸發出場）；stop 是風控價位。其他都交給 TRADING agent 在當下判斷。
 - **嚴禁直接讀寫結構化 YAML**：`watchlist.yaml` / `journals/*.yaml` 必須透過 `tmp/` + CLI；markdown 可直接 Write，寫完 re-read 確認可解析

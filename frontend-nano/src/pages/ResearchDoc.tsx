@@ -9,7 +9,7 @@ export default function ResearchDoc() {
     return (
       <div>
         <Link to="/" className="text-sm text-neutral-500 hover:underline">← Timeline</Link>
-        <p className="mt-4 text-neutral-500">找不到研究文件：{filename}</p>
+        <p className="mt-4 text-neutral-500">找不到研究檔案：{filename}</p>
       </div>
     )
   }

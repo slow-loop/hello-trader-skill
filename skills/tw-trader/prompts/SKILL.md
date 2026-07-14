@@ -23,7 +23,7 @@ cd <SKILL_ROOT> && uv run market overview
 ```
 
 CLI 內部一律走 `data_root()`（= `<DATA_ROOT>`），不受 cwd 影響。
-但 **shell redirect 與 Claude `Read`/`Write` tool 是 cwd-relative**，所以本文件中：
+但 **shell redirect 與 Claude `Read`/`Write` tool 是 cwd-relative**，所以本檔案中：
 
 - 任何 runtime 輸入/輸出檔，路徑必須寫絕對路徑或 `<DATA_ROOT>/...`
 - 任何靜態 config / template，路徑寫 `<SKILL_ROOT>/...`（cd 後的相對路徑也行）
@@ -46,7 +46,7 @@ CLI 內部一律走 `data_root()`（= `<DATA_ROOT>`），不受 cwd 影響。
 
 僅在下列情況可自行追加下一輪：
 
-- **Regime 降級**：`market overview` 的 `benchmark_metrics.dist_to_sma20_pct` 由正轉負，或 TWII 盤中跌破用戶設定的風控門檻
+- **Regime 降級**：`market overview` 的 `benchmark_metrics.dist_to_sma20_pct` 由正轉負，或 TWII 盤中跌破使用者設定的風控門檻
 - **持倉觸發 invalidation** 或逼近 stop
 - **重大突發 catalyst**（持倉族群 / watchlist 標的）
 

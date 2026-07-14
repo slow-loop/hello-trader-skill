@@ -25,7 +25,7 @@
 ## 規則
 
 - **嚴禁**直接 Write `watchlist.yaml` / `journals/*.yaml`；結構化資料只能透過 `tw` CLI flat flags 寫
-- 文件檔可以 Write，寫完 `tw docs-add <path>`
+- 檔案檔可以 Write，寫完 `tw docs-add <path>`
 
 ## 流程
 

@@ -150,7 +150,7 @@ Write 到 `data/accounts/us-momentum/research/{date}-us-brief.md`：
 - **Signal 帶 IC 的就重視**（backtest_summary 或 registry 的 ic 欄位）。沒 IC 的 factor 當「直覺」，不當硬規則
 - **Earnings blackout**：財報前 3 日不新進場
 - **FOMC/CPI 當日不新進場**（除非 strategy 說可以）
-- **新進 watchlist 的標的必須有研究文件**，不要事後補
+- **新進 watchlist 的標的必須有研究檔案**，不要事後補
 
 ## 下一步
 

@@ -115,7 +115,7 @@ uv run us-trader buy <SYM> \
 ### Step 5：盤後回顧（盤中略過）
 
 - 實際成交 vs 計畫差異
-- 訊號命中率（多少 top signal 真的進場？skip 多少？理由分布？）
+- 訊號命中率（多少 top signal 真的進場？skip 多少？理由分佈？）
 - Strategy 層觀察：如果連續多日 `entry_ok=true` 但跌破 stop，是策略問題還是執行問題？連續多日沒機會 → regime 還沒到，不是策略壞
 - 週末前把 strategy 問題整理到 `data/accounts/us-momentum/research/lab_requests.md` 交給 `strategy-lab`
 

@@ -89,7 +89,7 @@ uv run python -m tw_trader.cli journal-add --file tmp/journal_entry.yaml
 2. **Sizing**：依 regime sizing factor + stop 距離計算股數（公式見 strategy.md）。
 3. **Stop**：從 thesis 讀 stop 價（Research 端應寫好）。**只上移不下移**。
 4. **`--reason` 必含三項**：
-   - 相對強弱數據（例：「相對大盤 +7.2%」）
+   - 相對強弱資料（例：「相對大盤 +7.2%」）
    - thesis 一句話重點（例：「ABF三股強+南電營收+39.47%」）
    - 整合 judgment 一句話（例：「melt_up 持倉內已有 ABF 16%，再加 6% 仍在族群上限內」）
 5. `attach_stop_loss` 在成交時自動掛上。sweep 偵測成交後，`watchlist.status` 自動 `watch → hold`。
