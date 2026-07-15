@@ -24,7 +24,24 @@ Most days this produces **zero** candidates — that's expected, not a bug. The 
 is instructed to prefer over-including in step 2 (cheap) and only commit after
 step 3 (expensive verification against real standings, polls, and settlement rules).
 
+## How to run
+
+Clone this repo, then just tell Claude:
+
+```
+Run skills/polymarket-scan/SKILL.md
+```
+
+The agent follows the funnel in `SKILL.md` for a full scan round and writes its
+report to `data/journals/`. To have it run every day, follow up with:
+
+```
+Set this to run automatically at 9am every day
+```
+
 ## CLI
+
+You can also run the scanner directly, without the agent:
 
 ```bash
 # Sports: scan every sport for single-game moneylines opened since a given date
@@ -36,7 +53,7 @@ python3 scripts/polymarket_scan.py tagged --mode fresh --tags elections,world-el
 
 `tagged` modes: `early` (single matchup, near 50/50), `fresh` (just opened, real
 order book), `band` (traded, still mid-range price), `raw` (no filtering).
-Full flag reference is in [`prompts/SKILL.md`](prompts/SKILL.md).
+Full flag reference is in [`SKILL.md`](SKILL.md).
 
 ## Output
 
@@ -47,7 +64,7 @@ to `data/journals/{YYYY-MM-DD}.md`.
 ## Agent instructions
 
 The operating logic for the Claude agent (mindset, funnel rules, report format) lives
-in [`prompts/SKILL.md`](prompts/SKILL.md), written in Traditional Chinese. This
+in [`SKILL.md`](SKILL.md), written in Traditional Chinese. This
 README is the human-facing "what is this / how do I run it" doc; `SKILL.md` is
 the prompt Claude actually follows.
 

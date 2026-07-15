@@ -21,7 +21,24 @@
 多數天會掃不到東西，這是正常的。Agent 被要求在第 2 步（便宜）寧可放寬多留幾個，
 只有通過第 3 步（對真實戰績、民調、結算條款查證）才會下判斷。
 
+## 怎麼跑
+
+Clone 這個 repo，然後直接跟 Claude 說：
+
+```
+執行 skills/polymarket-scan/SKILL.md
+```
+
+Agent 會照著 `SKILL.md` 的漏斗流程跑完整輪掃描，並把報告寫進
+`data/journals/`。想讓它每天自動跑，接著說：
+
+```
+幫我把它設成每天 9 點自動執行
+```
+
 ## CLI
+
+也可以自己直接跑掃描器（不經過 agent）：
 
 ```bash
 # 運動：跨全部運動，掃自某日起新開的單場對戰盤
@@ -33,7 +50,7 @@ python3 scripts/polymarket_scan.py tagged --mode fresh --tags elections,world-el
 
 `tagged` 的 mode：`early`（單場對戰、近中段價位）、`fresh`（剛開盤、有真實訂單簿）、
 `band`（有成交但還在中段價格帶）、`raw`（不過濾全倒出）。完整參數說明見
-[`prompts/SKILL.md`](prompts/SKILL.md)。
+[`SKILL.md`](SKILL.md)。
 
 ## 輸出
 
@@ -43,7 +60,7 @@ python3 scripts/polymarket_scan.py tagged --mode fresh --tags elections,world-el
 ## Agent 操作說明
 
 給 Claude agent 讀的操作邏輯（心態、漏斗規則、報告格式）在
-[`prompts/SKILL.md`](prompts/SKILL.md)，以繁體中文撰寫。這份 README 是給人看的
+[`SKILL.md`](SKILL.md)，以繁體中文撰寫。這份 README 是給人看的
 「這是什麼／怎麼跑」文件；`SKILL.md` 才是 Claude 實際遵循的 prompt。
 
 ## 屬於 hello-trader-skill
